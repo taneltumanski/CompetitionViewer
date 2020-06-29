@@ -51,10 +51,10 @@ namespace DragParsement
             //Temp.Test();
 
             //return;
-            var idsToFind = new[] { "SB123", "BB123" };
+            var idsToFind = new[] { "BB002", "SB002" };
             var baseUrl = "http://www.edra.ee/tulemused.php?eventID={0}";
             var eventIds = Enumerable
-                .Range(67, 1)
+                .Range(50, 30)
                 .Select(x => x.ToString())
                 .ToArray();
 
@@ -129,7 +129,7 @@ namespace DragParsement
                     .Distinct()
                     //.Where(x => Regex.IsMatch(x.RacerId, @"(SB|BB|PB)\d*"))
                     //.GroupBy(x => x.RacerId)
-                    //.Where(x => idsToFind.Contains(x.RacerId))
+                    .Where(x => idsToFind.Contains(x.RacerId))
                     .ToArray();
 
                 var longestRacerId = racerResults

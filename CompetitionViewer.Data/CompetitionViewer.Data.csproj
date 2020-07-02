@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Data\Migrations\20200630151119_AddEvent.cs" />
+    <Compile Remove="Data\Migrations\20200630151119_AddEvent.Designer.cs" />
+    <Compile Remove="Data\Migrations\20200630152455_AddEvent.cs" />
+    <Compile Remove="Data\Migrations\20200630152455_AddEvent.Designer.cs" />
+    <Compile Remove="Data\Migrations\20200630152604_AddEvent.cs" />
+    <Compile Remove="Data\Migrations\20200630152604_AddEvent.Designer.cs" />
+    <Compile Remove="Data\Migrations\20200630152641_AddEvent.cs" />
+    <Compile Remove="Data\Migrations\20200630152641_AddEvent.Designer.cs" />
+    <Compile Remove="Data\Migrations\20200630152914_AddEvent.cs" />
+    <Compile Remove="Data\Migrations\20200630152914_AddEvent.Designer.cs" />
+    <Compile Remove="Data\Migrations\20200630153420_AddEvent.cs" />
+    <Compile Remove="Data\Migrations\20200630153420_AddEvent.Designer.cs" />
+    <Compile Remove="Data\Migrations\20200630153612_AddEvent.cs" />
+    <Compile Remove="Data\Migrations\20200630153612_AddEvent.Designer.cs" />
+    <Compile Remove="Data\Migrations\20200630154009_AddEvent.cs" />
+    <Compile Remove="Data\Migrations\20200630154009_AddEvent.Designer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.5" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="3.1.5" />
+    <PackageReference Include="Microsoft.AspNetCore.ApiAuthorization.IdentityServer" Version="3.1.5" />
+  </ItemGroup>
+
+</Project>

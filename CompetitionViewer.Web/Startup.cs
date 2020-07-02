@@ -11,6 +11,13 @@ using CompetitionViewer.Web.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using CompetitionViewer.gRpc;
+using CompetitionViewer.Services;
+using System;
+using CompetitionViewer.Web.Hubs;
+using Microsoft.AspNetCore.HttpOverrides;
+using Functional;
+using Microsoft.Extensions.Http.Logging;
 
 namespace CompetitionViewer.Web
 {
@@ -26,30 +33,80 @@ namespace CompetitionViewer.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));
+            services.AddResponseCompression();
 
-            services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+            services.AddGrpc();
+            services.AddMemoryCache();
+            services
+                .AddSignalR(o =>
+                {
+                    o.EnableDetailedErrors = true;
+                    o.HandshakeTimeout = TimeSpan.FromSeconds(5);
+                    o.KeepAliveInterval = TimeSpan.FromSeconds(10);
+                })
+                .AddJsonProtocol(x =>
+                {
+                    x.PayloadSerializerOptions.IgnoreNullValues = false;
+                });
+
+            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            services
+                .AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-            services.AddIdentityServer()
+            services
+                .AddIdentityServer()
                 .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
 
-            services.AddAuthentication()
-                .AddIdentityServerJwt();
+            services
+                .AddAuthentication()
+                .AddIdentityServerJwt()
+                .AddGoogle(options =>
+                {
+                    var googleAuthNSection = Configuration.GetSection("Authentication:Google");
+
+                    options.ClientId = googleAuthNSection["ClientId"];
+                    options.ClientSecret = googleAuthNSection["ClientSecret"];
+                });
+
             services.AddControllersWithViews();
             services.AddRazorPages();
+
             // In production, the Angular files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
             {
                 configuration.RootPath = "ClientApp/dist";
             });
+
+            services.AddHttpClient("EDRAClient");
+
+            //services.AddCors(o =>
+            //{
+            //    o.AddPolicy("MyPolicy", builder =>
+            //    {
+            //        builder.WithOrigins("localhost:5000", "YourCustomDomain");
+            //        builder.WithMethods("POST, OPTIONS");
+            //        builder.AllowAnyHeader();
+            //        builder.WithExposedHeaders("Grpc-Status", "Grpc-Message");
+            //    });
+            //});
+
+            services.AddSingleton<ILiveRaceResultsService, LiveRaceResultsService>();
+            services.AddTransient<EDRAResultService>();
+            services.AddTransient<IEventInfoProvider, EventInfoProvider>();
+            services.AddSingleton<MessagingListener>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseResponseCompression();
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -64,6 +121,7 @@ namespace CompetitionViewer.Web
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+
             if (!env.IsDevelopment())
             {
                 app.UseSpaStaticFiles();
@@ -74,11 +132,20 @@ namespace CompetitionViewer.Web
             app.UseAuthentication();
             app.UseIdentityServer();
             app.UseAuthorization();
+            //app.UseCors("MyPolicy");
+            app.UseGrpcWeb();
             app.UseEndpoints(endpoints =>
             {
+                endpoints
+                    .MapGrpcService<RaceService>()
+                    .RequireCors("MyPolicy");
+
+                endpoints.MapHub<CompetitionHub>("/messaging");
+
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller}/{action=Index}/{id?}");
+
                 endpoints.MapRazorPages();
             });
 

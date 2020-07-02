@@ -1,0 +1,51 @@
+<h1 id="tableLabel">Drag Results</h1>
+
+<p *ngIf="raceMessages.length == 0"><em>Waiting for results...</em></p>
+
+<div *ngFor="let msg of raceMessages" style="border: 2px solid gray; margin-bottom: 5px;">
+  <table class='table' aria-labelledby="tableLabel">
+    <thead>
+      <tr>
+        <th>Event ID</th>
+        <th>Race ID</th>
+        <th>Timestamp</th>
+        <th>Round</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{ msg.eventId }}</td>
+        <td>{{ msg.raceId }}</td>
+        <td>{{ msg.timestamp | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+        <td>{{ msg.round }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table class='table table-striped' *ngIf="msg.results.length > 0">
+    <thead>
+      <tr>
+        <th>Racer ID</th>
+        <th>Lane</th>
+        <th>Result</th>
+        <th>Reaction</th>
+        <th>60ft</th>
+        <th>ET</th>
+        <th>ET speed</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let result of msg.results">
+        <td>{{ result.racerId }}</td>
+        <td>{{ result.lanePosition | lane }}</td>
+        <td>{{ result.result | raceResult }}</td>
+        <td>{{ result.reactionTime }}</td>
+        <td>{{ result.sixtyFeetTime }}</td>
+        <td>{{ result.finishTime }}</td>
+        <td>{{ result.finishSpeed }}</td>
+        <td>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

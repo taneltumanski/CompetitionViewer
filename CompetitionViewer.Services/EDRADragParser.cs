@@ -6,6 +6,8 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using Functional;
+using System.Security.Cryptography;
 
 namespace CompetitionViewer.Services
 {
@@ -13,46 +15,67 @@ namespace CompetitionViewer.Services
     {
         private readonly ImmutableDictionary<int, Action<RaceData, string>> _parsers = new Dictionary<int, Action<RaceData, string>>()
         {
-            [0] = new Action<RaceData, string>((d, v) => d.Timestamp = string.IsNullOrEmpty(v) ? DateTimeOffset.MinValue : DateTimeOffset.ParseExact(v, "dd.MM.yyyy", CultureInfo.InvariantCulture)),
-            [1] = new Action<RaceData, string>((d, v) => d.Timestamp = string.IsNullOrEmpty(v) ? d.Timestamp : d.Timestamp.Add(TimeSpan.Parse(v, CultureInfo.InvariantCulture))),
+            [0] = new Action<RaceData, string>((d, v) => d.Timestamp = DateTimeOffset.ParseExact(v, "dd.MM.yyyy", CultureInfo.InvariantCulture)),
+            [1] = new Action<RaceData, string>((d, v) => d.Timestamp = d.Timestamp?.Add(TimeSpan.Parse(v, CultureInfo.InvariantCulture))),
             [2] = new Action<RaceData, string>((d, v) => d.RaceId = v),
             [3] = new Action<RaceData, string>((d, v) => d.Round = v),
             [4] = new Action<RaceData, string>((d, v) => d.RacerId = v),
-            [5] = new Action<RaceData, string>((d, v) => d.Lane = string.IsNullOrEmpty(v) ? RaceLane.Undefined : (RaceLane)Enum.Parse(typeof(RaceLane), v, true)),
-            [6] = new Action<RaceData, string>((d, v) => d.DialIn = string.IsNullOrEmpty(v) ? TimeSpan.Zero : TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
-            [7] = new Action<RaceData, string>((d, v) => d.ReactionTime = string.IsNullOrEmpty(v) ? TimeSpan.Zero : TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
-            [8] = new Action<RaceData, string>((d, v) => d.SixtyFeetTime = string.IsNullOrEmpty(v) ? TimeSpan.Zero : TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
-            [9] = new Action<RaceData, string>((d, v) => d.ThreeThirtyFeetTime = string.IsNullOrEmpty(v) ? TimeSpan.Zero : TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
-            [10] = new Action<RaceData, string>((d, v) => d.SixSixtyFeetTime = string.IsNullOrEmpty(v) ? TimeSpan.Zero : TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
-            [11] = new Action<RaceData, string>((d, v) => d.SixSixtyFeetSpeed = string.IsNullOrEmpty(v) ? 0 : double.Parse(v, CultureInfo.InvariantCulture)),
-            [12] = new Action<RaceData, string>((d, v) => d.ThousandFeetTime = string.IsNullOrEmpty(v) ? TimeSpan.Zero : TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
-            [13] = new Action<RaceData, string>((d, v) => d.ThousandFeetSpeed = string.IsNullOrEmpty(v) ? 0 : double.Parse(v, CultureInfo.InvariantCulture)),
-            [14] = new Action<RaceData, string>((d, v) => d.FinishTime = string.IsNullOrEmpty(v) ? TimeSpan.Zero : TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
-            [15] = new Action<RaceData, string>((d, v) => d.FinishSpeed = string.IsNullOrEmpty(v) ? 0 : double.Parse(v, CultureInfo.InvariantCulture)),
-            [16] = new Action<RaceData, string>((d, v) => d.Result = string.IsNullOrEmpty(v) ? RaceResult.Undefined : (RaceResult)Enum.Parse(typeof(RaceResult), v, true)),
+            [5] = new Action<RaceData, string>((d, v) => d.LanePosition = v.ToLowerInvariant() == "left" ? 0 : 1),
+            [6] = new Action<RaceData, string>((d, v) => d.DialIn = TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
+            [7] = new Action<RaceData, string>((d, v) => d.ReactionTime = TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
+            [8] = new Action<RaceData, string>((d, v) => d.SixtyFeetTime = TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
+            [9] = new Action<RaceData, string>((d, v) => d.ThreeThirtyFeetTime = TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
+            [10] = new Action<RaceData, string>((d, v) => d.SixSixtyFeetTime = TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
+            [11] = new Action<RaceData, string>((d, v) => d.SixSixtyFeetSpeed = double.Parse(v, CultureInfo.InvariantCulture)),
+            [12] = new Action<RaceData, string>((d, v) => d.ThousandFeetTime = TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
+            [13] = new Action<RaceData, string>((d, v) => d.ThousandFeetSpeed = double.Parse(v, CultureInfo.InvariantCulture)),
+            [14] = new Action<RaceData, string>((d, v) => d.FinishTime = TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
+            [15] = new Action<RaceData, string>((d, v) => d.FinishSpeed = double.Parse(v, CultureInfo.InvariantCulture)),
+            [16] = new Action<RaceData, string>((d, v) => d.Result = (RaceResult)Enum.Parse(typeof(RaceResult), v, true)),
         }.ToImmutableDictionary();
 
-        public ParseResult<RaceData> Parse(string row)
+        public ParseResult Parse(string row, string eventId)
         {
+            var hash = GetHash(row);
             var columns = row.Split('|');
-            var data = new RaceData();
-            var errors = new List<string>();
+            var data = new RaceData() { EventId = eventId };
 
-            for (int i = 0; i < columns.Length; i++)
+            var results = columns
+                .Select((x, i) => columns[i]?.Trim() ?? string.Empty)
+                .Select((x, i) => Result.Try(() => _parsers[i](data, x), y => $"Parsing failed for column '{i}' with message '{y.Message}': {x} {row}"))
+                .ToImmutableArray();
+
+            var errors = results
+                .Select(x => x.Failure().ValueOrDefault())
+                .Where(x => !string.IsNullOrEmpty(x))
+                .ToImmutableArray();
+
+            return new ParseResult(data, errors, hash);
+        }
+
+        private string GetHash(string data)
+        {
+            using var sha = SHA256.Create();
+
+            var bytes = Encoding.UTF8.GetBytes(data);
+            var hashBytes = sha.ComputeHash(bytes);
+            var hash = Encoding.UTF8.GetString(hashBytes);
+
+            return hash;
+        }
+
+        public class ParseResult
+        {
+            public ParseResult(RaceData raceData, ImmutableArray<string> errors, string hashcode)
             {
-                var value = columns[i].Trim();
-
-                try
-                {
-                    _parsers[i](data, value);
-                }
-                catch (Exception e)
-                {
-                    errors.Add($"Parsing failed for column '{i}' with message '{e.Message}': {value} {row}");
-                }
+                RaceData = raceData;
+                Errors = errors;
+                Hashcode = hashcode;
             }
 
-            return new ParseResult<RaceData>(data, errors);
+            public RaceData RaceData  { get; }
+            public ImmutableArray<string> Errors { get; }
+            public string Hashcode { get; }
         }
     }
 }

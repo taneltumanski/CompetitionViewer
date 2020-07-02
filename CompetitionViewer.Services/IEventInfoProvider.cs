@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace CompetitionViewer.Services
 {
@@ -11,10 +12,11 @@ namespace CompetitionViewer.Services
     {
         public IEnumerable<EventInfo> GetEventInfos()
         {
-            return new[]
-            {
-                new EventInfo("65", "http://www.edra.ee/tulemused.php?eventID=65")
-            };
+            return Enumerable
+                .Range(64, 6)
+                .Select(x => x.ToString())
+                .Select(x => new EventInfo(x, $"http://www.edra.ee/tulemused.php?eventID={x}"))
+                .ToArray();
         }
     }
 }

@@ -1,6 +1,9 @@
-﻿using HtmlAgilityPack;
+﻿using Functional;
+using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -12,17 +15,15 @@ namespace CompetitionViewer.Services
     public class EDRAResultService
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly EDRADragParser _dragParser;
 
-        public EDRAResultService(EDRADragParser dragParser, IHttpClientFactory httpClientFactory)
+        public EDRAResultService(IHttpClientFactory httpClientFactory)
         {
-            _dragParser = dragParser;
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<IEnumerable<RaceData>> GetRaceData(EventInfo eventInfo, CancellationToken token)
+        public async Task<ImmutableArray<EDRADragParser.ParseResult>> GetRaceData(EventInfo eventInfo, CancellationToken token)
         {
-            var client = _httpClientFactory.CreateClient();
+            var client = _httpClientFactory.CreateClient("EDRAClient");
             var result = await client.GetAsync(eventInfo.FullUri, token);
 
             result.EnsureSuccessStatusCode();
@@ -34,12 +35,12 @@ namespace CompetitionViewer.Services
 
             var table = doc.DocumentNode.Descendants("table").Single();
             var rows = table.Descendants("tr").Skip(1).ToArray();
+            var parser = new EDRADragParser();
 
             return rows
                 .Select(x => string.Join("|", x.Descendants("td").Select(y => y.InnerText)))
-                .Select(_dragParser.Parse)
-                .Select(x => x.Result)
-                .ToArray();
+                .Select(x => parser.Parse(x, eventInfo.Id))
+                .ToImmutableArray();
         }
     }
 }

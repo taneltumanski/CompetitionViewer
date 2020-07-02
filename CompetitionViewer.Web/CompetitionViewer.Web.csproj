@@ -46,7 +46,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CompetitionViewer.Data\CompetitionViewer.Data.csproj" />
-    <ProjectReference Include="..\CompetitionViewer.gRpc\CompetitionViewer.gRpc.csproj" />
   </ItemGroup>
 
   <ItemGroup>

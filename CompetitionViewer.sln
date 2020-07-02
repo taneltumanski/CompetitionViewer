@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompetitionViewer.Models", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompetitionViewer.Web", "CompetitionViewer.Web\CompetitionViewer.Web.csproj", "{39B58631-1018-4B84-BB6F-91C78CAE46A8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompetitionViewer.gRpc", "CompetitionViewer.gRpc\CompetitionViewer.gRpc.csproj", "{969DAD64-DB9C-4676-9FA1-479000F061D7}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompetitionViewer.Data", "CompetitionViewer.Data\CompetitionViewer.Data.csproj", "{ECDDDE4E-F540-4F27-A315-153C7D287B8B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8A19FFF6-35A9-44BA-9EB9-283765AD1BAC}"
@@ -42,10 +40,6 @@ Global
 		{39B58631-1018-4B84-BB6F-91C78CAE46A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39B58631-1018-4B84-BB6F-91C78CAE46A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39B58631-1018-4B84-BB6F-91C78CAE46A8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{969DAD64-DB9C-4676-9FA1-479000F061D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{969DAD64-DB9C-4676-9FA1-479000F061D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{969DAD64-DB9C-4676-9FA1-479000F061D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{969DAD64-DB9C-4676-9FA1-479000F061D7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{ECDDDE4E-F540-4F27-A315-153C7D287B8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{ECDDDE4E-F540-4F27-A315-153C7D287B8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ECDDDE4E-F540-4F27-A315-153C7D287B8B}.Release|Any CPU.ActiveCfg = Release|Any CPU

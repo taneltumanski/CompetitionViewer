@@ -1,8 +1,6 @@
 ﻿using CompetitionViewer.Services;
 using Functional;
-using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
-using Grpc.Net.Client;
 using HtmlAgilityPack;
 using OfficeOpenXml;
 using System;
@@ -56,54 +54,6 @@ namespace DragParsement
         static async Task Main(string[] args)
         {
             //Temp.Test();
-
-            var httpHandler = new HttpClientHandler
-            {
-                // Return `true` to allow certificates that are untrusted/invalid
-                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-            };
-
-            var channel = GrpcChannel.ForAddress("https://localhost:5001", new GrpcChannelOptions { HttpHandler = httpHandler });
-            var client = new CompetitionViewer.gRpc.RaceStreamer.RaceStreamerClient(channel);
-
-            //await channel.ConnectAsync(DateTime.UtcNow.AddSeconds(5));
-
-            using var response = client.GetStream(new Empty());
-            using var cts = new CancellationTokenSource();
-
-            Console.CancelKeyPress += (s, e) => cts.Cancel();
-
-            int count = 0;
-            var sw = Stopwatch.StartNew();
-
-            Task.Run(async () =>
-            {
-                while (!cts.Token.IsCancellationRequested)
-                {
-                    if (sw.Elapsed > TimeSpan.FromSeconds(10))
-                    {
-                        cts.Cancel();
-                    }
-
-                    await Task.Delay(1000);
-                }
-            });
-
-            try
-            {
-                while (await response.ResponseStream.MoveNext(cts.Token))
-                {
-                    count++;
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error " + e.Message);
-            }
-
-            Console.WriteLine(count + " results");
-
-            await channel.ShutdownAsync();
 
             return;
 

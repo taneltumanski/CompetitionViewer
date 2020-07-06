@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using CompetitionViewer.gRpc;
 using CompetitionViewer.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;

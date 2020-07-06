@@ -13,7 +13,7 @@ namespace CompetitionViewer.Services
         public IEnumerable<EventInfo> GetEventInfos()
         {
             return Enumerable
-                .Range(64, 6)
+                .Range(64, 10)
                 .Select(x => x.ToString())
                 .Select(x => new EventInfo(x, $"http://www.edra.ee/tulemused.php?eventID={x}"))
                 .ToArray();

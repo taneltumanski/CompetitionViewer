@@ -33,9 +33,14 @@ namespace CompetitionViewer.Services
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
 
-            var table = doc.DocumentNode.Descendants("table").Single();
-            var rows = table.Descendants("tr").Skip(1).ToArray();
+            var table = doc.DocumentNode.Descendants("table").SingleOrDefault();
+            var rows = table?.Descendants("tr").Skip(1).ToArray() ?? Array.Empty<HtmlNode>();
             var parser = new EDRADragParser();
+
+            if (!rows.Any())
+            {
+                return ImmutableArray<EDRADragParser.ParseResult>.Empty;
+            }
 
             return rows
                 .Select(x => string.Join("|", x.Descendants("td").Select(y => y.InnerText)))

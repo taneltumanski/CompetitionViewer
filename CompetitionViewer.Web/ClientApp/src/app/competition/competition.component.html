@@ -3,28 +3,12 @@
 <p *ngIf="raceMessages.length == 0"><em>Waiting for results...</em></p>
 
 <div *ngFor="let msg of raceMessages" style="border: 2px solid gray; margin-bottom: 5px;">
-  <table class='table' aria-labelledby="tableLabel">
+  <table class='table' *ngIf="msg.results.length > 0">
     <thead>
       <tr>
-        <th>Event ID</th>
         <th>Race ID</th>
         <th>Timestamp</th>
         <th>Round</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>{{ msg.eventId }}</td>
-        <td>{{ msg.raceId }}</td>
-        <td>{{ msg.timestamp | date:'yyyy-MM-dd HH:mm:ss' }}</td>
-        <td>{{ msg.round }}</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <table class='table table-striped' *ngIf="msg.results.length > 0">
-    <thead>
-      <tr>
         <th>Racer ID</th>
         <th>Lane</th>
         <th>Result</th>
@@ -32,10 +16,16 @@
         <th>60ft</th>
         <th>ET</th>
         <th>ET speed</th>
+        <th>Dial In</th>
+        <th>Time difference</th>
+        <th>Dial-in difference</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let result of msg.results">
+        <td>{{ msg.raceId }}</td>
+        <td>{{ msg.timestamp | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+        <td>{{ msg.round }}</td>
         <td>{{ result.racerId }}</td>
         <td>{{ result.lanePosition | lane }}</td>
         <td>{{ result.result | raceResult }}</td>
@@ -43,8 +33,9 @@
         <td>{{ result.sixtyFeetTime }}</td>
         <td>{{ result.finishTime }}</td>
         <td>{{ result.finishSpeed }}</td>
-        <td>
-        </td>
+        <td>{{ result.dialIn }}</td>
+        <td>{{ msg | timeDifference: result }}</td>
+        <td>{{ result | dialInAccuracy }}</td>
       </tr>
     </tbody>
   </table>

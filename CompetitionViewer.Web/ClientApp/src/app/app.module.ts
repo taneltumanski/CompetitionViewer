@@ -11,7 +11,7 @@ import { CompetitionComponent } from './competition/competition.component';
 import { ApiAuthorizationModule } from 'src/api-authorization/api-authorization.module';
 import { AuthorizeGuard } from 'src/api-authorization/authorize.guard';
 import { AuthorizeInterceptor } from 'src/api-authorization/authorize.interceptor';
-import { LanePipe, RaceResultPipe } from './competition/competition.pipes';
+import { LanePipe, RaceResultPipe, TimeDifferencePipe, DialInAccuracyPipe } from './competition/competition.pipes';
 
 @NgModule({
   declarations: [
@@ -20,7 +20,10 @@ import { LanePipe, RaceResultPipe } from './competition/competition.pipes';
     HomeComponent,
     CompetitionComponent,
     LanePipe,
-    RaceResultPipe
+    RaceResultPipe,
+    TimeDifferencePipe,
+    DialInAccuracyPipe,
+    
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),

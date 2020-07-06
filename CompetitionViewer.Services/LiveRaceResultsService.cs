@@ -39,8 +39,6 @@ namespace CompetitionViewer.Services
 
             _stream = CreateObservable()
                 .Distinct(x => HashCode.Combine(x.RaceId, x.EventId, x.Timestamp))
-                .Publish()
-                .RefCount()
                 .Replay();
 
             _disposable = _stream.Connect();

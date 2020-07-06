@@ -11,7 +11,6 @@ using CompetitionViewer.Web.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using CompetitionViewer.gRpc;
 using CompetitionViewer.Services;
 using System;
 using CompetitionViewer.Web.Hubs;
@@ -136,9 +135,9 @@ namespace CompetitionViewer.Web
             app.UseGrpcWeb();
             app.UseEndpoints(endpoints =>
             {
-                endpoints
-                    .MapGrpcService<RaceService>()
-                    .RequireCors("MyPolicy");
+                //endpoints
+                //    .MapGrpcService<RaceService>()
+                //    .RequireCors("MyPolicy");
 
                 endpoints.MapHub<CompetitionHub>("/messaging");
 

@@ -36,22 +36,22 @@ export class TimeDifferencePipe implements PipeTransform {
       return "---";
     }
 
-    var winnerResult = value.results.find(x => x.result == 0);
+    let winnerResult = value.results.find(x => x.result == 0);
 
     if (winnerResult == undefined || winnerResult.racerId == currentResult.racerId || winnerResult.racerId.toLowerCase() == "bye" || currentResult.racerId.toLowerCase() == "bye") {
       return "---";
     }
 
     if (currentResult.dialIn > 0 || winnerResult.dialIn > 0) {
-      var currentResultDialInDifference = currentResult.reactionTime + currentResult.finishTime - currentResult.dialIn;
-      var winnerResultDialInDifference = winnerResult.reactionTime + winnerResult.finishTime - winnerResult.dialIn;
-      var difference = currentResultDialInDifference - winnerResultDialInDifference;
+      let currentResultDialInDifference = currentResult.reactionTime + currentResult.finishTime - currentResult.dialIn;
+      let winnerResultDialInDifference = winnerResult.reactionTime + winnerResult.finishTime - winnerResult.dialIn;
+      let difference = currentResultDialInDifference - winnerResultDialInDifference;
 
       return (difference > 0 ? "+" : "") + difference.toFixed(5);
     } else {
-      var currentResultDiff = currentResult.reactionTime + currentResult.finishTime;
-      var winnerResultDiff = winnerResult.reactionTime + winnerResult.finishTime;
-      var difference = currentResultDiff - winnerResultDiff;
+      let currentResultDiff = currentResult.reactionTime + currentResult.finishTime;
+      let winnerResultDiff = winnerResult.reactionTime + winnerResult.finishTime;
+      let difference = currentResultDiff - winnerResultDiff;
 
       return (difference > 0 ? "+" : "") + difference.toFixed(5);
     }
@@ -71,7 +71,7 @@ export class DialInAccuracyPipe implements PipeTransform {
       return "---";
     }
 
-    var difference = value.finishTime - value.dialIn;
+    let difference = value.finishTime - value.dialIn;
     if (difference == 0) {
       return 0;
     }

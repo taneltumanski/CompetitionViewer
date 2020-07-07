@@ -134,7 +134,7 @@ namespace CompetitionViewer.Services
 
                 try
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(5), ct);
+                    await Task.Delay(TimeSpan.FromHours(1), ct);
                 }
                 catch (OperationCanceledException) { }
             }
@@ -154,7 +154,7 @@ namespace CompetitionViewer.Services
                         DialIn = x.DialIn,
                         FinishSpeed = x.FinishSpeed,
                         FinishTime = x.FinishTime,
-                        LanePosition = x.LanePosition,
+                        Lane = x.Lane,
                         RacerId = x.RacerId,
                         ReactionTime = x.ReactionTime,
                         Result = x.Result == RaceResult.Winner ? 0 : x.Result == RaceResult.RunnerUp ? 1 : (int?)null,

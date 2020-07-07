@@ -20,7 +20,7 @@ namespace CompetitionViewer.Services
             [2] = new Action<RaceData, string>((d, v) => d.RaceId = v),
             [3] = new Action<RaceData, string>((d, v) => d.Round = v),
             [4] = new Action<RaceData, string>((d, v) => d.RacerId = v),
-            [5] = new Action<RaceData, string>((d, v) => d.LanePosition = v.ToLowerInvariant() == "left" ? 0 : 1),
+            [5] = new Action<RaceData, string>((d, v) => d.Lane = v?.ToLowerInvariant()),
             [6] = new Action<RaceData, string>((d, v) => d.DialIn = TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
             [7] = new Action<RaceData, string>((d, v) => d.ReactionTime = TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
             [8] = new Action<RaceData, string>((d, v) => d.SixtyFeetTime = TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
@@ -31,7 +31,7 @@ namespace CompetitionViewer.Services
             [13] = new Action<RaceData, string>((d, v) => d.ThousandFeetSpeed = double.Parse(v, CultureInfo.InvariantCulture)),
             [14] = new Action<RaceData, string>((d, v) => d.FinishTime = TimeSpan.FromSeconds(double.Parse(v, CultureInfo.InvariantCulture))),
             [15] = new Action<RaceData, string>((d, v) => d.FinishSpeed = double.Parse(v, CultureInfo.InvariantCulture)),
-            [16] = new Action<RaceData, string>((d, v) => d.Result = (RaceResult)Enum.Parse(typeof(RaceResult), v, true)),
+            [16] = new Action<RaceData, string>((d, v) => d.Result = string.IsNullOrEmpty(v) ? RaceResult.Undefined : (RaceResult)Enum.Parse(typeof(RaceResult), v, true)),
         }.ToImmutableDictionary();
 
         public ParseResult Parse(string row, string eventId)
@@ -73,7 +73,7 @@ namespace CompetitionViewer.Services
                 Hashcode = hashcode;
             }
 
-            public RaceData RaceData  { get; }
+            public RaceData RaceData { get; }
             public ImmutableArray<string> Errors { get; }
             public string Hashcode { get; }
         }

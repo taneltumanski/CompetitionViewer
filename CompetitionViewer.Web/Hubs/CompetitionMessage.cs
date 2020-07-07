@@ -16,7 +16,7 @@ namespace CompetitionViewer.Web.Hubs
     public class RaceEventResult
     {
         public string RacerId { get; set; }
-        public int? LanePosition { get; set; }
+        public string Lane { get; set; }
         public int? Result { get; set; }
 
         public double? DialIn { get; set; }

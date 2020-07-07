@@ -17,7 +17,7 @@ namespace CompetitionViewer.Services
     {
         public string RacerId { get; set; }
         public int? Result { get; set; }
-        public int? LanePosition { get; set; }
+        public string Lane { get; set; }
 
         public TimeSpan? DialIn { get; set; }
         public TimeSpan? ReactionTime { get; set; }
@@ -41,7 +41,7 @@ namespace CompetitionViewer.Services
         public string RacerId { get; set; }
         public RaceResult? Result { get; set; }
 
-        public int? LanePosition { get; set; }
+        public string Lane { get; set; }
         public TimeSpan? DialIn { get; set; }
         public TimeSpan? ReactionTime { get; set; }
         public TimeSpan? SixtyFeetTime { get; set; }

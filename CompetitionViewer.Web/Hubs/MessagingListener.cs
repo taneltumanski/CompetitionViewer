@@ -65,7 +65,7 @@ namespace CompetitionViewer.Web.Hubs
                                 DialIn = x.DialIn?.TotalSeconds,
                                 FinishSpeed = x.FinishSpeed,
                                 FinishTime = x.FinishTime?.TotalSeconds,
-                                LanePosition = x.LanePosition,
+                                Lane = x.Lane,
                                 RacerId = x.RacerId,
                                 ReactionTime = x.ReactionTime?.TotalSeconds,
                                 Result = x.Result,

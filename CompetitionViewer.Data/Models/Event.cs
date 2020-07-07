@@ -24,5 +24,5 @@ namespace CompetitionViewer.Data.Models
                 builder.HasIndex(x => x.Name).IsUnique();
             }
         }
-    }    
+    }
 }

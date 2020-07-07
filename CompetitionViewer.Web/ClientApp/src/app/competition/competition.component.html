@@ -1,42 +1,54 @@
 <h1 id="tableLabel">Drag Results</h1>
 
-<p *ngIf="raceMessages.length == 0"><em>Waiting for results...</em></p>
+<div *ngIf="eventList.length > 0">
+  <select name="selectedEvent" [(ngModel)]="selectedEvent" (change)="onChange()">
+    <option *ngFor="let event of eventList" [ngValue]="event">{{ event.eventName }}</option>
+  </select>
+</div>
 
-<div *ngFor="let msg of raceMessages" style="border: 2px solid gray; margin-bottom: 5px;">
-  <table class='table' *ngIf="msg.results.length > 0">
-    <thead>
-      <tr>
-        <th>Race ID</th>
-        <th>Timestamp</th>
-        <th>Round</th>
-        <th>Racer ID</th>
-        <th>Lane</th>
-        <th>Result</th>
-        <th>Reaction</th>
-        <th>60ft</th>
-        <th>ET</th>
-        <th>ET speed</th>
-        <th>Dial In</th>
-        <th>Time difference</th>
-        <th>Dial-in difference</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let result of msg.results">
-        <td>{{ msg.raceId }}</td>
-        <td>{{ msg.timestamp | date:'yyyy-MM-dd HH:mm:ss' }}</td>
-        <td>{{ msg.round }}</td>
-        <td>{{ result.racerId }}</td>
-        <td>{{ result.lanePosition | lane }}</td>
-        <td>{{ result.result | raceResult }}</td>
-        <td>{{ result.reactionTime }}</td>
-        <td>{{ result.sixtyFeetTime }}</td>
-        <td>{{ result.finishTime }}</td>
-        <td>{{ result.finishSpeed }}</td>
-        <td>{{ result.dialIn }}</td>
-        <td>{{ msg | timeDifference: result }}</td>
-        <td>{{ result | dialInAccuracy }}</td>
-      </tr>
-    </tbody>
-  </table>
+<div *ngIf="filteredMessages.length == 0">
+  <p><em>Waiting for results...</em></p>
+</div>
+
+<div *ngIf="filteredMessages.length > 0">
+  <h2 *ngIf="selectedEvent != null">Selected event: {{ selectedEvent.eventName }}</h2>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Race ID</th>
+          <th scope="col">Timestamp</th>
+          <th scope="col">Round</th>
+          <th scope="col">Racer ID</th>
+          <th scope="col">Lane</th>
+          <th scope="col">Result</th>
+          <th scope="col">Reaction</th>
+          <th scope="col">60ft</th>
+          <th scope="col">ET</th>
+          <th scope="col">ET speed</th>
+          <th scope="col">Dial In</th>
+          <th scope="col">Final Time difference</th>
+          <th scope="col">Dial-in difference</th>
+        </tr>
+      </thead>
+      <tbody *ngFor="let msg of filteredMessages; let i = index">
+        <tr *ngFor="let result of msg.results" [ngClass]="{gray: i % 2 == 0}">
+          <td>{{ msg.raceId }}</td>
+          <td>{{ msg.timestamp | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+          <td>{{ msg.round }}</td>
+          <td>{{ result.racerId }}</td>
+          <td>{{ result.lane | lane }}</td>
+          <td>{{ result.result | raceResult }}</td>
+          <td>{{ result.reactionTime }}</td>
+          <td>{{ result.sixtyFeetTime }}</td>
+          <td>{{ result.finishTime }}</td>
+          <td>{{ result.finishSpeed }}</td>
+          <td>{{ result.dialIn }}</td>
+          <td>{{ msg | timeDifference: result }}</td>
+          <td>{{ result | dialInAccuracy }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>

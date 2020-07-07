@@ -5,12 +5,12 @@ import { RaceEventMessage, RaceEventResult } from './competition.component';
   name: 'lane'
 })
 export class LanePipe implements PipeTransform {
-  transform(value: number | null): any {
+  transform(value: string | null): any {
     if (value == null) {
       return "---";
     }
 
-    return value == 0 ? "Left" : "Right";
+    return value.toUpperCase();
   }
 }
 
@@ -45,15 +45,15 @@ export class TimeDifferencePipe implements PipeTransform {
     if (currentResult.dialIn > 0 || winnerResult.dialIn > 0) {
       var currentResultDialInDifference = currentResult.reactionTime + currentResult.finishTime - currentResult.dialIn;
       var winnerResultDialInDifference = winnerResult.reactionTime + winnerResult.finishTime - winnerResult.dialIn;
-      var difference = winnerResultDialInDifference - currentResultDialInDifference;
+      var difference = currentResultDialInDifference - winnerResultDialInDifference;
 
-      return difference.toFixed(5);
+      return (difference > 0 ? "+" : "") + difference.toFixed(5);
     } else {
       var currentResultDiff = currentResult.reactionTime + currentResult.finishTime;
       var winnerResultDiff = winnerResult.reactionTime + winnerResult.finishTime;
-      var difference = winnerResultDiff - currentResultDiff;
+      var difference = currentResultDiff - winnerResultDiff;
 
-      return difference.toFixed(5);
+      return (difference > 0 ? "+" : "") + difference.toFixed(5);
     }
   }
 }
@@ -76,7 +76,7 @@ export class DialInAccuracyPipe implements PipeTransform {
       return 0;
     }
 
-    return difference < 0 ? difference.toFixed(5) : "+" + difference.toFixed(5);
+    return (difference > 0 ? "+" : "") + difference.toFixed(5);
   }
 }
 

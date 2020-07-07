@@ -32,6 +32,6 @@ namespace CompetitionViewer.Web
                 {
                     builder.UseStartup<Startup>();
                 });
-        }   
+        }
     }
 }

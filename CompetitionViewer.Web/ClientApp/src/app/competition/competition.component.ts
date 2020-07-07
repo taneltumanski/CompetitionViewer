@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnChanges, SimpleChanges } from '@angular/core';
 import { HubConnection, HttpError } from '@aspnet/signalr'
 import { HubConnectionBuilder } from '@aspnet/signalr/dist/esm/HubConnectionBuilder';
 
@@ -7,10 +7,12 @@ import { HubConnectionBuilder } from '@aspnet/signalr/dist/esm/HubConnectionBuil
   templateUrl: './competition.component.html',
   styleUrls: ['./competition.component.css'],
 })
-
 export class CompetitionComponent {
   public raceMessages: RaceEventMessage[] = [];
+  public filteredMessages: RaceEventMessage[] = [];
+  public eventList: EventModel[] = [];
   public selectedMessage: RaceEventMessage | null = null;
+  public selectedEvent: EventModel | null = null;
   public isConnectedToServer: boolean = false;
 
   private connection: HubConnection | null = null;
@@ -23,9 +25,16 @@ export class CompetitionComponent {
     this.connectSignalR();
   }
 
+  onChange() {
+    this.updateUI();
+  }
+
   private clearState() {
     this.raceMessages = [];
     this.selectedMessage = null;
+    this.selectedEvent = null;
+
+    this.updateUI();
   }
 
   private connectSignalR() {
@@ -92,14 +101,36 @@ export class CompetitionComponent {
     for (const event of events) {
       this.handleMessage(event);
     }
+
+    this.updateUI();
   }
 
   private handleMessage(event: RaceEventMessage) {
-    event.results.sort((a, b) => a.lanePosition - b.lanePosition)
+    event.results.sort((a, b) => a.lane.localeCompare(b.lane));
 
     this.raceMessages.push(event);
 
-    this.raceMessages.sort((a, b) => b.timestamp - a.timestamp)
+    let existingEvent = this.eventList.find(x => x.eventId == event.eventId);
+    if (existingEvent == undefined) {
+      this.eventList.push({
+        eventId: event.eventId,
+        eventName: event.eventName || event.eventId
+      });
+    }
+  }
+
+  private updateUI() {
+    this.filteredMessages = this.filterMessages(this.raceMessages).sort((a, b) => b.timestamp - a.timestamp);
+  }
+
+  private filterMessages(messages: RaceEventMessage[]): RaceEventMessage[] {
+    let filteredMessages = messages;
+
+    if (this.selectedEvent != null) {
+      filteredMessages = filteredMessages.filter(x => x.eventId == this.selectedEvent.eventId);
+    }
+
+    return filteredMessages;
   }
 }
 
@@ -109,6 +140,7 @@ export interface MessageViewModel {
 
 export interface RaceEventMessage {
   eventId: string;
+  eventName: string;
   raceId: string;
   round: string;
   timestamp: number;
@@ -117,7 +149,7 @@ export interface RaceEventMessage {
 
 export interface RaceEventResult {
   racerId: string;
-  lanePosition: number | null;
+  lane: string | null;
   result: number | null;
   dialIn: number | null;
   reactionTime: number | null;
@@ -129,4 +161,9 @@ export interface RaceEventResult {
   thousandFeetSpeed: number | null;
   finishTime: number | null;
   finishSpeed: number | null;
+}
+
+export interface EventModel {
+  eventId: string;
+  eventName: string;
 }

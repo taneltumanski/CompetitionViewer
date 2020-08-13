@@ -61,13 +61,14 @@ namespace CompetitionViewer.Web
             services
                 .AddAuthentication()
                 .AddIdentityServerJwt()
-                .AddGoogle(options =>
-                {
-                    var googleAuthNSection = Configuration.GetSection("Authentication:Google");
+                //.AddGoogle(options =>
+                //{
+                //    var googleAuthNSection = Configuration.GetSection("Authentication:Google");
 
-                    options.ClientId = googleAuthNSection["ClientId"];
-                    options.ClientSecret = googleAuthNSection["ClientSecret"];
-                });
+                //    options.ClientId = googleAuthNSection["ClientId"];
+                //    options.ClientSecret = googleAuthNSection["ClientSecret"];
+                //})
+                ;
 
             services.AddControllersWithViews();
             services.AddRazorPages();

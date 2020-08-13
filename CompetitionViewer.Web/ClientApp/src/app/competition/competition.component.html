@@ -1,7 +1,7 @@
 <h1 id="tableLabel">Drag Results</h1>
 
 <div *ngIf="eventList.length > 0">
-  <select name="selectedEvent" [(ngModel)]="selectedEvent" (change)="onChange()">
+  <select name="selectedEvent" [(ngModel)]="selectedEvent" (change)="onSelectedEventChange()">
     <option *ngFor="let event of eventList" [ngValue]="event">{{ event.eventName }}</option>
   </select>
 </div>
@@ -11,10 +11,54 @@
 </div>
 
 <div *ngIf="filteredMessages.length > 0">
-  <h2 *ngIf="selectedEvent != null">Selected event: {{ selectedEvent.eventName }}</h2>
+  <div *ngIf="selectedEvent != null">
+    <h2>Selected event: {{ selectedEvent.eventName }}</h2>
+    <h2>Total participants: {{ getParticipantCount(selectedEvent) }}</h2>
+    <h2>Classes: {{ selectedEvent.classes.length }}</h2>
 
+    <div class="table-responsive">
+      <table class="table table-fit">
+        <thead>
+          <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Name</th>
+            <th scope="col">Participants</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let class of selectedEvent.classes" (contextmenu)="openContextMenu($event, class)">
+            <td>{{ class.classId }}</td>
+            <td>{{ class.className }}</td>
+            <td>{{ class.participants.length }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Qualifications</h2>
+    <div *ngFor="let classVm of qualificationViewModel.classViewModels">
+      <h3>{{ classVm.name }}</h3>
+
+      <table class="table table-fit">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Best time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let participant of classVm.participantPositions">
+            <td>{{ participant.participant }}</td>
+            <td>{{ participant.bestTime }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2>Results</h2>
   <div class="table-responsive">
-    <table class="table">
+    <table class="table table-fit">
       <thead>
         <tr>
           <th scope="col">Race ID</th>
@@ -40,15 +84,22 @@
           <td>{{ result.racerId }}</td>
           <td>{{ result.lane | lane }}</td>
           <td>{{ result.result | raceResult }}</td>
-          <td>{{ result.reactionTime }}</td>
-          <td>{{ result.sixtyFeetTime }}</td>
-          <td>{{ result.finishTime }}</td>
-          <td>{{ result.finishSpeed }}</td>
-          <td>{{ result.dialIn }}</td>
+          <td>{{ result.reactionTime | number: '1.0-5' }}</td>
+          <td>{{ result.sixtyFeetTime | number: '1.0-5' }}</td>
+          <td>{{ result.finishTime | number: '1.0-5' }}</td>
+          <td>{{ result.finishSpeed | number: '1.0-5' }}</td>
+          <td>{{ result.dialIn | number: '1.0-5' }}</td>
           <td>{{ msg | timeDifference: result }}</td>
           <td>{{ result | dialInAccuracy }}</td>
         </tr>
       </tbody>
     </table>
   </div>
+
+  <ng-template #classMenu let-class>
+    <section class="class-menu">
+      <div (click)="hideClass(c)">Hide {{class.name}}</div>
+    </section>
+  </ng-template>
+
 </div>

@@ -16,32 +16,32 @@ import { LanePipe, RaceResultPipe, TimeDifferencePipe, DialInAccuracyPipe } from
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    NavMenuComponent,
-    HomeComponent,
-    CompetitionComponent,
-    LanePipe,
-    RaceResultPipe,
-    TimeDifferencePipe,
-    DialInAccuracyPipe,
-  ],
-  imports: [
-    BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
-    HttpClientModule,
-    FormsModule,
-    ApiAuthorizationModule,
-    MatSelectModule,
-    RouterModule.forRoot([
-      //{ path: '', component: HomeComponent, pathMatch: 'full' },
-      { path: '', component: CompetitionComponent },
-      //{ path: 'fetch-data', component: FetchDataComponent, canActivate: [AuthorizeGuard] },
-    ]),
-    BrowserAnimationsModule
-  ],
-  providers: [
-    { provide: HTTP_INTERCEPTORS, useClass: AuthorizeInterceptor, multi: true }
-  ],
-  bootstrap: [AppComponent]
+    declarations: [
+        AppComponent,
+        NavMenuComponent,
+        HomeComponent,
+        CompetitionComponent,
+        LanePipe,
+        RaceResultPipe,
+        TimeDifferencePipe,
+        DialInAccuracyPipe,
+    ],
+    imports: [
+        BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
+        HttpClientModule,
+        FormsModule,
+        ApiAuthorizationModule,
+        MatSelectModule,
+        RouterModule.forRoot([
+            //{ path: '', component: HomeComponent, pathMatch: 'full' },
+            { path: '', component: CompetitionComponent },
+            //{ path: 'fetch-data', component: FetchDataComponent, canActivate: [AuthorizeGuard] },
+        ]),
+        BrowserAnimationsModule
+    ],
+    providers: [
+        { provide: HTTP_INTERCEPTORS, useClass: AuthorizeInterceptor, multi: true }
+    ],
+    bootstrap: [AppComponent]
 })
 export class AppModule { }

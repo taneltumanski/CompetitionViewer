@@ -78,7 +78,7 @@ namespace CompetitionViewer.Web.Hubs
                             })
                             .ToList()
                     })
-                    .Buffer(TimeSpan.FromMilliseconds(100))
+                    .Buffer(TimeSpan.FromSeconds(1))
                     .Where(x => x.Any())
                     .Subscribe(observer);
 

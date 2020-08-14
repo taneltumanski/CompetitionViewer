@@ -72,8 +72,8 @@
           <th scope="col">ET</th>
           <th scope="col">ET speed</th>
           <th scope="col">Dial In</th>
-          <th scope="col">Final Time difference</th>
           <th scope="col">Dial-in difference</th>
+          <th scope="col">ET+RT difference</th>
         </tr>
       </thead>
       <tbody *ngFor="let msg of filteredMessages; let i = index">
@@ -89,8 +89,8 @@
           <td>{{ result.finishTime | number: '1.0-5' }}</td>
           <td>{{ result.finishSpeed | number: '1.0-5' }}</td>
           <td>{{ result.dialIn | number: '1.0-5' }}</td>
-          <td>{{ msg | timeDifference: result }}</td>
           <td>{{ result | dialInAccuracy }}</td>
+          <td>{{ msg | timeDifference: result }}</td>
         </tr>
       </tbody>
     </table>

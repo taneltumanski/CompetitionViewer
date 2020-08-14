@@ -240,8 +240,6 @@ export class CompetitionComponent {
                 if (raceClass != null && raceClass.toUpperCase().startsWith("RWYB") && raceClass.length > 4) {
                     filteredMessages[i].results.splice(j, 1);
                     j--;
-
-                    console.log("Removed " + result.racerId);
                 }
             }
 

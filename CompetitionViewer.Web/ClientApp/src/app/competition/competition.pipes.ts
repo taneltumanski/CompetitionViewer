@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { RaceEventModel, RaceEventResultModel } from './competition.component';
+import { RaceEventMessage, RaceEventResultMessage } from '../../models/racemessages';
 
 @Pipe({
     name: 'lane'
@@ -31,7 +31,7 @@ export class RaceResultPipe implements PipeTransform {
     name: 'timeDifference'
 })
 export class TimeDifferencePipe implements PipeTransform {
-    transform(value: RaceEventModel | null, currentResult: RaceEventResultModel): any {
+    transform(value: RaceEventMessage | null, currentResult: RaceEventResultMessage): any {
         if (value == null) {
             return "---";
         }
@@ -66,7 +66,7 @@ export class TimeDifferencePipe implements PipeTransform {
     name: 'dialInAccuracy'
 })
 export class DialInAccuracyPipe implements PipeTransform {
-    transform(value: RaceEventResultModel | null): any {
+    transform(value: RaceEventResultMessage | null): any {
         if (value == null) {
             return "---";
         }

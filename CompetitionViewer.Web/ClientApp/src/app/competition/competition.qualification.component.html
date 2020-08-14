@@ -1,0 +1,18 @@
+<div *ngFor="let classVm of classViewModels">
+  <h3>Class: {{ classVm.classData.name }}</h3>
+
+  <table class="table table-fit">
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Best time</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let participant of classVm.participantPositions">
+        <td>{{ participant.participantId }}</td>
+        <td>{{ participant.bestTime }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

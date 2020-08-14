@@ -1,0 +1,38 @@
+<div class="table-responsive">
+  <table class="table table-fit">
+    <thead>
+      <tr>
+        <th scope="col">Race ID</th>
+        <th scope="col">Timestamp</th>
+        <th scope="col">Round</th>
+        <th scope="col">Racer ID</th>
+        <th scope="col">Lane</th>
+        <th scope="col">Result</th>
+        <th scope="col">Reaction</th>
+        <th scope="col">60ft</th>
+        <th scope="col">ET</th>
+        <th scope="col">ET speed</th>
+        <th scope="col">Dial In</th>
+        <th scope="col">Dial-in accuracy</th>
+        <th scope="col">ET+RT difference</th>
+      </tr>
+    </thead>
+    <tbody *ngFor="let msg of messages; let i = index">
+      <tr *ngFor="let result of msg.results" [ngClass]="{gray: i % 2 == 0}">
+        <td>{{ msg.raceId }}</td>
+        <td>{{ msg.timestamp | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+        <td>{{ msg.round }}</td>
+        <td>{{ result.racerId }}</td>
+        <td>{{ result.lane | lane }}</td>
+        <td>{{ result.result | raceResult }}</td>
+        <td>{{ result.reactionTime | number: '1.0-5' }}</td>
+        <td>{{ result.sixtyFeetTime | number: '1.0-5' }}</td>
+        <td>{{ result.finishTime | number: '1.0-5' }}</td>
+        <td>{{ result.finishSpeed | number: '1.0-5' }}</td>
+        <td>{{ result.dialIn | number: '1.0-5' }}</td>
+        <td>{{ result | dialInAccuracy }}</td>
+        <td>{{ msg | timeDifference: result }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

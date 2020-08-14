@@ -1,0 +1,23 @@
+<h2>Selected event: {{ selectedEvent.name }}</h2>
+<h2>Total participants: {{ getParticipantCount(selectedEvent) }}</h2>
+<h2>Total races: {{ getRaceCount(selectedEvent) }}</h2>
+<h2>Classes: {{ selectedEvent.classes.value.length }}</h2>
+
+<div class="table-responsive">
+  <table class="table table-fit">
+    <thead>
+      <tr>
+        <th scope="col">Id</th>
+        <th scope="col">Name</th>
+        <th scope="col">Participants</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let class of selectedEvent.classes.value" (contextmenu)="openContextMenu($event, class)">
+        <td>{{ class.id }}</td>
+        <td>{{ class.name }}</td>
+        <td>{{ class.participants.value.length }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

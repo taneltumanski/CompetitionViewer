@@ -1,0 +1,31 @@
+<div class="course">
+
+  <h2>{{ selectedEvent?.name }}</h2>
+  <button (click)="onButton()">CLICK ME</button>
+
+  <mat-table class="mat-elevation-z8" [dataSource]="dataSource"
+             matSort matSortActive="timestamp" matSortDirection="asc" matSortDisableClear>
+
+    <ng-container matColumnDef="timestamp">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>Timestamp</mat-header-cell>
+      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.timestamp | date:'yyyy-MM-dd HH:mm:ss' }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="raceId">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>Race ID</mat-header-cell>
+      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.raceId }}</mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+
+    <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+
+  </mat-table>
+
+  <mat-paginator [length]="selectedEvent?.results.value.length" [pageSize]="3"
+                 [pageSizeOptions]="[3, 5, 10]"></mat-paginator>
+
+
+
+
+</div>

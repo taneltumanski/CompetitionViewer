@@ -1,41 +1,22 @@
 <h1 id="tableLabel">Drag Results</h1>
 
 <div *ngIf="eventList.length > 0">
-  <select name="selectedEvent" [(ngModel)]="selectedEvent" (change)="onSelectedEventChange()">
-    <option *ngFor="let event of eventList" [ngValue]="event">{{ event.name }}</option>
+  <select name="selectedEventId" [(ngModel)]="selectedEventId" (change)="onSelectedEventChange()">
+    <option [ngValue]="null">ALL</option>
+    <option *ngFor="let event of eventList" [ngValue]="event.id">{{ event.name }}</option>
   </select>
 </div>
 
-<div *ngIf="filteredMessages.length == 0">
-  <p><em>Waiting for results...</em></p>
-</div>
+<mat-tab-group animationDuration="0ms">
+  <mat-tab label="Event info" *ngIf="selectedEventId != null">
+    <competition-eventInfo></competition-eventInfo>
+  </mat-tab>
 
-<div *ngIf="filteredMessages.length > 0">
-  <div *ngIf="selectedEvent != null">
-    <mat-tab-group animationDuration="0ms">
-      <mat-tab label="Event info">
-        <ng-template matTabContent>
-          <competition-eventInfo [selectedEvent]="selectedEvent"></competition-eventInfo>
-        </ng-template>
-      </mat-tab>
+  <mat-tab label="Qualifications" *ngIf="selectedEventId != null">
+    <competition-qualification></competition-qualification>
+  </mat-tab>
 
-      <mat-tab label="Qualifications">
-        <ng-template matTabContent>
-          <competition-qualification [selectedEvent]="selectedEvent"></competition-qualification>
-        </ng-template>
-      </mat-tab>
-
-      <mat-tab label="Results">
-        <ng-template matTabContent>
-          <competition-results [selectedEvent]="selectedEvent"></competition-results>
-        </ng-template>
-      </mat-tab>
-
-      <mat-tab label="Results2">
-        <ng-template matTabContent>
-          <competition-results2 [selectedEvent]="selectedEvent"></competition-results2>
-        </ng-template>
-      </mat-tab>
-    </mat-tab-group>
-  </div>
-</div>
+  <mat-tab label="Results">
+    <competition-results></competition-results>
+  </mat-tab>
+</mat-tab-group>

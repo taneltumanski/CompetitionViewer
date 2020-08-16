@@ -1,5 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { RaceEventMessage, RaceEventResultMessage } from '../../models/racemessages';
+import { DecimalPipe } from '@angular/common';
+import { isNumber } from 'util';
 
 @Pipe({
     name: 'lane'
@@ -46,6 +48,10 @@ export class TimeDifferencePipe implements PipeTransform {
             return "---";
         }
 
+        if (currentResult.dialIn == null || winnerResult.dialIn == null || currentResult.reactionTime == null || currentResult.finishTime == null || winnerResult.reactionTime == null || winnerResult.finishTime == null) {
+            return "---";
+        }
+
         if (currentResult.dialIn > 0 || winnerResult.dialIn > 0) {
             let currentResultDialInDifference = currentResult.reactionTime + currentResult.finishTime - currentResult.dialIn;
             let winnerResultDialInDifference = winnerResult.reactionTime + winnerResult.finishTime - winnerResult.dialIn;
@@ -67,11 +73,11 @@ export class TimeDifferencePipe implements PipeTransform {
 })
 export class DialInAccuracyPipe implements PipeTransform {
     transform(value: RaceEventResultMessage | null): any {
-        if (value == null) {
+        if (value == null || value.finishTime == null) {
             return "---";
         }
 
-        if (value.dialIn == 0 || value.dialIn == null) {
+        if (value.dialIn == null || value.dialIn == 0) {
             return "---";
         }
 
@@ -81,6 +87,21 @@ export class DialInAccuracyPipe implements PipeTransform {
         }
 
         return (difference > 0 ? "+" : "") + difference.toFixed(5);
+    }
+}
+
+@Pipe({
+    name: 'myNumber'
+})
+export class MyNumberPipe implements PipeTransform {
+    transform(value: any, defaultValue: string | null): any {
+        if (isNumber(value)) {
+            let val = value as number;
+
+            return (val > 0 ? "+" : "") + val.toFixed(5);
+        }
+
+        return defaultValue;
     }
 }
 

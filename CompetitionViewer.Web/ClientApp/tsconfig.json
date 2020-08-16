@@ -10,13 +10,15 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowJs": true,
-    "target": "ES2016",
+    "strictNullChecks": true,
+    //"alwaysStrict": true,
+    //"strict": true,
+    "target": "ES2015",
     "typeRoots": [
       "node_modules/@types"
     ],
     "lib": [
-      "ES2016",
-      "ES2016.Array.Include",
+      "ES2015",
       "DOM"
     ]
   }

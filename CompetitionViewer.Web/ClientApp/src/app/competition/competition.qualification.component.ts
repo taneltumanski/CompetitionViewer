@@ -2,24 +2,27 @@ import { Component, OnChanges, SimpleChanges, Input } from '@angular/core';
 import { RaceEventMessage, RaceEventResultMessage } from '../../models/racemessages';
 import { RaceEvent, RaceClassDefiningProperty, RaceClass } from '../../models/models';
 import { RaceUtils } from '../../util/raceUtils';
+import { CompetitionService } from '../../services/competitionService';
 
 @Component({
     selector: 'competition-qualification',
     templateUrl: './competition.qualification.component.html',
 })
-export class CompetitionQualificationComponent implements OnChanges {
-    @Input() public selectedEvent: RaceEvent | null = null;
-
+export class CompetitionQualificationComponent {
+    public selectedEvent: RaceEvent | null = null;
     public classViewModels: QualificationClassViewModel[] = [];
 
-    public ngOnChanges(changes: SimpleChanges) {
-        this.classViewModels = [];
+    constructor(competitionService: CompetitionService) {
+        competitionService
+            .selectedEvent
+            .subscribe(x => {
+                this.selectedEvent = x;
+                this.classViewModels = [];
 
-        if (this.selectedEvent == null) {
-            return;
-        }
-
-        this.invalidate(this.selectedEvent.results.value);
+                if (this.selectedEvent != null) {
+                    this.invalidate(this.selectedEvent.results.value);
+                }
+            });
     }
 
     public invalidate(messages: RaceEventMessage[]) {
@@ -33,7 +36,11 @@ export class CompetitionQualificationComponent implements OnChanges {
     }
 
     private updateWithMessage(message: RaceEventMessage, result: RaceEventResultMessage) {
-        let raceClass = RaceUtils.getClass(result.racerId);
+        if (this.selectedEvent == null) {
+            return;
+        }
+
+        let raceClass = RaceUtils.getClass(result.racerId, "GENERAL");
 
         if (!RaceUtils.isValidRaceClass(raceClass)) {
             return;
@@ -45,6 +52,10 @@ export class CompetitionQualificationComponent implements OnChanges {
 
         let classData = this.selectedEvent.classes.value.find(x => x.id == raceClass);
         let existingClassVM = this.classViewModels.find(x => x.classData.id == raceClass);
+
+        if (classData == undefined) {
+            return;
+        }
 
         if (existingClassVM == undefined) {
             existingClassVM = new QualificationClassViewModel(classData);
@@ -68,30 +79,30 @@ export class QualificationClassViewModel {
         }
 
         let currentTime = this.classData.definingProperty == RaceClassDefiningProperty.FinishTime ? result.finishTime : result.reactionTime;
-        let existingItemIndex = this.participantPositions.findIndex(x => x.participantId == result.racerId);
+        let existingItem = this.participantPositions.find(x => x.participantId == result.racerId);
 
-        if (existingItemIndex == -1) {
-            this.participantPositions.push({
+        if (existingItem == undefined) {
+            existingItem = {
                 participantId: result.racerId,
-                bestTime: currentTime
-            });
-        } else if (currentTime < this.participantPositions[existingItemIndex].bestTime) {
-            if (this.classData.definingProperty == RaceClassDefiningProperty.FinishTime && currentTime > 0) {
-                this.participantPositions[existingItemIndex].bestTime = currentTime;
-            } else if (this.classData.definingProperty == RaceClassDefiningProperty.ReactionTime && currentTime >= 0) {
-                this.participantPositions[existingItemIndex].bestTime = currentTime;
+                bestTime: null
+            };
+
+            this.participantPositions.push(existingItem);
+        }
+
+        if (currentTime != null && ((this.classData.definingProperty == RaceClassDefiningProperty.FinishTime && currentTime > 0) || (this.classData.definingProperty == RaceClassDefiningProperty.ReactionTime && currentTime >= 0))) {
+            if (existingItem.bestTime == null || currentTime < existingItem.bestTime) {
+                existingItem.bestTime = currentTime;
             }
         }
 
         this.participantPositions.sort((a, b) => {
-            if (this.classData.definingProperty == RaceClassDefiningProperty.FinishTime) {
-                if (a.bestTime <= 0) {
-                    return 1;
-                }
-            } else if (this.classData.definingProperty == RaceClassDefiningProperty.ReactionTime) {
-                if (a.bestTime < 0) {
-                    return 1;
-                }
+            if (a.bestTime == null) {
+                return 1;
+            }
+
+            if (b.bestTime == null) {
+                return -1;
             }
 
             return a.bestTime - b.bestTime;
@@ -101,5 +112,5 @@ export class QualificationClassViewModel {
 
 export interface QualificationPosition {
     participantId: string;
-    bestTime: number;
+    bestTime: number | null;
 }

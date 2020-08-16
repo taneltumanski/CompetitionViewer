@@ -1,18 +1,21 @@
-<div *ngFor="let classVm of classViewModels">
-  <h3>Class: {{ classVm.classData.name }}</h3>
-
-  <table class="table table-fit">
-    <thead>
-      <tr>
-        <th scope="col">Name</th>
-        <th scope="col">Best time</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let participant of classVm.participantPositions">
-        <td>{{ participant.participantId }}</td>
-        <td>{{ participant.bestTime }}</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+<mat-accordion>
+  <mat-expansion-panel hideToggle *ngFor="let classVm of classViewModels">
+    <mat-expansion-panel-header>
+      <mat-panel-title><h3>Class: {{ classVm.classData.name }} - {{ classVm.participantPositions.length }} partcipants</h3></mat-panel-title>
+    </mat-expansion-panel-header>
+    <table class="table table-fit">
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">Best time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let participant of classVm.participantPositions">
+          <td>{{ participant.participantId }}</td>
+          <td>{{ participant.bestTime }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </mat-expansion-panel>
+</mat-accordion>

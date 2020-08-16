@@ -1,4 +1,6 @@
 <h2>Selected event: {{ selectedEvent.name }}</h2>
+<h2>First race at: {{ getFirstDate(selectedEvent) | date:'yyyy-MM-dd HH:mm:ss' }}</h2>
+<h2>Last race at: {{ getLastDate(selectedEvent) | date:'yyyy-MM-dd HH:mm:ss' }}</h2>
 <h2>Total participants: {{ getParticipantCount(selectedEvent) }}</h2>
 <h2>Total races: {{ getRaceCount(selectedEvent) }}</h2>
 <h2>Classes: {{ selectedEvent.classes.value.length }}</h2>

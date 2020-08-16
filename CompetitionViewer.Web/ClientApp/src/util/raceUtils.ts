@@ -1,5 +1,5 @@
 export class RaceUtils {
-    public static getClass(id: string): string | null {
+    public static getClass(id: string, defaultClass: string): string {
         for (var i = id.length - 1; i >= 0; i--) {
             let c = id[i];
 
@@ -8,7 +8,7 @@ export class RaceUtils {
             }
         }
 
-        return null;
+        return defaultClass;
     }
 
     public static isValidRaceClass(raceClass: string | null): boolean {
@@ -16,11 +16,7 @@ export class RaceUtils {
             return false;
         }
 
-        if (raceClass == "BYE") {
-            return false;
-        }
-
-        if (raceClass.toUpperCase().startsWith("RWYB") && raceClass.length > 4) {
+        if (raceClass.toUpperCase() == "BYE") {
             return false;
         }
 

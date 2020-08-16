@@ -40,4 +40,9 @@ export class ObservableArray<T> extends BehaviorSubject<T[]> {
         this.value.push(item);
         this.next(this.value);
     }
+
+    public clear() {
+        this.value.splice(0, this.value.length);
+        this.next(this.value);
+    }
 }

@@ -1,5 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
 @import '~bootstrap/dist/css/bootstrap.min.css';
+@import '~@angular/material/prebuilt-themes/deeppurple-amber.css';
 
 /* Provide sufficient contrast against white background */
 a {
@@ -22,5 +23,9 @@ html, body {
 
 body {
   margin: 0;
+  font-family: Roboto Mono, "Helvetica Neue", sans-serif;
+}
+
+.mat-table {
   font-family: Roboto Mono, "Helvetica Neue", sans-serif;
 }

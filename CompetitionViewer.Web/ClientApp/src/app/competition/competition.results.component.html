@@ -7,7 +7,18 @@
              matSortDisableClear
              cdkDropListGroup>
 
-    <ng-container matColumnDef="timestamp">
+    <ng-container *ngFor="let column of getDisplayedColumns(); let i = index" [matColumnDef]="column.id">
+      <mat-header-cell *matHeaderCellDef>{{ column.name }}</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ format(row[column.id], column) }}</mat-cell>
+    </ng-container>
+
+    <ng-container *ngFor="let column of getDisplayedColumns(); let i = index" [matColumnDef]="column.id + '-buttons'">
+      <mat-header-cell *matHeaderCellDef>
+        <button mat-button (click)="hideColumn(column.id)">HIDE</button>
+      </mat-header-cell>
+    </ng-container>
+
+    <!--<ng-container matColumnDef="timestamp">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Timestamp</mat-header-cell>
       <mat-cell *matCellDef="let raceEvent">{{ raceEvent.timestamp | date:'yyyy-MM-dd HH:mm:ss' }}</mat-cell>
     </ng-container>
@@ -106,9 +117,6 @@
     </ng-container>
 
     <ng-container matColumnDef="round-buttons">
-      <!--<img src="../../assets/hide.png" (click)="hideColumn('round')" style="width: 16px; height: 16px; margin: 0 2px 0 2px">-->
-      <!--<button mat-icon-button (click)="hideColumn('round')">
-    </button>-->
       <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('round')">HIDE</button></mat-header-cell>
     </ng-container>
 
@@ -170,12 +178,12 @@
 
     <ng-container matColumnDef="timeDifference-buttons">
       <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('timeDifference')">HIDE</button></mat-header-cell>
-    </ng-container>
+    </ng-container>-->
 
-    <mat-header-row *matHeaderRowDef="getDisplayedColumns(); sticky: true;"></mat-header-row>
+    <mat-header-row *matHeaderRowDef="getDisplayedColumnNames(); sticky: true;"></mat-header-row>
     <mat-header-row *matHeaderRowDef="getDisplayedColumnsSecondHeaders()"></mat-header-row>
 
-    <mat-row *matRowDef="let row; columns: getDisplayedColumns()"></mat-row>
+    <mat-row *matRowDef="let row; columns: getDisplayedColumnNames()"></mat-row>
   </mat-table>
 
   <mat-paginator [length]="selectedEvent?.results.value.length"

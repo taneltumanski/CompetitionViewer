@@ -13,6 +13,8 @@ import { ActivatedRoute } from '@angular/router';
 import { debounceTime, distinctUntilChanged, tap } from 'rxjs/operators';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CompetitionService } from '../../services/competitionService';
+import { LanePipe, MyNumberPipe, RaceResultPipe } from './competition.pipes';
+import { DatePipe, DecimalPipe } from '@angular/common';
 
 @Component({
     selector: 'competition-results',
@@ -29,45 +31,71 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
     @ViewChild(MatSort, { static: true }) sort: MatSort;
     @ViewChild('input') input: ElementRef;
 
-    constructor(private competitionService: CompetitionService) {
+    constructor(private competitionService: CompetitionService, private datePipe: DatePipe, private decimalPipe: DecimalPipe) {
         this.columns = [
-            { name: "timestamp", isHidden: false },
-            { name: "raceId", isHidden: false },
-            { name: "round", isHidden: false },
-            { name: "racerId", isHidden: false },
-            { name: "lane", isHidden: false },
-            { name: "result", isHidden: false },
-            { name: "reactionTime", isHidden: false },
-            { name: "sixtyFeetTime", isHidden: false },
-            { name: "threeThirtyFeetTime", isHidden: false },
-            { name: "sixSixtyFeetTime", isHidden: false },
-            { name: "sixSixtyFeetSpeed", isHidden: false },
-            { name: "thousandFeetTime", isHidden: false },
-            { name: "thousandFeetSpeed", isHidden: false },
-            { name: "finishTime", isHidden: false },
-            { name: "finishSpeed", isHidden: false },
-            { name: "dialIn", isHidden: false },
-            { name: "dialInAccuracy", isHidden: false },
-            { name: "timeDifference", isHidden: false }
+            { id: "timestamp", isHidden: false, name: "Timestamp", type: ColumnType.Default },
+            { id: "raceId", isHidden: false, name: "Race ID", type: ColumnType.Default },
+            { id: "round", isHidden: false, name: "Round", type: ColumnType.Default },
+            { id: "racerId", isHidden: false, name: "Racer ID", type: ColumnType.Default },
+            { id: "lane", isHidden: false, name: "Lane", type: ColumnType.Default },
+            { id: "result", isHidden: false, name: "Result", type: ColumnType.Default  },
+            { id: "reactionTime", isHidden: false, name: "RT", type: ColumnType.RoundedNumber },
+            { id: "sixtyFeetTime", isHidden: false, name: "60ft", type: ColumnType.RoundedNumber  },
+            { id: "threeThirtyFeetTime", isHidden: false, name: "330ft", type: ColumnType.RoundedNumber  },
+            { id: "sixSixtyFeetTime", isHidden: false, name: "660ft", type: ColumnType.RoundedNumber  },
+            { id: "sixSixtyFeetSpeed", isHidden: false, name: "660ft Speed", type: ColumnType.RoundedNumber  },
+            { id: "thousandFeetTime", isHidden: false, name: "1000ft", type: ColumnType.RoundedNumber },
+            { id: "thousandFeetSpeed", isHidden: false, name: "1000ft Speed", type: ColumnType.RoundedNumber  },
+            { id: "finishTime", isHidden: false, name: "ET", type: ColumnType.RoundedNumber  },
+            { id: "finishSpeed", isHidden: false, name: "ET Speed", type: ColumnType.RoundedNumber },
+            { id: "dialIn", isHidden: false, name: "Dial In", type: ColumnType.RoundedNumber },
+            { id: "dialInAccuracy", isHidden: false, name: "Dial In difference", type: ColumnType.SignedNumber },
+            { id: "timeDifference", isHidden: false, name: "RT+ET difference", type: ColumnType.SignedNumber }
         ];
     }
 
+    public format(item: any, column: ColumnData): any {
+        if (column.id == "lane") {
+            return new LanePipe().transform(item);
+        }
+
+        if (column.id == "timestamp") {
+            return this.datePipe.transform(item, "yyyy-MM-dd HH:mm:ss");
+        }
+
+        if (column.id == "result") {
+            return new RaceResultPipe().transform(item);
+        }
+
+        if (column.type == ColumnType.SignedNumber) {
+            return new MyNumberPipe().transform(item, null);
+        }
+
+        if (column.type == ColumnType.RoundedNumber) {
+            return this.decimalPipe.transform(item);
+        }
+
+        return item;
+    }
+
     public getDisplayedColumns() {
-        return this.columns
-            .filter(x => !x.isHidden)
-            .map(x => x.name);
+        return this.columns.filter(x => !x.isHidden);
+    }
+
+    public getDisplayedColumnNames() {
+        return this.getDisplayedColumns().map(x => x.id);
     }
 
     public getDisplayedColumnsSecondHeaders() {
-        return this.getDisplayedColumns().map(x => x + "-buttons");
+        return this.getDisplayedColumns().map(x => x.id + "-buttons");
     }
 
     public onButton() {
         if (this.isAscending) {
-            this.columns.sort((a, b) => a.name.localeCompare(b.name));
+            this.columns.sort((a, b) => a.id.localeCompare(b.id));
             this.isAscending = false;
         } else {
-            this.columns.sort((a, b) => b.name.localeCompare(a.name));
+            this.columns.sort((a, b) => b.id.localeCompare(a.id));
             this.isAscending = true;
         }
     }
@@ -124,7 +152,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
     }
 
     public hideColumn(columnName: string) {
-        let column = this.columns.find(x => x.name == columnName);
+        let column = this.columns.find(x => x.id == columnName);
         if (column != undefined) {
             column.isHidden = true;
         }
@@ -132,8 +160,8 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
 
     public dropColumn($event: any) {
         console.log(event);
-        const fromIndex: number = this.columns.findIndex(x => x.name == $event.previousContainer.id);
-        const toIndex: number = this.columns.findIndex(x => x.name == $event.container.id);
+        const fromIndex: number = this.columns.findIndex(x => x.id == $event.previousContainer.id);
+        const toIndex: number = this.columns.findIndex(x => x.id == $event.container.id);
 
         moveItemInArray(this.columns, fromIndex, toIndex);
     }
@@ -287,6 +315,14 @@ export interface RaceMessageViewModel {
 }
 
 export interface ColumnData {
+    id: string;
     name: string;
     isHidden: boolean;
+    type: ColumnType
+}
+
+export enum ColumnType {
+    Default = 0,
+    RoundedNumber = 1,
+    SignedNumber = 2
 }

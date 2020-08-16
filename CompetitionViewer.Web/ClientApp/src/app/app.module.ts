@@ -26,6 +26,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { DecimalPipe, DatePipe } from '@angular/common';
 
 @NgModule({
     declarations: [
@@ -69,6 +70,9 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
         BrowserAnimationsModule
     ],
     providers: [
+        DatePipe,
+        DecimalPipe,
+
         { provide: HTTP_INTERCEPTORS, useClass: AuthorizeInterceptor, multi: true }
     ],
     bootstrap: [AppComponent]

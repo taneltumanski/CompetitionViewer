@@ -6,7 +6,6 @@ import { RouterModule } from '@angular/router';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 
-
 import { AppComponent } from './app.component';
 import { NavMenuComponent } from './nav-menu/nav-menu.component';
 import { HomeComponent } from './home/home.component';
@@ -23,10 +22,11 @@ import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { DecimalPipe, DatePipe } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon'
+import { MatChipsModule } from '@angular/material/chips'
 
 @NgModule({
     declarations: [
@@ -58,8 +58,9 @@ import { DecimalPipe, DatePipe } from '@angular/common';
         MatSortModule,
         MatButtonModule,
         MatExpansionModule,
+        MatIconModule,
+        MatChipsModule,
 
-        FlexLayoutModule,
         DragDropModule,
 
         RouterModule.forRoot([

@@ -1,184 +1,41 @@
 <div>
+  <mat-form-field style="display: inline">
+    <mat-chip-list #chipList aria-label="Filters">
+      <mat-chip *ngFor="let filter of filters" [removable]="true" (removed)="removeFilter(filter)">
+        {{filter.value}}
+        <mat-icon matChipRemove>cancel</mat-icon>
+      </mat-chip>
+
+      <input placeholder="New filter..."
+             [matChipInputFor]="chipList"
+             [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+             [matChipInputAddOnBlur]="true"
+             (matChipInputTokenEnd)="addFilterFromInput($event)">
+    </mat-chip-list>
+  </mat-form-field>
+
   <mat-table class="mat-elevation-z8"
              [dataSource]="dataSource"
              matSort
              matSortActive="timestamp"
              matSortDirection="desc"
-             matSortDisableClear
-             cdkDropListGroup>
+             matSortDisableClear>
 
-    <ng-container *ngFor="let column of getDisplayedColumns(); let i = index" [matColumnDef]="column.id">
-      <mat-header-cell *matHeaderCellDef>{{ column.name }}</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ format(row[column.id], column) }}</mat-cell>
+    <ng-container *ngFor="let column of getDisplayedColumns()" [matColumnDef]="column.id">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>{{ column.name }}</mat-header-cell>
+      <ng-container *ngIf="column.id == 'index'">
+        <mat-cell *matCellDef="let row; let i = index">{{ i + 1 }}.</mat-cell>
+      </ng-container>
+      <ng-container *ngIf="column.id != 'index'">
+        <mat-cell *matCellDef="let row">{{ format(row[column.id], column) }}</mat-cell>
+      </ng-container>
     </ng-container>
 
     <ng-container *ngFor="let column of getDisplayedColumns(); let i = index" [matColumnDef]="column.id + '-buttons'">
       <mat-header-cell *matHeaderCellDef>
-        <button mat-button (click)="hideColumn(column.id)">HIDE</button>
+        <button mat-icon-button (click)="hideColumn(column.id)"><mat-icon>cancel</mat-icon></button>
       </mat-header-cell>
     </ng-container>
-
-    <!--<ng-container matColumnDef="timestamp">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Timestamp</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.timestamp | date:'yyyy-MM-dd HH:mm:ss' }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="raceId">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Race ID</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.raceId }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="round">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Round</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.round }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="racerId">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Racer ID</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.racerId }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="lane">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Lane</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.lane | lane }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="result">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Result</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.result | raceResult }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="reactionTime">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>RT</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.reactionTime | number: '1.0-5' }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="sixtyFeetTime">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>60ft</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.sixtyFeetTime | number: '1.0-5' }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="threeThirtyFeetTime">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>330ft</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.threeThirtyFeetTime | number: '1.0-5' }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="sixSixtyFeetTime">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>660ft</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.sixSixtyFeetTime | number: '1.0-5' }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="sixSixtyFeetSpeed">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>660ft Speed</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.sixSixtyFeetSpeed | number: '1.0-5' }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="thousandFeetTime">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>1000ft</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.thousandFeetTime | number: '1.0-5' }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="thousandFeetSpeed">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>1000ft Speed</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.thousandFeetSpeed | number: '1.0-5' }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="finishTime">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>ET</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.finishTime | number: '1.0-5' }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="finishSpeed">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>ET Speed</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.finishSpeed | number: '1.0-5' }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="dialIn">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Dial In</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.dialIn | number: '1.0-5' }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="dialInAccuracy">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Dial In difference</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.dialInAccuracy | myNumber }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="timeDifference">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>RT+ET difference</mat-header-cell>
-      <mat-cell *matCellDef="let raceEvent">{{ raceEvent.timeDifference | myNumber }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="timestamp-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('timestamp')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="raceId-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('raceId')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="round-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('round')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="racerId-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('racerId')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="lane-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('lane')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="result-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('result')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="reactionTime-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('reactionTime')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="sixtyFeetTime-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('sixtyFeetTime')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="threeThirtyFeetTime-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('threeThirtyFeetTime')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="sixSixtyFeetTime-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('sixSixtyFeetTime')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="sixSixtyFeetSpeed-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('sixSixtyFeetSpeed')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="thousandFeetTime-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('thousandFeetTime')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="thousandFeetSpeed-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('thousandFeetSpeed')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="finishTime-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('finishTime')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="finishSpeed-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('finishSpeed')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="dialIn-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('dialIn')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="dialInAccuracy-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('dialInAccuracy')">HIDE</button></mat-header-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="timeDifference-buttons">
-      <mat-header-cell *matHeaderCellDef><button mat-button (click)="hideColumn('timeDifference')">HIDE</button></mat-header-cell>
-    </ng-container>-->
 
     <mat-header-row *matHeaderRowDef="getDisplayedColumnNames(); sticky: true;"></mat-header-row>
     <mat-header-row *matHeaderRowDef="getDisplayedColumnsSecondHeaders()"></mat-header-row>

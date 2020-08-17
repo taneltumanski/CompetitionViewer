@@ -4,6 +4,9 @@ var RaceUtils = /** @class */ (function () {
     function RaceUtils() {
     }
     RaceUtils.getClass = function (id, defaultClass) {
+        if (id == null) {
+            return null;
+        }
         for (var i = id.length - 1; i >= 0; i--) {
             var c = id[i];
             if (!(c >= '0' && c <= '9')) {

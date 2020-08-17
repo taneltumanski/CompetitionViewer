@@ -1,5 +1,9 @@
 export class RaceUtils {
-    public static getClass(id: string, defaultClass: string): string {
+    public static getClass(id: string, defaultClass: string): string | null {
+        if (id == null) {
+            return null;
+        }
+
         for (var i = id.length - 1; i >= 0; i--) {
             let c = id[i];
 

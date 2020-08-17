@@ -77,7 +77,7 @@ export class CompetitionService {
             let racerId = result.racerId;
             let raceClass = RaceUtils.getClass(racerId, "GENERAL");
 
-            if (!RaceUtils.isValidRaceClass(raceClass)) {
+            if (raceClass == null || !RaceUtils.isValidRaceClass(raceClass)) {
                 continue;
             }
 

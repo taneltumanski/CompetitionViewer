@@ -121,5 +121,4 @@ export interface MessageFilter {
     raceId: string | null;
     classId: string | null;
     eventId: string | null;
-    isGlobal: boolean;
 }

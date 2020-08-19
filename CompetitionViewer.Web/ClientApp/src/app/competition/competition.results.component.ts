@@ -10,13 +10,15 @@ import { Observable, BehaviorSubject, Subscription, fromEvent, merge } from 'rxj
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { ActivatedRoute } from '@angular/router';
-import { debounceTime, distinctUntilChanged, tap, filter } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, tap, filter, take } from 'rxjs/operators';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CompetitionService } from '../../services/competitionService';
 import { LanePipe, MyNumberPipe, RaceResultPipe } from './competition.pipes';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { MatChipInputEvent } from '@angular/material/chips';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
+import { MatMenuTrigger } from '@angular/material/menu';
 
 @Component({
     selector: 'competition-results',
@@ -25,16 +27,23 @@ import { COMMA, ENTER } from '@angular/cdk/keycodes';
 export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDestroy {
     private dataSource = new MatTableDataSource<RaceMessageViewModel>([]);
     private subscription: Subscription | null;
+    private currentContextMenuTarget: HTMLElement | null;
 
     public filters: FilterData[] = [];
     public columns: ColumnData[] = [];
 
     public readonly separatorKeysCodes: number[] = [ENTER, COMMA];
+    public contextMenuPosition = { x: '0px', y: '0px' };
 
     @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
     @ViewChild(MatSort, { static: true }) sort: MatSort;
+    @ViewChild(MatMenuTrigger, { static: true }) contextMenu: MatMenuTrigger;
 
-    constructor(private competitionService: CompetitionService, private datePipe: DatePipe, private decimalPipe: DecimalPipe) {
+    public get FilterType(): typeof FilterType {
+        return FilterType;
+    }
+
+    constructor(private competitionService: CompetitionService, private datePipe: DatePipe, private decimalPipe: DecimalPipe, private snackBar: MatSnackBar) {
         this.columns = [
             { id: "index", isHidden: false, name: "Index", type: ColumnType.Default },
             { id: "timestamp", isHidden: false, name: "Timestamp", type: ColumnType.Default },
@@ -60,6 +69,16 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
 
     public ngOnInit() {
         const originalFilterPredicate = this.dataSource.filterPredicate;
+        const filterFunctions = [
+            { type: FilterType.Event,  function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.eventId && item.eventId.toLowerCase() == filter.value.toLowerCase() },
+            { type: FilterType.Class,  function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.raceClass && item.raceClass.toLowerCase() == filter.value.toLowerCase() },
+            { type: FilterType.Lane,   function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.lane && item.lane.toLowerCase() == filter.value.toLowerCase() },
+            { type: FilterType.Race,   function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.raceId && item.raceId.toLowerCase() == filter.value.toLowerCase() },
+            { type: FilterType.Racer,  function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.racerId && item.racerId.toLowerCase() == filter.value.toLowerCase() },
+            { type: FilterType.Result, function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.result && item.result.toLowerCase() == filter.value.toLowerCase() },
+            { type: FilterType.Round,  function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.round && item.round.toLowerCase() == filter.value.toLowerCase() },
+            { type: FilterType.Any,    function: (filter: FilterData, item: RaceMessageViewModel): boolean => originalFilterPredicate(item, filter.value.toLowerCase()) },
+        ];
 
         this.dataSource.sort = this.sort;
         this.dataSource.paginator = this.paginator;
@@ -69,31 +88,33 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
                 return true;
             }
 
-            let raceClass = RaceUtils.getClass(item.racerId, "GENERAL");
-            let resultValue = new RaceResultPipe().transform(item.result) as string;
+            let whitelistFilterCount = this.filters.filter(filter => !filter.isInverse).reduce(acc => acc + 1, 0); 
+            let blacklistFilterCount = this.filters.filter(filter =>  filter.isInverse).reduce(acc => acc + 1, 0);
 
-            for (let filter of this.filters) {
-                if (filter.type == FilterType.Class && raceClass && raceClass.toLowerCase() == filter.value.toLowerCase()) {
-                    return true;
-                } else if (filter.type == FilterType.Lane && item.lane && item.lane.toLowerCase() == filter.value.toLowerCase()) {
-                    return true;
-                } else if (filter.type == FilterType.Race && item.raceId && item.raceId.toLowerCase() == filter.value.toLowerCase()) {
-                    return true;
-                } else if (filter.type == FilterType.Racer && item.racerId && item.racerId.toLowerCase() == filter.value.toLowerCase()) {
-                    return true;
-                } else if (filter.type == FilterType.Result && resultValue && resultValue.toLowerCase() == filter.value.toLowerCase()) {
-                    return true;
-                } else if (filter.type == FilterType.Round && item.round && item.round.toLowerCase() == filter.value.toLowerCase()) {
-                    return true;
-                } else if (filter.type == FilterType.Any && originalFilterPredicate(item, filter.value)) {
-                    return true;
-                }
-            }
+            let whitelistResult = this.filters.some(filter => !filter.isInverse && filterFunctions.some(filterFn => filterFn.type == filter.type && filterFn.function(filter, item)));
+            let blacklistResult = this.filters.some(filter => filter.isInverse && filterFunctions.some(filterFn => filterFn.type == filter.type && filterFn.function(filter, item)));;
 
-            return false;
+            return (whitelistFilterCount == 0 || whitelistResult) && (blacklistFilterCount == 0 || !blacklistResult);
         };
 
-        this.subscription = this.competitionService.filteredMessages.subscribe(x => this.dataSource.data = this.map(x, this.getFilters(this.sort)));
+        let subscriptions = [
+            this.competitionService.filteredMessages.subscribe(() => this.invalidate()),
+            this.contextMenu.menuClosed.subscribe(() => this.currentContextMenuTarget = null),
+
+            fromEvent<MouseEvent>(document, 'click')
+                .pipe(
+                    filter(event => {
+                        const clickTarget = event.target as HTMLElement;
+                        return !!this.currentContextMenuTarget && !this.currentContextMenuTarget.contains(clickTarget);
+                    })
+                ).subscribe(() => this.contextMenu.closeMenu())
+        ];
+
+        this.subscription = new Subscription(() => {
+            for (let sub of subscriptions) {
+                sub.unsubscribe();
+            }
+        });
     }
 
     public ngOnDestroy() {
@@ -111,23 +132,59 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
     }
 
     public invalidate() {
-        this.dataSource.data = this.map(this.competitionService.filteredMessages.value, this.getFilters(this.sort));
+        let oldLength = this.dataSource.filteredData.length;
+
+        this.dataSource.data = this.map(this.competitionService.filteredMessages.value, this.getSortFilters(this.sort));
+
+        let newLength = this.dataSource.filteredData.length;
+        let lengthDifference = newLength - oldLength;
+        let message: string | null = null;
+
+        if (lengthDifference > 0) {
+            message = "Added " + lengthDifference + " results";
+        } else if (lengthDifference < 0) {
+            message = "Removed " + Math.abs(lengthDifference) + " results";
+        }
+
+        if (message) {
+            this.snackBar.open(message, "Ok", { duration: 3000, politeness: "polite" });
+        }
+    }
+
+    public onContextMenu(event: MouseEvent, item: RaceMessageViewModel) {
+        this.contextMenu.closeMenu();
+        this.currentContextMenuTarget = event.target as HTMLElement;
+
+        event.preventDefault();
+        this.contextMenuPosition.x = event.clientX + 'px';
+        this.contextMenuPosition.y = event.clientY + 'px';
+        this.contextMenu.menuData = { 'item': item };
+        this.contextMenu.menu.focusFirstItem('mouse');
+        this.contextMenu.openMenu();
+    }
+
+    public onContextMenuIgnore(item: string, filterType: FilterType) {
+        this.addFilter(item, filterType, true);
+    }
+
+    public onContextMenuAllow(item: string, filterType: FilterType) {
+        this.addFilter(item, filterType, false);
     }
 
     public addFilterFromInput(event: MatChipInputEvent): void {
         const input = event.input;
         const value = (event.value || "").trim();
 
-        this.addFilter(value, FilterType.Any);
+        this.addFilter(value, FilterType.Any, false);
 
         if (input) {
             input.value = "";
         }
     }
 
-    public addFilter(value: string, filterType: FilterType): void {
+    public addFilter(value: string, filterType: FilterType, isInverse: boolean): void {
         if (value && filterType in FilterType) {
-            this.filters.push({ value: value, type: filterType });
+            this.filters.push({ value: value, type: filterType, isInverse: isInverse });
             this.invalidate();
         }
     }
@@ -141,19 +198,11 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
         }
     }
 
+    public getFilters(isInverse: boolean): FilterData[] {
+        return this.filters.filter(x => x.isInverse == isInverse);
+    }
+
     public format(item: any, column: ColumnData): any {
-        if (column.id == "lane") {
-            return new LanePipe().transform(item);
-        }
-
-        if (column.id == "timestamp") {
-            return this.datePipe.transform(item, "yyyy-MM-dd HH:mm:ss");
-        }
-
-        if (column.id == "result") {
-            return new RaceResultPipe().transform(item);
-        }
-
         if (column.type == ColumnType.SignedNumber) {
             return new MyNumberPipe().transform(item, null);
         }
@@ -177,7 +226,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
         return this.getDisplayedColumnNames().map(x => x + "-buttons");
     }
 
-    private getFilters(sort: MatSort): ((item: RaceMessageViewModel) => boolean)[] {
+    private getSortFilters(sort: MatSort): ((item: RaceMessageViewModel) => boolean)[] {
         let filters = new Array<((item: RaceMessageViewModel) => boolean)>();
         let raceProperties = ["reactionTime", "sixtyFeetTime", "threeThirtyFeetTime", "sixSixtyFeetTime", "sixSixtyFeetSpeed", "thousandFeetTime", "thousandFeetSpeed", "finishTime", "finishSpeed", "dialIn", "dialInAccuracy", "timeDifference"];
 
@@ -211,19 +260,20 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
         for (const msg of messages) {
             for (const result of msg.results) {
                 let item = {
-                    timestamp: msg.timestamp,
+                    timestamp: this.datePipe.transform(msg.timestamp, "yyyy-MM-dd HH:mm:ss")!,
                     eventId: msg.eventId,
-                    eventName: msg.eventName,
+                    eventName: msg.eventName || msg.eventId,
                     raceId: msg.raceId,
                     round: msg.round,
+                    raceClass: RaceUtils.getClass(result.racerId, "GENERAL") || "INVALID",
 
                     dialIn: result.dialIn,
                     finishSpeed: result.finishSpeed,
                     finishTime: result.finishTime,
-                    lane: result.lane,
+                    lane: result.lane ? result.lane.toUpperCase() : null,
                     racerId: result.racerId,
                     reactionTime: result.reactionTime,
-                    result: result.result,
+                    result: new RaceResultPipe().transform(result.result),
                     sixSixtyFeetSpeed: result.sixSixtyFeetSpeed,
                     sixSixtyFeetTime: result.sixSixtyFeetTime,
                     sixtyFeetTime: result.sixtyFeetTime,
@@ -288,46 +338,17 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
     }
 }
 
-export class RaceMessagesDataSource implements DataSource<RaceEventMessage> {
-    private messagesSubject = new BehaviorSubject<RaceEventMessage[]>([]);
-    private subscription: Subscription | null = null;
-
-    public connect(collectionViewer: CollectionViewer): Observable<RaceEventMessage[] | readonly RaceEventMessage[]> {
-        return this.messagesSubject.asObservable();
-    }
-
-    public disconnect(collectionViewer: CollectionViewer): void {
-        this.messagesSubject.complete();
-    }
-
-    public eventChanged(selectedEvent: RaceEvent | null) {
-        if (this.subscription) {
-            this.subscription.unsubscribe();
-            this.subscription = null;
-        }
-
-        if (selectedEvent == null) {
-            this.messagesSubject.next([]);
-            return;
-        }
-
-        this.subscription = selectedEvent.results.subscribe(
-            x => this.messagesSubject.next(x),
-            err => { },
-            () => this.messagesSubject.next([]));
-    }
-}
-
 export interface RaceMessageViewModel {
     eventId: string;
     eventName: string;
     raceId: string;
     round: string;
-    timestamp: number;
+    timestamp: string;
+    raceClass: string;
 
     racerId: string;
     lane: string | null;
-    result: number | null;
+    result: string | null;
     dialIn: number | null;
     reactionTime: number | null;
     sixtyFeetTime: number | null;
@@ -359,15 +380,17 @@ export enum ColumnType {
 export interface FilterData {
     type: FilterType;
     value: string;
+    isInverse: boolean;
 }
 
 export enum FilterType {
     Unknown = 0,
-    Class = 1,
-    Racer = 2,
-    Race = 3,
-    Lane = 4,
-    Result = 5,
-    Round = 6,
-    Any = 7
+    Event = 1,
+    Class = 2,
+    Racer = 3,
+    Race = 4,
+    Lane = 5,
+    Result = 6,
+    Round = 7,
+    Any = 8
 }

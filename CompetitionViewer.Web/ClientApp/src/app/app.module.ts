@@ -27,6 +27,8 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon'
 import { MatChipsModule } from '@angular/material/chips'
+import { MatMenuModule } from '@angular/material/menu'
+import { MatSnackBarModule } from '@angular/material/snack-bar'
 
 @NgModule({
     declarations: [
@@ -60,6 +62,8 @@ import { MatChipsModule } from '@angular/material/chips'
         MatExpansionModule,
         MatIconModule,
         MatChipsModule,
+        MatMenuModule,
+        MatSnackBarModule,
 
         DragDropModule,
 

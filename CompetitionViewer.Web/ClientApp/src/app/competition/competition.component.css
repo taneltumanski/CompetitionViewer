@@ -38,3 +38,11 @@ table.table-fit {
 .gray {
   background-color: #f2f2f2;
 }
+
+.whitelistChip {
+  background-color: aquamarine;
+}
+
+.blacklistChip {
+  background-color: firebrick;
+}

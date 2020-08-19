@@ -1,18 +1,29 @@
 <div>
-  <mat-form-field style="display: inline">
-    <mat-chip-list #chipList aria-label="Filters">
-      <mat-chip *ngFor="let filter of filters" [removable]="true" (removed)="removeFilter(filter)">
-        {{filter.value}}
-        <mat-icon matChipRemove>cancel</mat-icon>
-      </mat-chip>
+  <div>
+    <mat-form-field style="display: inline">
+      <mat-chip-list aria-label="Filters">
+        <input placeholder="Add filter..."
+               [matChipInputFor]="chipList"
+               [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+               [matChipInputAddOnBlur]="true"
+               (matChipInputTokenEnd)="addFilterFromInput($event)">
+      </mat-chip-list>
 
-      <input placeholder="New filter..."
-             [matChipInputFor]="chipList"
-             [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-             [matChipInputAddOnBlur]="true"
-             (matChipInputTokenEnd)="addFilterFromInput($event)">
-    </mat-chip-list>
-  </mat-form-field>
+      <mat-chip-list #chipList aria-label="Filters">
+        <mat-chip *ngFor="let filter of getFilters(false)" [removable]="true" (removed)="removeFilter(filter)" style="background-color: lightgreen">
+          {{ filter.type == FilterType.Any ? filter.value : FilterType[filter.type] + ": " + filter.value }}
+          <mat-icon matChipRemove>cancel</mat-icon>
+        </mat-chip>
+      </mat-chip-list>
+
+      <mat-chip-list aria-label="Filters">
+        <mat-chip *ngFor="let filter of getFilters(true)" [removable]="true" (removed)="removeFilter(filter)" style="background-color: lightcoral">
+          {{ filter.type == FilterType.Any ? filter.value : FilterType[filter.type] + ": " + filter.value }}
+          <mat-icon matChipRemove>cancel</mat-icon>
+        </mat-chip>
+      </mat-chip-list>
+    </mat-form-field>
+  </div>
 
   <mat-table class="mat-elevation-z8"
              [dataSource]="dataSource"
@@ -22,12 +33,12 @@
              matSortDisableClear>
 
     <ng-container *ngFor="let column of getDisplayedColumns()" [matColumnDef]="column.id">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>{{ column.name }}</mat-header-cell>
+      <mat-header-cell *matHeaderCellDef mat-sort-header disabled="false">{{ column.name }}</mat-header-cell>
       <ng-container *ngIf="column.id == 'index'">
-        <mat-cell *matCellDef="let row; let i = index">{{ i + 1 }}.</mat-cell>
+        <mat-cell *matCellDef="let row; let i = index" (contextmenu)="onContextMenu($event, row)">{{ i + 1 }}.</mat-cell>
       </ng-container>
       <ng-container *ngIf="column.id != 'index'">
-        <mat-cell *matCellDef="let row">{{ format(row[column.id], column) }}</mat-cell>
+        <mat-cell *matCellDef="let row" (contextmenu)="onContextMenu($event, row)">{{ format(row[column.id], column) }}</mat-cell>
       </ng-container>
     </ng-container>
 
@@ -47,4 +58,41 @@
                  [pageSize]="20"
                  [pageSizeOptions]="[10, 20, 100]"
                  [showFirstLastButtons]="true"></mat-paginator>
+
+  <div style="visibility: hidden; position: fixed"
+       [style.left]="contextMenuPosition.x"
+       [style.top]="contextMenuPosition.y"
+       [matMenuTriggerFor]="contextMenu">
+  </div>
+
+  <mat-menu #contextMenu="matMenu" [hasBackdrop]="false" [overlapTrigger]="false">
+    <ng-template matMenuContent let-item="item">
+      <button mat-menu-item [matMenuTriggerFor]="allowMenu" [matMenuTriggerData]="{item: item}">Include</button>
+      <button mat-menu-item [matMenuTriggerFor]="ignoreMenu" [matMenuTriggerData]="{item: item}">Remove</button>
+    </ng-template>
+  </mat-menu>
+
+  <mat-menu #ignoreMenu="matMenu" [hasBackdrop]="false" [overlapTrigger]="false">
+    <ng-template matMenuContent let-item="item">
+      <button mat-menu-item (click)="onContextMenuIgnore(item.eventId, FilterType.Event)">Event: {{ item.eventName }}</button>
+      <button mat-menu-item (click)="onContextMenuIgnore(item.raceClass, FilterType.Class)">Class: {{ item.raceClass }}</button>
+      <button mat-menu-item (click)="onContextMenuIgnore(item.round, FilterType.Round)">Round: {{ item.round }}</button>
+      <button mat-menu-item (click)="onContextMenuIgnore(item.racerId, FilterType.Racer)">Racer: {{ item.racerId }}</button>
+      <button mat-menu-item (click)="onContextMenuIgnore(item.raceId, FilterType.Race)">Race: {{ item.raceId }}</button>
+      <button mat-menu-item (click)="onContextMenuIgnore(item.lane, FilterType.Lane)">Lane: {{ item.lane }}</button>
+      <button mat-menu-item (click)="onContextMenuIgnore(item.result, FilterType.Result)">Result: {{ item.result }}</button>
+    </ng-template>
+  </mat-menu>
+
+  <mat-menu #allowMenu="matMenu" [hasBackdrop]="false" [overlapTrigger]="false">
+    <ng-template matMenuContent let-item="item">
+      <button mat-menu-item (click)="onContextMenuAllow(item.eventId, FilterType.Event)">Event: {{ item.eventName }}</button>
+      <button mat-menu-item (click)="onContextMenuAllow(item.raceClass, FilterType.Class)">Class: {{ item.raceClass }}</button>
+      <button mat-menu-item (click)="onContextMenuAllow(item.round, FilterType.Round)">Round: {{ item.round }}</button>
+      <button mat-menu-item (click)="onContextMenuAllow(item.racerId, FilterType.Racer)">Racer: {{ item.racerId }}</button>
+      <button mat-menu-item (click)="onContextMenuAllow(item.raceId, FilterType.Race)">Race: {{ item.raceId }}</button>
+      <button mat-menu-item (click)="onContextMenuAllow(item.lane, FilterType.Lane)">Lane: {{ item.lane }}</button>
+      <button mat-menu-item (click)="onContextMenuAllow(item.result, FilterType.Result)">Result: {{ item.result }}</button>
+    </ng-template>
+  </mat-menu>
 </div>

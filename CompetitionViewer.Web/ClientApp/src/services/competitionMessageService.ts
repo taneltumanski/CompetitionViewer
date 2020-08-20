@@ -41,7 +41,6 @@ export class CompetitionMessageService {
 
         connection
             .start()
-            .then(() => { /* TODO stop event */ })
             .then(
                 () => {
                     connection

@@ -1,7 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { RaceEventMessage, RaceEventResultMessage } from '../../models/racemessages';
 import { DecimalPipe } from '@angular/common';
-import { isNumber } from 'util';
 
 @Pipe({
     name: 'lane'
@@ -95,13 +94,17 @@ export class DialInAccuracyPipe implements PipeTransform {
 })
 export class MyNumberPipe implements PipeTransform {
     transform(value: any, defaultValue: string | null): any {
-        if (isNumber(value)) {
+        if (this.isNumber(value)) {
             let val = value as number;
 
             return (val > 0 ? "+" : "") + val.toFixed(5);
         }
 
         return defaultValue;
+    }
+
+    private isNumber(value: string | number): boolean {
+        return (value != null) && (value !== '') && !isNaN(Number(value.toString()));
     }
 }
 

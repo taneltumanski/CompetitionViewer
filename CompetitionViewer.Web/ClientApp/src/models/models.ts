@@ -12,7 +12,8 @@ export interface RaceEvent {
 export interface RaceClass {
     id: string;
     name: string;
-    definingProperty: RaceClassDefiningProperty;
+    qualificationDefiningProperty: RaceClassDefiningProperty;
+    raceEndDefiningProperty: RaceEndDefiningProperty;
     results: ObservableArray<RaceEventMessage>;
     participants: ObservableArray<ClassParticipant>;
 }
@@ -31,8 +32,15 @@ export interface Participant {
 
 export enum RaceClassDefiningProperty {
     Invalid = 0,
-    FinishTime = 1,
-    ReactionTime = 2
+    QuarterMileTime = 1,
+    EightMileTime = 2,
+    ReactionTime = 3
+}
+
+export enum RaceEndDefiningProperty {
+    Invalid = 0,
+    QuarterMileTime = 1,
+    EightMileTime = 2
 }
 
 export class ObservableArray<T> extends BehaviorSubject<T[]> {

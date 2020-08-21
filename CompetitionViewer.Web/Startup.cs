@@ -17,6 +17,14 @@ using CompetitionViewer.Web.Hubs;
 using Microsoft.AspNetCore.HttpOverrides;
 using Functional;
 using Microsoft.Extensions.Http.Logging;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.AspNetCore.Connections;
+using System.Buffers;
+using System.IO;
+using ICSharpCode.SharpZipLib.GZip;
+using Microsoft.Extensions.Options;
 
 namespace CompetitionViewer.Web
 {
@@ -34,7 +42,6 @@ namespace CompetitionViewer.Web
         {
             services.AddResponseCompression();
 
-            services.AddGrpc();
             services.AddMemoryCache();
             services
                 .AddSignalR(o =>
@@ -44,9 +51,11 @@ namespace CompetitionViewer.Web
                     o.KeepAliveInterval = TimeSpan.FromSeconds(10);
                 })
                 .AddJsonProtocol(x =>
+                //.AddCompressedJsonProtocol(x =>
                 {
                     x.PayloadSerializerOptions.IgnoreNullValues = false;
-                });
+                })
+                ;
 
             services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
@@ -133,7 +142,7 @@ namespace CompetitionViewer.Web
             app.UseIdentityServer();
             app.UseAuthorization();
             //app.UseCors("MyPolicy");
-            app.UseGrpcWeb();
+            //app.UseGrpcWeb();
             app.UseEndpoints(endpoints =>
             {
                 //endpoints
@@ -161,6 +170,91 @@ namespace CompetitionViewer.Web
                     spa.UseAngularCliServer(npmScript: "start");
                 }
             });
+        }
+    }
+
+    /// <summary>
+    /// Extension methods for <see cref="ISignalRBuilder"/>.
+    /// </summary>
+    public static class CompressedJsonProtocolDependencyInjectionExtensions
+    {
+        /// <summary>
+        /// Enables the JSON protocol for SignalR.
+        /// </summary>
+        /// <remarks>
+        /// This has no effect if the JSON protocol has already been enabled.
+        /// </remarks>
+        /// <param name="builder">The <see cref="ISignalRBuilder"/> representing the SignalR server to add JSON protocol support to.</param>
+        /// <returns>The value of <paramref name="builder"/></returns>
+        public static TBuilder AddCompressedJsonProtocol<TBuilder>(this TBuilder builder) where TBuilder : ISignalRBuilder
+            => AddCompressedJsonProtocol(builder, _ => { });
+
+        /// <summary>
+        /// Enables the JSON protocol for SignalR and allows options for the JSON protocol to be configured.
+        /// </summary>
+        /// <remarks>
+        /// Any options configured here will be applied, even if the JSON protocol has already been registered with the server.
+        /// </remarks>
+        /// <param name="builder">The <see cref="ISignalRBuilder"/> representing the SignalR server to add JSON protocol support to.</param>
+        /// <param name="configure">A delegate that can be used to configure the <see cref="JsonHubProtocolOptions"/></param>
+        /// <returns>The value of <paramref name="builder"/></returns>
+        public static TBuilder AddCompressedJsonProtocol<TBuilder>(this TBuilder builder, Action<JsonHubProtocolOptions> configure) where TBuilder : ISignalRBuilder
+        {
+            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IHubProtocol, CompressedJsonHubProtocol>());
+            builder.Services.Configure(configure);
+            return builder;
+        }
+    }
+
+    internal class CompressedJsonHubProtocol : IHubProtocol
+    {
+        private readonly JsonHubProtocol _jsonHubProtocol;
+
+        public string Name { get; } = "compressedJson";
+        public TransferFormat TransferFormat { get; } = TransferFormat.Binary;
+        public int Version => _jsonHubProtocol.Version;
+
+        public CompressedJsonHubProtocol(IOptions<JsonHubProtocolOptions> options)
+        {
+            _jsonHubProtocol = new JsonHubProtocol(options);
+        }
+
+        public ReadOnlyMemory<byte> GetMessageBytes(HubMessage message)
+        {
+            return HubProtocolExtensions.GetMessageBytes(this, message);
+        }
+
+        public bool IsVersionSupported(int version)
+        {
+            return _jsonHubProtocol.IsVersionSupported(version);
+        }
+
+        public bool TryParseMessage(ref ReadOnlySequence<byte> input, IInvocationBinder binder, out HubMessage message)
+        {
+            using var inStream = new MemoryStream(input.ToArray());
+            using var outStream = new MemoryStream();
+
+            GZip.Decompress(inStream, outStream, false);
+
+            var decompressedInput = new ReadOnlySequence<byte>(outStream.ToArray());
+
+            return _jsonHubProtocol.TryParseMessage(ref decompressedInput, binder, out message);
+        }
+
+        public void WriteMessage(HubMessage message, IBufferWriter<byte> output)
+        {
+            var myWriter = new ArrayBufferWriter<byte>(1024);
+
+            _jsonHubProtocol.WriteMessage(message, myWriter);
+
+            using var inStream = new MemoryStream(myWriter.WrittenMemory.ToArray());
+            using var outStream = new MemoryStream();
+
+            GZip.Compress(inStream, outStream, false, 1024, 9);
+
+            var compressedOutput = outStream.ToArray();
+
+            output.Write(compressedOutput);
         }
     }
 }

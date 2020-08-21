@@ -5,6 +5,6 @@ namespace CompetitionViewer.Web.Hubs
 {
     public interface ICompetitionClient
     {
-        Task SendMessages(IEnumerable<RaceEventMessage> msgs);
+        Task RaceMessages(IEnumerable<RaceEventMessage> msgs);
     }
 }

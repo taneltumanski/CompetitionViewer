@@ -46,7 +46,7 @@ namespace CompetitionViewer.Web.Hubs
 
                 var observer = Observer
                     .Create<IEnumerable<RaceEventMessage>>(
-                        async msgs => await _clients.Client(id).SendMessages(msgs),
+                        async msgs => await _clients.Client(id).RaceMessages(msgs),
                         ex => _logger.LogError(ex, "Logger error for client {connectionId}", id));
 
                 var subscription = _liveRaceResultsService

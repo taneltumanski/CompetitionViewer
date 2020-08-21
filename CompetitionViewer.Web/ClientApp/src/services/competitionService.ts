@@ -1,7 +1,7 @@
 import { Injectable, EventEmitter } from '@angular/core';
-import { RaceEventMessage } from '../models/racemessages';
+import { RaceEventMessage, RaceEventResultMessage } from '../models/racemessages';
 import { CompetitionMessageService } from './competitionMessageService';
-import { RaceEvent, ObservableArray, RaceClass, RaceClassDefiningProperty, ClassParticipant, Participant } from '../models/models';
+import { RaceEvent, ObservableArray, RaceClass, RaceClassDefiningProperty, ClassParticipant, Participant, RaceEndDefiningProperty } from '../models/models';
 import { BehaviorSubject } from 'rxjs';
 import { RaceUtils } from '../util/raceUtils';
 
@@ -10,6 +10,7 @@ import { RaceUtils } from '../util/raceUtils';
 })
 export class CompetitionService {
     private readonly rawMessages = new ObservableArray<RaceEventMessage>([]);
+    private eventInformations: EventInformation[] = [];
     private selectedEventId: string | null = null;
 
     public filteredMessages = new BehaviorSubject<RaceEventMessage[]>([]);
@@ -46,7 +47,7 @@ export class CompetitionService {
 
     private updateFilteredMessages() {
         let messages = this.rawMessages.value.filter(x => this.isValidEvent(x));
-        let selectedEventId = this.selectedEvent.value ? this.selectedEvent.value.id : null;
+        let selectedEventId = this.selectedEventId;
 
         if (selectedEventId != null) {
             messages = messages.filter(x => x.eventId == selectedEventId);
@@ -58,11 +59,12 @@ export class CompetitionService {
     private handleRaceMessage(message: RaceEventMessage) {
         this.rawMessages.push(message);
 
+        let eventInfo = this.eventInformations.find(x => x.id == message.eventId) || this.getDefaultEventInfo(message);
         let existingEvent = this.events.value.find(x => x.id == message.eventId);
         if (existingEvent == undefined) {
             existingEvent = {
                 id: message.eventId,
-                name: message.eventName || message.eventId,
+                name: eventInfo.name,
                 classes: new ObservableArray<RaceClass>([]),
                 results: new ObservableArray<RaceEventMessage>([]),
                 participants: new ObservableArray<Participant>([]),
@@ -75,21 +77,21 @@ export class CompetitionService {
 
         for (const result of message.results) {
             let racerId = result.racerId;
-            let raceClass = RaceUtils.getClass(racerId, "GENERAL");
+            let raceClass = RaceUtils.getClass(racerId, eventInfo.generalClassName);
 
             if (raceClass == null || !RaceUtils.isValidRaceClass(raceClass)) {
                 continue;
             }
 
+            let classInfo = eventInfo.classInformations.find(x => x.id == raceClass) || this.getDefaultClassInfo(raceClass);
             let existingEventClass = existingEvent.classes.value.find(x => x.id == raceClass);
             if (existingEventClass == undefined) {
-                let prop = ["BB", "SET", "PET", "J/BR",].includes(raceClass) ? RaceClassDefiningProperty.ReactionTime : RaceClassDefiningProperty.FinishTime;
-
                 existingEventClass = {
                     id: raceClass,
                     name: raceClass,
                     results: new ObservableArray<RaceEventMessage>([]),
-                    definingProperty: prop,
+                    qualificationDefiningProperty: classInfo.qualificationDefiningProperty,
+                    raceEndDefiningProperty: classInfo.raceEndDefiningProperty,
                     participants: new ObservableArray<ClassParticipant>([]),
                 };
 
@@ -103,6 +105,27 @@ export class CompetitionService {
                 existingEventClass.participants.push({ participant: null, participantId: racerId });
             }
         }
+    }
+
+    private getDefaultEventInfo(message: RaceEventMessage): EventInformation {
+        return {
+            id: message.eventId,
+            name: "Unknown event: " + message.eventId,
+            generalClassName: "Default class",
+            classInformations: []
+        };
+    }
+
+    public getDefaultClassInfo(raceClass: string): ClassInformation {
+        let qualificationProp = ["BB", "SET", "PET", "J/BR",].includes(raceClass) ? RaceClassDefiningProperty.ReactionTime : RaceClassDefiningProperty.QuarterMileTime;
+        let raceEndProp = ["J/BR"].includes(raceClass) ? RaceEndDefiningProperty.EightMileTime : RaceEndDefiningProperty.QuarterMileTime;
+
+        return {
+            id: raceClass,
+            name: raceClass,
+            qualificationDefiningProperty: qualificationProp,
+            raceEndDefiningProperty: raceEndProp
+        };
     }
 
     private isValidEvent(message: RaceEventMessage) {
@@ -121,4 +144,44 @@ export interface MessageFilter {
     raceId: string | null;
     classId: string | null;
     eventId: string | null;
+}
+
+export interface RaceEventModel {
+    event: RaceEventModel
+    eventId: string;
+    eventName: string;
+    raceId: string;
+    round: string;
+    timestamp: number;
+    results: RaceEventResultModel[];
+}
+
+export interface RaceEventResultModel {
+    racerId: string;
+    lane: string | null;
+    result: number | null;
+    dialIn: number | null;
+    reactionTime: number | null;
+    sixtyFeetTime: number | null;
+    threeThirtyFeetTime: number | null;
+    sixSixtyFeetTime: number | null;
+    sixSixtyFeetSpeed: number | null;
+    thousandFeetTime: number | null;
+    thousandFeetSpeed: number | null;
+    finishTime: number | null;
+    finishSpeed: number | null;
+}
+
+export interface EventInformation {
+    id: string;
+    name: string;
+    generalClassName: string;
+    classInformations: ClassInformation[];
+}
+
+export interface ClassInformation {
+    id: string;
+    name: string;
+    qualificationDefiningProperty: RaceClassDefiningProperty;
+    raceEndDefiningProperty: RaceEndDefiningProperty;
 }

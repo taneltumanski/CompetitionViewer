@@ -52,7 +52,7 @@ namespace DragParsement
             }
         }
 
-        static async Task Main(string[] args)
+        static async Task Main()
         {
             var idsToFind = new[] { "BB123", "SB123" };
             var baseUrl = "http://www.edra.ee/tulemused.php?eventID={0}";
@@ -63,217 +63,166 @@ namespace DragParsement
 
             //eventIds = new[] { "64" };
 
-            using (var factory = new HttpClientFactory())
+            using var factory = new HttpClientFactory();
+            var service = new EDRAResultService(factory);
+            using var liveService = new LiveRaceResultsService(service, new EventInfoProvider(), NullLogger<LiveRaceResultsService>.Instance);
+
+            var results = new List<RaceData>();
+
+            foreach (var eventId in eventIds)
             {
-                var service = new EDRAResultService(factory);
-                var liveService = new LiveRaceResultsService(service, new EventInfoProvider(), NullLogger<LiveRaceResultsService>.Instance);
-                var results = new List<RaceData>();
+                var fullUrl = string.Format(baseUrl, eventId);
 
-                foreach (var eventId in eventIds)
+                Console.WriteLine("Loading " + eventId);
+
+                var eventResults = Result.TryAsync(() => service.GetRaceData(new EDRAEventInfo(eventId, fullUrl), CancellationToken.None));
+
+                await eventResults.Apply(localResults =>
                 {
-                    var fullUrl = string.Format(baseUrl, eventId);
+                    Console.WriteLine("Loaded " + eventId + ", found " + localResults.Length + " results");
 
-                    Console.WriteLine("Loading " + eventId);
-
-                    var eventResults = Result.TryAsync(() => service.GetRaceData(new EventInfo(eventId, fullUrl), CancellationToken.None));
-
-                    await eventResults.Apply(localResults =>
+                    foreach (var errorResults in localResults)
                     {
-                        Console.WriteLine("Loaded " + eventId + ", found " + localResults.Length + " results");
-
-                        foreach (var errorResults in localResults)
+                        foreach (var error in errorResults.Errors)
                         {
-                            foreach (var error in errorResults.Errors)
-                            {
-                                Console.WriteLine(error);
-                            }
+                            Console.WriteLine(error);
                         }
-
-                        results.AddRange(localResults.Select(x => x.RaceData));
-                    },
-                    ex => Console.WriteLine("ERROR: " + ex.Message));
-                }
-
-                var racerResults = results
-                    .Where(x => x.RacerId != "BYE")
-                    .Where(x => x.FinishTime > TimeSpan.Zero)
-                    .Where(x => x.Result != RaceResult.Invalid)
-                    .Distinct()
-                    //.Where(x => x.ReactionTime >= TimeSpan.Zero)
-                    //.Where(x => Regex.IsMatch(x.RacerId, @"(SB|BB|PB)\d*"))
-                    //.GroupBy(x => x.RacerId)
-                    .Where(x => idsToFind.Contains(x.RacerId))
-                    .ToArray();
-
-                var longestRacerId = racerResults
-                    .Select(x => x.RacerId.Length)
-                    .DefaultIfEmpty(0)
-                    .Max();
-
-                Console.WriteLine("Found " + racerResults.Length + " racer results");
-
-                var selector = CreateSelector(x => x.SixtyFeetTime);
-                var grouping = new Func<IEnumerable<RaceData>, IEnumerable<RaceData>>(x => x.OrderBy(selector));
-
-                var orderedResults = grouping(racerResults);
-                var i = 1;
-
-                foreach (var result in orderedResults)
-                {
-                    var bg = Console.BackgroundColor;
-                    if (idsToFind.Contains(result.RacerId))
-                    {
-                        Console.BackgroundColor = ConsoleColor.DarkGreen;
                     }
-                    Console.WriteLine($"{result.Timestamp.Value.ToString("yyyy-MM-dd HH:mm:ss")} {result.RaceId.PadRight(7)} | {(i++.ToString() + ".").PadRight(5)} {result.RacerId.PadRight(longestRacerId)} {((result.ReactionTime < TimeSpan.Zero ? "-" : " ") + result.ReactionTime?.ToString("s\\.fffff")).PadRight(9)} {result.SixtyFeetTime?.ToString("s\\.fffff").PadRight(9)} {result.FinishTime?.ToString("s\\.fffff").PadRight(8)} {result.FinishSpeed?.ToString("0.0").PadRight(5)} {(result.FinishTime + result.ReactionTime)?.ToString("s\\.fffff").PadRight(8)} {result.Result.ToString().PadRight(8)} {(result.DialIn > TimeSpan.Zero ? (((result.FinishTime + result.ReactionTime - result.DialIn) < TimeSpan.Zero ? "-" : " ") + (result.FinishTime + result.ReactionTime - result.DialIn)?.ToString("s\\.fffff")) : string.Empty)} {result.DialIn?.ToString("s\\.fffff")}");
-                    Console.BackgroundColor = bg;
-                }
 
-                var test = results
-                    .GroupBy(x => $"{x.EventId}_{x.RaceId}")
-                    .Where(x => x.Any())
-                    .Where(x => x.All(y => y.Result != RaceResult.Invalid))
-                    .Where(x => x.All(y => y.FinishTime > TimeSpan.Zero))
-                    .Where(x => x.Count() == 2)
-                    .Select(x => new
-                    {
-                        Id = x.Key,
-                        Time = x.First().Timestamp,
-                        Lane1 = x.OrderBy(y => y.Result).First(),
-                        Lane2 = x.OrderBy(y => y.Result).Skip(1).First(),
-                    })
-                    .Select(x => new
-                    {
-                        x.Id,
-                        x.Time,
-                        x.Lane1,
-                        x.Lane2,
-                        Difference = (x.Lane2.ReactionTime + x.Lane2.FinishTime - (x.Lane2.DialIn ?? TimeSpan.Zero)) - (x.Lane1.ReactionTime + x.Lane1.FinishTime - (x.Lane1.DialIn ?? TimeSpan.Zero))
-                    })
-                    .Where(x => idsToFind.Contains(x.Lane1.RacerId) || idsToFind.Contains(x.Lane2.RacerId))
-                    //.Where(x => x.Lane1.DialIn == TimeSpan.Zero)
-                    .Where(x => x.Lane2.RacerId != "BYE" && x.Lane1.RacerId != "BYE")
-                    .OrderBy(x => x.Lane1.FinishTime)
-                    //.Where(x => x.Time >= new DateTimeOffset(new DateTime(2019, 7, 10)))
-                    .Where(x => x.Lane1.ReactionTime >= TimeSpan.Zero && x.Lane2.ReactionTime >= TimeSpan.Zero)
-                    .Where(x => x.Lane1.FinishTime >= TimeSpan.Zero && x.Lane2.FinishTime >= TimeSpan.Zero)
-                    .Where(x => (x.Lane1.FinishTime >= x.Lane1.DialIn || (x.Lane1.DialIn ?? TimeSpan.Zero) == TimeSpan.Zero) && (x.Lane2.FinishTime >= x.Lane2.DialIn || (x.Lane2.DialIn ?? TimeSpan.Zero) == TimeSpan.Zero))
-                    //.Where(x => x.Lane1.Round.StartsWith('E'))
-                    .Where(x => !x.Lane1.RacerId.StartsWith("RWYB"))
-                    //.Where(x => x.Difference >= TimeSpan.Zero)
-                    //.OrderByDescending(x => Math.Abs(x.Lane1.ReactionTime?.Ticks ?? 0 - x.Lane2.ReactionTime?.Ticks ?? 0))
-                    .ToArray();
-
-                i = 1;
-
-                Console.WriteLine();
-
-                foreach (var result in test)
-                {
-                    var bg = Console.BackgroundColor;
-                    if (idsToFind.Contains(result.Lane1.RacerId) || idsToFind.Contains(result.Lane2.RacerId))
-                    {
-                        Console.BackgroundColor = ConsoleColor.DarkGreen;
-                    }
-                    else if (result.Lane1.RacerId.StartsWith("SB") || result.Lane1.RacerId.StartsWith("BB") || result.Lane1.RacerId.StartsWith("PB"))
-                    {
-                        Console.BackgroundColor = ConsoleColor.DarkBlue;
-                    }
-                    //Console.WriteLine($"{result.Time?.ToString("yyyy-MM-dd HH:mm:ss")} {(i++.ToString() + ".").PadRight(5)} {result.Id.PadRight(9)} | {result.Lane1.Round.PadRight(5)} {((result.Lane1.ReactionTime < TimeSpan.Zero ? "-" : " ") + result.Lane1.ReactionTime?.ToString("s\\.fffff")).PadRight(9)} {result.Lane1.FinishTime?.ToString("s\\.fffff").PadRight(8)} {result.Lane1.DialIn?.ToString("s\\.ff").PadRight(6)} WINNER {result.Lane1.RacerId.PadRight(longestRacerId)} | {result.Lane2.RacerId.PadRight(longestRacerId)} RUNNERUP {((result.Lane2.ReactionTime < TimeSpan.Zero ? "-" : " ") + result.Lane2.ReactionTime?.ToString("s\\.fffff")).PadRight(9)} {result.Lane2.FinishTime?.ToString("s\\.fffff").PadRight(8)} {result.Lane2.DialIn?.ToString("s\\.ff").PadRight(6)} {((result.Difference < TimeSpan.Zero ? "-" : "+") + result.Difference?.ToString("s\\.fffff")).PadRight(8)}");
-                    Console.BackgroundColor = bg;
-                }
-
-                Console.WriteLine(test.Length);
-
-                var events = results.Select(x => x.EventId).Distinct().ToArray();
-
-                var raceNumbers = events
-                    .Select(e => new
-                    {
-                        Id = e,
-                        Numbers = results
-                            .Where(x => x.EventId == e)
-                            .Select(x => x.RaceId)
-                            .Distinct()
-                            .Select(x => int.Parse(x))
-                            .ToHashSet()
-                    })
-                    .Select(x => new
-                    {
-                        EventId = x.Id,
-                        All = x.Numbers.OrderBy(y => y).ToArray(),
-                        Missing = Enumerable.Range(x.Numbers.Min(), x.Numbers.Max() - x.Numbers.Min())
-                            .Where(y => !x.Numbers.Contains(y))
-                            .ToArray()
-                    })
-                    .ToArray();
-
-                foreach (var item in raceNumbers)
-                {
-                    Console.WriteLine($"MISSING from {item.EventId} {item.Missing.Length}");
-                }
-
-                var myResults = results
-                    .Where(x => x.RacerId != "BYE")
-                    .Where(x => x.FinishTime > TimeSpan.Zero)
-                    .Where(x => x.Result != RaceResult.Invalid)
-                    .OrderBy(x => x.Timestamp)
-                    .Distinct()
-                    .Where(x => idsToFind.Contains(x.RacerId))
-                    .ToArray();
-
-                Console.WriteLine("Found " + myResults.Length + " my results");
-
-                //using (var excel = new ExcelPackage())
-                //{
-                //    var columns = new List<Func<RaceDataDto, object>>()
-                //    {
-                //        x => x.Timestamp,
-                //        x => x.ReactionTime?.TotalSeconds ?? 0,
-                //        x => x.SixtyFeetTime?.TotalSeconds ?? 0,
-                //        x => x.ThreeThirtyFeetTime?.TotalSeconds ?? 0,
-                //        x => x.SixtyFeetTime?.TotalSeconds ?? 0,
-                //        x => x.SixSixtyFeetSpeed,
-                //        x => x.ThousandFeetTime?.TotalSeconds ?? 0,
-                //        x => x.ThousandFeetSpeed,
-                //        x => x.FinishTime?.TotalSeconds ?? 0,
-                //        x => x.FinishSpeed
-                //    };
-
-                //    var wb = excel.Workbook.Worksheets.Add("drag");
-                //    var row = 2;
-
-                //    wb.Cells[1, 1].Value = "Time";
-                //    wb.Cells[1, 2].Value = "Reaction";
-                //    wb.Cells[1, 3].Value = "60ft";
-                //    wb.Cells[1, 4].Value = "330ft";
-                //    wb.Cells[1, 5].Value = "660ft";
-                //    wb.Cells[1, 6].Value = "660ft speed";
-                //    wb.Cells[1, 7].Value = "1000ft";
-                //    wb.Cells[1, 8].Value = "1000ft speed";
-                //    wb.Cells[1, 9].Value = "ET";
-                //    wb.Cells[1, 10].Value = "ET speed";
-
-                //    foreach (var result in myResults)
-                //    {
-                //        for (int col = 0; col < columns.Count; col++)
-                //        {
-                //            wb.Cells[row, col + 1].Value = columns[col](result);
-                //        }
-
-                //        row++;
-                //    }
-
-                //    Directory.CreateDirectory(@"C:\Users\tanel.tumanski\Desktop\drag");
-
-                //    using (var stream = File.OpenWrite(@"C:\Users\tanel.tumanski\Desktop\drag\data.xlsx"))
-                //    {
-                //        excel.SaveAs(stream);
-                //    }
-                //}
-
-                //Console.WriteLine("Created file");
+                    results.AddRange(localResults.Select(x => x.RaceData));
+                },
+                ex => Console.WriteLine("ERROR: " + ex.Message));
             }
+
+            var racerResults = results
+                .Where(x => x.RacerId != "BYE")
+                .Where(x => x.FinishTime > TimeSpan.Zero)
+                .Where(x => x.Result != RaceResult.Invalid)
+                .Distinct()
+                //.Where(x => x.ReactionTime >= TimeSpan.Zero)
+                //.Where(x => Regex.IsMatch(x.RacerId, @"(SB|BB|PB)\d*"))
+                //.GroupBy(x => x.RacerId)
+                .Where(x => idsToFind.Contains(x.RacerId))
+                .ToArray();
+
+            var longestRacerId = racerResults
+                .Select(x => x.RacerId.Length)
+                .DefaultIfEmpty(0)
+                .Max();
+
+            Console.WriteLine("Found " + racerResults.Length + " racer results");
+
+            var selector = CreateSelector(x => x.SixtyFeetTime);
+            var grouping = new Func<IEnumerable<RaceData>, IEnumerable<RaceData>>(x => x.OrderBy(selector));
+
+            var orderedResults = grouping(racerResults);
+            var i = 1;
+
+            foreach (var result in orderedResults)
+            {
+                var bg = Console.BackgroundColor;
+                if (idsToFind.Contains(result.RacerId))
+                {
+                    Console.BackgroundColor = ConsoleColor.DarkGreen;
+                }
+                Console.WriteLine($"{result.Timestamp.Value.ToString("yyyy-MM-dd HH:mm:ss")} {result.RaceId.PadRight(7)} | {(i++.ToString() + ".").PadRight(5)} {result.RacerId.PadRight(longestRacerId)} {((result.ReactionTime < TimeSpan.Zero ? "-" : " ") + result.ReactionTime?.ToString("s\\.fffff")).PadRight(9)} {result.SixtyFeetTime?.ToString("s\\.fffff").PadRight(9)} {result.FinishTime?.ToString("s\\.fffff").PadRight(8)} {result.FinishSpeed?.ToString("0.0").PadRight(5)} {(result.FinishTime + result.ReactionTime)?.ToString("s\\.fffff").PadRight(8)} {result.Result.ToString().PadRight(8)} {(result.DialIn > TimeSpan.Zero ? (((result.FinishTime + result.ReactionTime - result.DialIn) < TimeSpan.Zero ? "-" : " ") + (result.FinishTime + result.ReactionTime - result.DialIn)?.ToString("s\\.fffff")) : string.Empty)} {result.DialIn?.ToString("s\\.fffff")}");
+                Console.BackgroundColor = bg;
+            }
+
+            var test = results
+                .GroupBy(x => $"{x.EventId}_{x.RaceId}")
+                .Where(x => x.Any())
+                .Where(x => x.All(y => y.Result != RaceResult.Invalid))
+                .Where(x => x.All(y => y.FinishTime > TimeSpan.Zero))
+                .Where(x => x.Count() == 2)
+                .Select(x => new
+                {
+                    Id = x.Key,
+                    Time = x.First().Timestamp,
+                    Lane1 = x.OrderBy(y => y.Result).First(),
+                    Lane2 = x.OrderBy(y => y.Result).Skip(1).First(),
+                })
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Time,
+                    x.Lane1,
+                    x.Lane2,
+                    Difference = (x.Lane2.ReactionTime + x.Lane2.FinishTime - (x.Lane2.DialIn ?? TimeSpan.Zero)) - (x.Lane1.ReactionTime + x.Lane1.FinishTime - (x.Lane1.DialIn ?? TimeSpan.Zero))
+                })
+                .Where(x => idsToFind.Contains(x.Lane1.RacerId) || idsToFind.Contains(x.Lane2.RacerId))
+                //.Where(x => x.Lane1.DialIn == TimeSpan.Zero)
+                .Where(x => x.Lane2.RacerId != "BYE" && x.Lane1.RacerId != "BYE")
+                .OrderBy(x => x.Lane1.FinishTime)
+                //.Where(x => x.Time >= new DateTimeOffset(new DateTime(2019, 7, 10)))
+                .Where(x => x.Lane1.ReactionTime >= TimeSpan.Zero && x.Lane2.ReactionTime >= TimeSpan.Zero)
+                .Where(x => x.Lane1.FinishTime >= TimeSpan.Zero && x.Lane2.FinishTime >= TimeSpan.Zero)
+                .Where(x => (x.Lane1.FinishTime >= x.Lane1.DialIn || (x.Lane1.DialIn ?? TimeSpan.Zero) == TimeSpan.Zero) && (x.Lane2.FinishTime >= x.Lane2.DialIn || (x.Lane2.DialIn ?? TimeSpan.Zero) == TimeSpan.Zero))
+                //.Where(x => x.Lane1.Round.StartsWith('E'))
+                .Where(x => !x.Lane1.RacerId.StartsWith("RWYB"))
+                //.Where(x => x.Difference >= TimeSpan.Zero)
+                //.OrderByDescending(x => Math.Abs(x.Lane1.ReactionTime?.Ticks ?? 0 - x.Lane2.ReactionTime?.Ticks ?? 0))
+                .ToArray();
+
+            i = 1;
+
+            Console.WriteLine();
+
+            foreach (var result in test)
+            {
+                var bg = Console.BackgroundColor;
+                if (idsToFind.Contains(result.Lane1.RacerId) || idsToFind.Contains(result.Lane2.RacerId))
+                {
+                    Console.BackgroundColor = ConsoleColor.DarkGreen;
+                }
+                else if (result.Lane1.RacerId.StartsWith("SB") || result.Lane1.RacerId.StartsWith("BB") || result.Lane1.RacerId.StartsWith("PB"))
+                {
+                    Console.BackgroundColor = ConsoleColor.DarkBlue;
+                }
+                //Console.WriteLine($"{result.Time?.ToString("yyyy-MM-dd HH:mm:ss")} {(i++.ToString() + ".").PadRight(5)} {result.Id.PadRight(9)} | {result.Lane1.Round.PadRight(5)} {((result.Lane1.ReactionTime < TimeSpan.Zero ? "-" : " ") + result.Lane1.ReactionTime?.ToString("s\\.fffff")).PadRight(9)} {result.Lane1.FinishTime?.ToString("s\\.fffff").PadRight(8)} {result.Lane1.DialIn?.ToString("s\\.ff").PadRight(6)} WINNER {result.Lane1.RacerId.PadRight(longestRacerId)} | {result.Lane2.RacerId.PadRight(longestRacerId)} RUNNERUP {((result.Lane2.ReactionTime < TimeSpan.Zero ? "-" : " ") + result.Lane2.ReactionTime?.ToString("s\\.fffff")).PadRight(9)} {result.Lane2.FinishTime?.ToString("s\\.fffff").PadRight(8)} {result.Lane2.DialIn?.ToString("s\\.ff").PadRight(6)} {((result.Difference < TimeSpan.Zero ? "-" : "+") + result.Difference?.ToString("s\\.fffff")).PadRight(8)}");
+                Console.BackgroundColor = bg;
+            }
+
+            Console.WriteLine(test.Length);
+
+            var events = results.Select(x => x.EventId).Distinct().ToArray();
+
+            var raceNumbers = events
+                .Select(e => new
+                {
+                    Id = e,
+                    Numbers = results
+                        .Where(x => x.EventId == e)
+                        .Select(x => x.RaceId)
+                        .Distinct()
+                        .Select(x => int.Parse(x))
+                        .ToHashSet()
+                })
+                .Select(x => new
+                {
+                    EventId = x.Id,
+                    All = x.Numbers.OrderBy(y => y).ToArray(),
+                    Missing = Enumerable.Range(x.Numbers.Min(), x.Numbers.Max() - x.Numbers.Min())
+                        .Where(y => !x.Numbers.Contains(y))
+                        .ToArray()
+                })
+                .ToArray();
+
+            foreach (var item in raceNumbers)
+            {
+                Console.WriteLine($"MISSING from {item.EventId} {item.Missing.Length}");
+            }
+
+            var myResults = results
+                .Where(x => x.RacerId != "BYE")
+                .Where(x => x.FinishTime > TimeSpan.Zero)
+                .Where(x => x.Result != RaceResult.Invalid)
+                .OrderBy(x => x.Timestamp)
+                .Distinct()
+                .Where(x => idsToFind.Contains(x.RacerId))
+                .ToArray();
+
+            Console.WriteLine("Found " + myResults.Length + " my results");
         }
 
         private static Func<RaceData, T> CreateSelector<T>(Func<RaceData, T> func)

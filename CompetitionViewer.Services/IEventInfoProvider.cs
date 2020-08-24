@@ -5,17 +5,17 @@ namespace CompetitionViewer.Services
 {
     public interface IEventInfoProvider
     {
-        IEnumerable<EventInfo> GetEventInfos();
+        IEnumerable<EDRAEventInfo> GetEventInfos();
     }
 
     public class EventInfoProvider : IEventInfoProvider
     {
-        public IEnumerable<EventInfo> GetEventInfos()
+        public IEnumerable<EDRAEventInfo> GetEventInfos()
         {
             return Enumerable
                 .Range(0, 200)
                 .Select(x => x.ToString())
-                .Select(x => new EventInfo(x, $"http://www.edra.ee/tulemused.php?eventID={x}"))
+                .Select(x => new EDRAEventInfo(x, $"http://www.edra.ee/tulemused.php?eventID={x}"))
                 .ToArray();
         }
     }

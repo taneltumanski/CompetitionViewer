@@ -17,7 +17,7 @@ namespace CompetitionViewer.Web.Hubs
         private readonly ILiveRaceResultsService _liveRaceResultsService;
         private readonly ILogger<MessagingListener> _logger;
 
-        private ConcurrentDictionary<string, IDisposable> _subscribers = new ConcurrentDictionary<string, IDisposable>();
+        private readonly ConcurrentDictionary<string, IDisposable> _subscribers = new ConcurrentDictionary<string, IDisposable>();
 
         private readonly object _lock = new object();
 

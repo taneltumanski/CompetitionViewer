@@ -21,7 +21,7 @@ namespace CompetitionViewer.Services
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<ImmutableArray<EDRADragParser.ParseResult>> GetRaceData(EventInfo eventInfo, CancellationToken token)
+        public async Task<ImmutableArray<EDRADragParser.ParseResult>> GetRaceData(EDRAEventInfo eventInfo, CancellationToken token)
         {
             var client = _httpClientFactory.CreateClient("EDRAClient");
             var result = await client.GetAsync(eventInfo.FullUri, token);

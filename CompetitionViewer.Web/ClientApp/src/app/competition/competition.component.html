@@ -1,10 +1,13 @@
 <h1 id="tableLabel">Drag Results</h1>
 
 <div *ngIf="eventList.length > 0">
-  <select name="selectedEventId" [(ngModel)]="selectedEventId" (change)="onSelectedEventChange()">
-    <option [ngValue]="null">ALL</option>
-    <option *ngFor="let event of eventList" [ngValue]="event.id">{{ event.name }}</option>
-  </select>
+  <mat-form-field appearance="fill">
+    <mat-label>Select event</mat-label>
+    <mat-select [(value)]="selectedEventId" name="event" (selectionChange)="onSelectedEventChange()">
+      <mat-option [value]="null">ALL EVENTS</mat-option>
+      <mat-option *ngFor="let event of eventList" [value]="event.id">{{ event.name }}</mat-option>
+    </mat-select>
+  </mat-form-field>
 </div>
 
 <mat-tab-group animationDuration="0ms">

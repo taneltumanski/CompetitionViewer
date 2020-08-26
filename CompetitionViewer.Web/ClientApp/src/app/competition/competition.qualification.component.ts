@@ -74,11 +74,11 @@ export class QualificationClassViewModel {
     }
 
     public update(result: RaceEventResultMessage) {
-        if (this.classData.definingProperty == RaceClassDefiningProperty.Invalid) {
+        if (this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.Invalid) {
             return;
         }
 
-        let currentTime = this.classData.definingProperty == RaceClassDefiningProperty.FinishTime ? result.finishTime : result.reactionTime;
+        let currentTime = this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.QuarterMileTime ? result.finishTime : result.reactionTime;
         let existingItem = this.participantPositions.find(x => x.participantId == result.racerId);
 
         if (existingItem == undefined) {
@@ -90,7 +90,7 @@ export class QualificationClassViewModel {
             this.participantPositions.push(existingItem);
         }
 
-        if (currentTime != null && ((this.classData.definingProperty == RaceClassDefiningProperty.FinishTime && currentTime > 0) || (this.classData.definingProperty == RaceClassDefiningProperty.ReactionTime && currentTime >= 0))) {
+        if (currentTime != null && ((this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.QuarterMileTime && currentTime > 0) || (this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.ReactionTime && currentTime >= 0))) {
             if (existingItem.bestTime == null || currentTime < existingItem.bestTime) {
                 existingItem.bestTime = currentTime;
             }

@@ -1,4 +1,5 @@
-﻿using Functional;
+﻿using CompetitionViewer.Services.ResultsRequesters.EDRA;
+using Functional;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -136,7 +137,7 @@ namespace CompetitionViewer.Services
 
                 try
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(20), ct);
+                    await Task.Delay(TimeSpan.FromSeconds(5), ct);
                 }
                 catch (OperationCanceledException) { }
             }

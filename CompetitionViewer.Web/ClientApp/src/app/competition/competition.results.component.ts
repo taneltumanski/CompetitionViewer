@@ -23,6 +23,7 @@ import { MatMenuTrigger } from '@angular/material/menu';
 @Component({
     selector: 'competition-results',
     templateUrl: './competition.results.component.html',
+    styleUrls: ['./competition.component.css'],
 })
 export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDestroy {
     private dataSource = new MatTableDataSource<RaceMessageViewModel>([]);

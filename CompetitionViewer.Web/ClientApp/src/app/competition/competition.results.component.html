@@ -25,7 +25,7 @@
     </mat-form-field>
   </div>
 
-  <mat-table class="mat-elevation-z8"
+  <table mat-table class="table-fit result-table mat-elevation-z8"
              [dataSource]="dataSource"
              matSort
              matSortActive="timestamp"
@@ -33,26 +33,26 @@
              matSortDisableClear>
 
     <ng-container *ngFor="let column of getDisplayedColumns()" [matColumnDef]="column.id">
-      <mat-header-cell *matHeaderCellDef mat-sort-header disabled="false">{{ column.name }}</mat-header-cell>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header disabled="false">{{ column.name }}</th>
       <ng-container *ngIf="column.id == 'index'">
-        <mat-cell *matCellDef="let row; let i = index" (contextmenu)="onContextMenu($event, row)">{{ i + 1 }}.</mat-cell>
+        <td mat-cell *matCellDef="let row; let i = index" (contextmenu)="onContextMenu($event, row)">{{ i + 1 }}.</td>
       </ng-container>
       <ng-container *ngIf="column.id != 'index'">
-        <mat-cell *matCellDef="let row" (contextmenu)="onContextMenu($event, row)">{{ format(row[column.id], column) }}</mat-cell>
+        <td mat-cell *matCellDef="let row" (contextmenu)="onContextMenu($event, row)">{{ format(row[column.id], column) }}</td>
       </ng-container>
     </ng-container>
 
     <ng-container *ngFor="let column of getDisplayedColumns(); let i = index" [matColumnDef]="column.id + '-buttons'">
-      <mat-header-cell *matHeaderCellDef>
+      <th mat-header-cell *matHeaderCellDef>
         <button mat-icon-button (click)="hideColumn(column.id)"><mat-icon>cancel</mat-icon></button>
-      </mat-header-cell>
+      </th>
     </ng-container>
 
-    <mat-header-row *matHeaderRowDef="getDisplayedColumnNames(); sticky: true;"></mat-header-row>
-    <mat-header-row *matHeaderRowDef="getDisplayedColumnsSecondHeaders()"></mat-header-row>
+    <tr mat-header-row *matHeaderRowDef="getDisplayedColumnNames(); sticky: true;"></tr>
+    <tr mat-header-row *matHeaderRowDef="getDisplayedColumnsSecondHeaders(); sticky: true;"></tr>
 
-    <mat-row *matRowDef="let row; columns: getDisplayedColumnNames()"></mat-row>
-  </mat-table>
+    <tr mat-row *matRowDef="let row; columns: getDisplayedColumnNames()"></tr>
+  </table>
 
   <mat-paginator [length]="selectedEvent?.results.value.length"
                  [pageSize]="20"

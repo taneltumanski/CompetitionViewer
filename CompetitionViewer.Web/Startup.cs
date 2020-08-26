@@ -25,6 +25,9 @@ using System.Buffers;
 using System.IO;
 using ICSharpCode.SharpZipLib.GZip;
 using Microsoft.Extensions.Options;
+using CompetitionViewer.Services.ResultsRequesters.EDRA;
+using System.Net.Http;
+using System.Net;
 
 namespace CompetitionViewer.Web
 {
@@ -88,7 +91,18 @@ namespace CompetitionViewer.Web
                 configuration.RootPath = "ClientApp/dist";
             });
 
-            services.AddHttpClient("EDRAClient");
+            services
+                .AddHttpClient("EDRAClient")
+                .ConfigurePrimaryHttpMessageHandler(messageHandler =>
+                {
+                    var handler = new HttpClientHandler();
+
+                    if (handler.SupportsAutomaticDecompression)
+                    {
+                        handler.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
+                    }
+                    return handler;
+                });
 
             //services.AddCors(o =>
             //{
@@ -105,6 +119,7 @@ namespace CompetitionViewer.Web
             services.AddTransient<EDRAResultService>();
             services.AddTransient<IEventInfoProvider, EventInfoProvider>();
             services.AddSingleton<MessagingListener>();
+            services.AddSingleton<HostedServiceManager>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

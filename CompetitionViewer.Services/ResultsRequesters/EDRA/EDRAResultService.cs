@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CompetitionViewer.Services
+namespace CompetitionViewer.Services.ResultsRequesters.EDRA
 {
     public class EDRAResultService
     {
@@ -21,14 +21,19 @@ namespace CompetitionViewer.Services
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<ImmutableArray<EDRADragParser.ParseResult>> GetRaceData(EDRAEventInfo eventInfo, CancellationToken token)
+        public async Task<string> GetRaceHtml(EDRAEventInfo eventInfo, CancellationToken token)
         {
             var client = _httpClientFactory.CreateClient("EDRAClient");
             var result = await client.GetAsync(eventInfo.FullUri, token);
 
             result.EnsureSuccessStatusCode();
 
-            var html = await result.Content.ReadAsStringAsync();
+            return await result.Content.ReadAsStringAsync();
+        }
+
+        public async Task<ImmutableArray<EDRADragParser.ParseResult>> GetRaceData(EDRAEventInfo eventInfo, CancellationToken token)
+        {
+            var html = await GetRaceHtml(eventInfo, token);
 
             var doc = new HtmlDocument();
             doc.LoadHtml(html);

@@ -9,7 +9,7 @@ using System.Text;
 using Functional;
 using System.Security.Cryptography;
 
-namespace CompetitionViewer.Services
+namespace CompetitionViewer.Services.ResultsRequesters.EDRA
 {
     public class EDRADragParser
     {

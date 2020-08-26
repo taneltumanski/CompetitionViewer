@@ -54,7 +54,7 @@
     <tr mat-row *matRowDef="let row; columns: getDisplayedColumnNames()"></tr>
   </table>
 
-  <mat-paginator [length]="selectedEvent?.results.value.length"
+  <mat-paginator [length]="this.dataSource.filteredData.length"
                  [pageSize]="20"
                  [pageSizeOptions]="[10, 20, 100]"
                  [showFirstLastButtons]="true"></mat-paginator>

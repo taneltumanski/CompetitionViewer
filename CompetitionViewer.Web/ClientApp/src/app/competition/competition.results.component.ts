@@ -26,10 +26,10 @@ import { MatMenuTrigger } from '@angular/material/menu';
     styleUrls: ['./competition.component.css'],
 })
 export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDestroy {
-    private dataSource = new MatTableDataSource<RaceMessageViewModel>([]);
     private subscription: Subscription | null;
     private currentContextMenuTarget: HTMLElement | null;
 
+    public dataSource = new MatTableDataSource<RaceMessageViewModel>([]);
     public filters: FilterData[] = [];
     public columns: ColumnData[] = [];
 

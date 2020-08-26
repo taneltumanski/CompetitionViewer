@@ -60,19 +60,19 @@ namespace CompetitionViewer.Web
                 })
                 ;
 
-            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            //services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-            services
-                .AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+            //services
+            //    .AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+            //    .AddEntityFrameworkStores<ApplicationDbContext>();
 
-            services
-                .AddIdentityServer()
-                .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
+            //services
+            //    .AddIdentityServer()
+            //    .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
 
-            services
-                .AddAuthentication()
-                .AddIdentityServerJwt()
+            //services
+            //    .AddAuthentication()
+            //    .AddIdentityServerJwt()
                 //.AddGoogle(options =>
                 //{
                 //    var googleAuthNSection = Configuration.GetSection("Authentication:Google");
@@ -153,17 +153,11 @@ namespace CompetitionViewer.Web
 
             app.UseRouting();
 
-            app.UseAuthentication();
-            app.UseIdentityServer();
-            app.UseAuthorization();
-            //app.UseCors("MyPolicy");
-            //app.UseGrpcWeb();
+            //app.UseAuthentication();
+            //app.UseIdentityServer();
+            //app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
-                //endpoints
-                //    .MapGrpcService<RaceService>()
-                //    .RequireCors("MyPolicy");
-
                 endpoints.MapHub<CompetitionHub>("/messaging");
 
                 endpoints.MapControllerRoute(

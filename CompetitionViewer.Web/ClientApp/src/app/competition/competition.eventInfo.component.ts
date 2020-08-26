@@ -15,19 +15,35 @@ export class CompetitionEventInfoComponent {
             .subscribe(x => this.selectedEvent = x);
     }
 
-    public getParticipantCount(event: RaceEvent): number {
+    public getParticipantCount(event: RaceEvent | null): number {
+        if (event == null) {
+            return 0;
+        }
+
         return event.classes.value.reduce((acc, val) => acc + val.participants.value.length, 0);
     }
 
-    public getRaceCount(event: RaceEvent): number {
+    public getRaceCount(event: RaceEvent | null): number {
+        if (event == null) {
+            return 0;
+        }
+
         return event.results.value.reduce((acc, val) => acc + 1, 0);
     }
 
-    public getFirstDate(event: RaceEvent): number | undefined {
+    public getFirstDate(event: RaceEvent | null): number | undefined {
+        if (event == null) {
+            return 0;
+        }
+
         return event.results.value.map(x => x.timestamp).sort((a, b) => b - a).pop();
     }
 
-    public getLastDate(event: RaceEvent): number | undefined {
+    public getLastDate(event: RaceEvent | null): number | undefined {
+        if (event == null) {
+            return 0;
+        }
+
         return event.results.value.map(x => x.timestamp).sort((a, b) => a - b).pop();
     }
 }

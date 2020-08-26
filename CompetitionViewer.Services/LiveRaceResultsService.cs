@@ -28,8 +28,7 @@ namespace CompetitionViewer.Services
 
         private readonly IEventInfoProvider _eventUriProvider;
         private readonly ILogger<LiveRaceResultsService> _logger;
-        private readonly IConnectableObservable<RaceDataDto> _stream;
-        private readonly IDisposable _disposable;
+        private readonly IObservable<RaceDataDto> _stream;
         private readonly EDRAResultService _resultService;
 
         public LiveRaceResultsService(EDRAResultService resultService, IEventInfoProvider eventUriProvider, ILogger<LiveRaceResultsService> logger)
@@ -40,14 +39,13 @@ namespace CompetitionViewer.Services
 
             _stream = CreateObservable()
                 .Distinct(x => HashCode.Combine(x.RaceId, x.EventId, x.Timestamp))
-                .Replay();
-
-            _disposable = _stream.Connect();
+                .Replay()
+                .RefCount();
         }
 
         public IObservable<RaceDataDto> GetStream()
         {
-            return _stream;
+            return _stream.AsObservable();
         }
 
         private IObservable<RaceDataDto> CreateObservable()
@@ -240,7 +238,6 @@ namespace CompetitionViewer.Services
         {
             _cts.Cancel();
             _cts.Dispose();
-            _disposable.Dispose();
         }
     }
 }

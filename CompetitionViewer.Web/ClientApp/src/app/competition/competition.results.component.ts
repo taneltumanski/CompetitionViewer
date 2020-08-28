@@ -6,11 +6,11 @@ import { Binary } from '@angular/compiler';
 import { MatTableDataSource } from '@angular/material/table';
 import { DataSource } from '@angular/cdk/table';
 import { CollectionViewer } from '@angular/cdk/collections';
-import { Observable, BehaviorSubject, Subscription, fromEvent, merge } from 'rxjs';
+import { Observable, BehaviorSubject, Subscription, fromEvent, merge, interval } from 'rxjs';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { ActivatedRoute } from '@angular/router';
-import { debounceTime, distinctUntilChanged, tap, filter, take } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, tap, filter, take, sample } from 'rxjs/operators';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CompetitionService } from '../../services/competitionService';
 import { LanePipe, MyNumberPipe, RaceResultPipe } from './competition.pipes';
@@ -90,8 +90,8 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
                 return true;
             }
 
-            let whitelistFilterCount = this.filters.filter(filter => !filter.isInverse).reduce(acc => acc + 1, 0); 
-            let blacklistFilterCount = this.filters.filter(filter =>  filter.isInverse).reduce(acc => acc + 1, 0);
+            let whitelistFilterCount = this.filters.filter(filter => !filter.isInverse).length;
+            let blacklistFilterCount = this.filters.filter(filter =>  filter.isInverse).length;
 
             let whitelistResult = this.filters.some(filter => !filter.isInverse && filterFunctions.some(filterFn => filterFn.type == filter.type && filterFn.function(filter, item)));
             let blacklistResult = this.filters.some(filter => filter.isInverse && filterFunctions.some(filterFn => filterFn.type == filter.type && filterFn.function(filter, item)));;
@@ -100,7 +100,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
         };
 
         let subscriptions = [
-            this.competitionService.filteredMessages.subscribe(() => this.invalidate()),
+            this.competitionService.filteredMessages.pipe(sample(interval(500))).subscribe(() => this.invalidate()),
             this.contextMenu.menuClosed.subscribe(() => this.currentContextMenuTarget = null),
 
             fromEvent<MouseEvent>(document, 'click')

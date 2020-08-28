@@ -28,6 +28,7 @@ import { MatMenuTrigger } from '@angular/material/menu';
 export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDestroy {
     private subscription: Subscription | null;
     private currentContextMenuTarget: HTMLElement | null;
+    private snackbarTimeout: NodeJS.Timeout | null;
 
     public dataSource = new MatTableDataSource<RaceMessageViewModel>([]);
     public filters: FilterData[] = [];
@@ -148,8 +149,20 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
         }
 
         if (message) {
-            this.snackBar.open(message, "Ok", { duration: 3000, politeness: "polite" });
+            this.pushSnackbarMessage(message);
         }
+    }
+
+    private pushSnackbarMessage(message: string): void {
+        if (this.snackbarTimeout) {
+            clearTimeout(this.snackbarTimeout);
+            this.snackbarTimeout = null;
+        }
+
+        this.snackbarTimeout = setTimeout(() => {
+            this.snackBar.open(message, "Ok", { duration: 3000, politeness: "polite" });
+            this.snackbarTimeout = null;
+        }, 1000);
     }
 
     public onContextMenu(event: MouseEvent, item: RaceMessageViewModel) {

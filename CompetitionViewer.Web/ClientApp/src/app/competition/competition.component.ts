@@ -19,7 +19,7 @@ export class CompetitionComponent {
         competitionService
             .events
             .subscribe(x => {
-                this.eventList = x;
+                this.eventList = x.sort((a, b) => a.id.localeCompare(b.id));
 
                 if (this.selectedEventId != null) {
                     let matchingEvent = this.eventList.find(x => x.id == this.selectedEventId);

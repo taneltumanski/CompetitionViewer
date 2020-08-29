@@ -15,7 +15,7 @@ export class CompetitionMessageService {
 
     private messageStream: ReplaySubject<RaceEventMessage[]> = new ReplaySubject();
 
-    public onConnected: BehaviorSubject<boolean>;
+    public onConnected: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
     constructor() {
         this.connectSignalR();

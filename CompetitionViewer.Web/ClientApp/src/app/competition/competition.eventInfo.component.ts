@@ -28,7 +28,7 @@ export class CompetitionEventInfoComponent {
             return 0;
         }
 
-        return event.results.value.reduce((acc, val) => acc + 1, 0);
+        return event.results.value.length;
     }
 
     public getFirstDate(event: RaceEvent | null): number | undefined {

@@ -3,6 +3,7 @@ import { RaceEventMessage, RaceEventResultMessage } from '../../models/racemessa
 import { RaceEvent, RaceClassDefiningProperty, RaceClass } from '../../models/models';
 import { RaceUtils } from '../../util/raceUtils';
 import { CompetitionService } from '../../services/competitionService';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'competition-qualification',
@@ -12,6 +13,8 @@ export class CompetitionQualificationComponent {
     public selectedEvent: RaceEvent | null = null;
     public classViewModels: QualificationClassViewModel[] = [];
 
+    private subscription: Subscription | null;
+
     constructor(competitionService: CompetitionService) {
         competitionService
             .selectedEvent
@@ -19,8 +22,13 @@ export class CompetitionQualificationComponent {
                 this.selectedEvent = x;
                 this.classViewModels = [];
 
+                if (this.subscription != null) {
+                    this.subscription.unsubscribe();
+                    this.subscription = null;
+                }
+
                 if (this.selectedEvent != null) {
-                    this.invalidate(this.selectedEvent.results.value);
+                    this.subscription = this.selectedEvent.results.subscribe(x => this.invalidate(x));
                 }
             });
     }

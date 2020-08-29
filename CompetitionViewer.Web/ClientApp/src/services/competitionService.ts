@@ -9,7 +9,7 @@ import { RaceUtils } from '../util/raceUtils';
     providedIn: 'root',
 })
 export class CompetitionService {
-    private readonly rawMessages = new ObservableArray<RaceEventMessage>([]);
+    private rawMessages = new ObservableArray<RaceEventMessage>([]);
     private eventInformations: EventInformation[] = [];
     private selectedEventId: string | null = null;
 
@@ -22,6 +22,21 @@ export class CompetitionService {
         raceMessageService
             .getMessageStream()
             .subscribe(x => this.handleRaceMessages(x));
+
+        raceMessageService
+            .onConnected
+            .subscribe(isConnected => {
+                if (isConnected) {
+                    this.reset();
+                }
+            });
+    }
+
+    private reset(): void {
+        this.selectedEvent.next(null);
+        this.rawMessages.clear();
+        this.events.clear();
+        this.updateFilteredMessages();
     }
 
     public selectEvent(eventId: string | null) {

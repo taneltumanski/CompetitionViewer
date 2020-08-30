@@ -47,25 +47,26 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
 
     constructor(private competitionService: CompetitionService, private datePipe: DatePipe, private decimalPipe: DecimalPipe, private snackBar: MatSnackBar) {
         this.columns = [
-            { id: "index", isHidden: false, name: "Index", type: ColumnType.Default },
-            { id: "timestamp", isHidden: false, name: "Timestamp", type: ColumnType.Default },
-            { id: "raceId", isHidden: false, name: "Race ID", type: ColumnType.Default },
-            { id: "round", isHidden: false, name: "Round", type: ColumnType.Default },
-            { id: "racerId", isHidden: false, name: "Racer ID", type: ColumnType.Default },
-            { id: "lane", isHidden: false, name: "Lane", type: ColumnType.Default },
-            { id: "result", isHidden: false, name: "Result", type: ColumnType.Default },
-            { id: "reactionTime", isHidden: false, name: "RT", type: ColumnType.RoundedNumber },
-            { id: "sixtyFeetTime", isHidden: false, name: "60ft", type: ColumnType.RoundedNumber },
-            { id: "threeThirtyFeetTime", isHidden: false, name: "330ft", type: ColumnType.RoundedNumber },
-            { id: "sixSixtyFeetTime", isHidden: false, name: "660ft", type: ColumnType.RoundedNumber },
-            { id: "sixSixtyFeetSpeed", isHidden: false, name: "660ft Speed", type: ColumnType.RoundedNumber },
-            { id: "thousandFeetTime", isHidden: false, name: "1000ft", type: ColumnType.RoundedNumber },
-            { id: "thousandFeetSpeed", isHidden: false, name: "1000ft Speed", type: ColumnType.RoundedNumber },
-            { id: "finishTime", isHidden: false, name: "ET", type: ColumnType.RoundedNumber },
-            { id: "finishSpeed", isHidden: false, name: "ET Speed", type: ColumnType.RoundedNumber },
-            { id: "dialIn", isHidden: false, name: "Dial In", type: ColumnType.RoundedNumber },
-            { id: "dialInAccuracy", isHidden: false, name: "Dial In difference", type: ColumnType.SignedNumber },
-            { id: "timeDifference", isHidden: false, name: "RT+ET difference", type: ColumnType.SignedNumber }
+            { id: "index", isHidden: false, name: "Index", type: ColumnType.Default, isRaceProperty: false },
+            { id: "timestamp", isHidden: false, name: "Timestamp", type: ColumnType.Default, isRaceProperty: false },
+            { id: "raceId", isHidden: false, name: "Race ID", type: ColumnType.Default, isRaceProperty: false },
+            { id: "round", isHidden: false, name: "Round", type: ColumnType.Default, isRaceProperty: false },
+            { id: "racerId", isHidden: false, name: "Racer ID", type: ColumnType.Default, isRaceProperty: false },
+            { id: "lane", isHidden: false, name: "Lane", type: ColumnType.Default, isRaceProperty: false },
+            { id: "result", isHidden: false, name: "Result", type: ColumnType.Default, isRaceProperty: false },
+            { id: "reactionTime", isHidden: false, name: "RT", type: ColumnType.RoundedNumber, isRaceProperty: true },
+            { id: "sixtyFeetTime", isHidden: false, name: "60ft", type: ColumnType.RoundedNumber, isRaceProperty: true },
+            { id: "threeThirtyFeetTime", isHidden: false, name: "330ft", type: ColumnType.RoundedNumber, isRaceProperty: true },
+            { id: "sixSixtyFeetTime", isHidden: false, name: "660ft", type: ColumnType.RoundedNumber, isRaceProperty: true },
+            { id: "sixSixtyFeetSpeed", isHidden: false, name: "660ft Speed", type: ColumnType.RoundedNumber, isRaceProperty: true },
+            { id: "thousandFeetTime", isHidden: false, name: "1000ft", type: ColumnType.RoundedNumber, isRaceProperty: true },
+            { id: "thousandFeetSpeed", isHidden: false, name: "1000ft Speed", type: ColumnType.RoundedNumber, isRaceProperty: true },
+            { id: "finishTime", isHidden: false, name: "ET", type: ColumnType.RoundedNumber, isRaceProperty: true },
+            { id: "finishSpeed", isHidden: false, name: "ET Speed", type: ColumnType.RoundedNumber, isRaceProperty: true },
+            { id: "total", isHidden: false, name: "Total", type: ColumnType.RoundedNumber, isRaceProperty: true },
+            { id: "dialIn", isHidden: false, name: "Dial In", type: ColumnType.RoundedNumber, isRaceProperty: true },
+            { id: "dialInAccuracy", isHidden: false, name: "Dial In difference", type: ColumnType.SignedNumber, isRaceProperty: true },
+            { id: "timeDifference", isHidden: false, name: "RT+ET difference", type: ColumnType.SignedNumber, isRaceProperty: true }
         ];
     }
 
@@ -242,9 +243,9 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
 
     private getSortFilters(sort: MatSort): ((item: RaceMessageViewModel) => boolean)[] {
         let filters = new Array<((item: RaceMessageViewModel) => boolean)>();
-        let raceProperties = ["reactionTime", "sixtyFeetTime", "threeThirtyFeetTime", "sixSixtyFeetTime", "sixSixtyFeetSpeed", "thousandFeetTime", "thousandFeetSpeed", "finishTime", "finishSpeed", "dialIn", "dialInAccuracy", "timeDifference"];
+        let column = this.columns.find(x => x.id == sort.active);
 
-        if (raceProperties.includes(sort.active)) {
+        if (column != undefined && column.isRaceProperty) {
             if (sort.active == "reactionTime") {
                 filters.push(x => x[sort.active] >= 0);
             } else {
@@ -382,7 +383,8 @@ export interface ColumnData {
     id: string;
     name: string;
     isHidden: boolean;
-    type: ColumnType
+    type: ColumnType;
+    isRaceProperty: boolean;
 }
 
 export enum ColumnType {

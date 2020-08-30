@@ -108,21 +108,4 @@ export class MyNumberPipe implements PipeTransform {
     }
 }
 
-@Pipe({
-    name: 'total'
-})
-export class TotalPipe implements PipeTransform {
-    transform(value: RaceEventResultMessage | null): any {
-        if (value && value.reactionTime && value.finishTime) {
-            return value.reactionTime + value.finishTime;
-        }
-
-        return null;
-    }
-
-    private isNumber(value: string | number): boolean {
-        return (value != null) && (value !== '') && !isNaN(Number(value.toString()));
-    }
-}
-
 

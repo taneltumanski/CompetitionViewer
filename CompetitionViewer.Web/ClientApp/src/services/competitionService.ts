@@ -72,6 +72,11 @@ export class CompetitionService {
     }
 
     private handleRaceMessage(message: RaceEventMessage) {
+        let existingMessage = this.rawMessages.value.find(x => x.eventId == message.eventId && x.raceId == message.raceId && x.timestamp == message.timestamp)
+        if (existingMessage != undefined) {
+            return;
+        }
+
         this.rawMessages.push(message);
 
         let eventInfo = this.eventInformations.find(x => x.id == message.eventId) || this.getDefaultEventInfo(message);

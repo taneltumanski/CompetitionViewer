@@ -63,7 +63,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
             { id: "thousandFeetSpeed", isHidden: false, name: "1000ft Speed", type: ColumnType.RoundedNumber, isRaceProperty: true },
             { id: "finishTime", isHidden: false, name: "ET", type: ColumnType.RoundedNumber, isRaceProperty: true },
             { id: "finishSpeed", isHidden: false, name: "ET Speed", type: ColumnType.RoundedNumber, isRaceProperty: true },
-            { id: "total", isHidden: false, name: "Total", type: ColumnType.RoundedNumber, isRaceProperty: true },
+            { id: "total", isHidden: false, name: "RT+ET", type: ColumnType.RoundedNumber, isRaceProperty: true },
             { id: "dialIn", isHidden: false, name: "Dial In", type: ColumnType.RoundedNumber, isRaceProperty: true },
             { id: "dialInAccuracy", isHidden: false, name: "Dial In difference", type: ColumnType.SignedNumber, isRaceProperty: true },
             { id: "timeDifference", isHidden: false, name: "RT+ET difference", type: ColumnType.SignedNumber, isRaceProperty: true }
@@ -73,14 +73,14 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
     public ngOnInit() {
         const originalFilterPredicate = this.dataSource.filterPredicate;
         const filterFunctions = [
-            { type: FilterType.Event,  function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.eventId && item.eventId.toLowerCase() == filter.value.toLowerCase() },
-            { type: FilterType.Class,  function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.raceClass && item.raceClass.toLowerCase() == filter.value.toLowerCase() },
-            { type: FilterType.Lane,   function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.lane && item.lane.toLowerCase() == filter.value.toLowerCase() },
-            { type: FilterType.Race,   function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.raceId && item.raceId.toLowerCase() == filter.value.toLowerCase() },
-            { type: FilterType.Racer,  function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.racerId && item.racerId.toLowerCase() == filter.value.toLowerCase() },
+            { type: FilterType.Event, function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.eventId && item.eventId.toLowerCase() == filter.value.toLowerCase() },
+            { type: FilterType.Class, function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.raceClass && item.raceClass.toLowerCase() == filter.value.toLowerCase() },
+            { type: FilterType.Lane, function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.lane && item.lane.toLowerCase() == filter.value.toLowerCase() },
+            { type: FilterType.Race, function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.raceId && item.raceId.toLowerCase() == filter.value.toLowerCase() },
+            { type: FilterType.Racer, function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.racerId && item.racerId.toLowerCase() == filter.value.toLowerCase() },
             { type: FilterType.Result, function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.result && item.result.toLowerCase() == filter.value.toLowerCase() },
-            { type: FilterType.Round,  function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.round && item.round.toLowerCase() == filter.value.toLowerCase() },
-            { type: FilterType.Any,    function: (filter: FilterData, item: RaceMessageViewModel): boolean => originalFilterPredicate(item, filter.value.toLowerCase()) },
+            { type: FilterType.Round, function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.round && item.round.toLowerCase() == filter.value.toLowerCase() },
+            { type: FilterType.Any, function: (filter: FilterData, item: RaceMessageViewModel): boolean => originalFilterPredicate(item, filter.value.toLowerCase()) },
         ];
 
         this.dataSource.sort = this.sort;
@@ -92,7 +92,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
             }
 
             let whitelistFilterCount = this.filters.filter(filter => !filter.isInverse).length;
-            let blacklistFilterCount = this.filters.filter(filter =>  filter.isInverse).length;
+            let blacklistFilterCount = this.filters.filter(filter => filter.isInverse).length;
 
             let whitelistResult = this.filters.some(filter => !filter.isInverse && filterFunctions.some(filterFn => filterFn.type == filter.type && filterFn.function(filter, item)));
             let blacklistResult = this.filters.some(filter => filter.isInverse && filterFunctions.some(filterFn => filterFn.type == filter.type && filterFn.function(filter, item)));;
@@ -285,6 +285,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
                     dialIn: result.dialIn,
                     finishSpeed: result.finishSpeed,
                     finishTime: result.finishTime,
+                    total: this.getTotalTime(result),
                     lane: result.lane ? result.lane.toUpperCase() : null,
                     racerId: result.racerId,
                     reactionTime: result.reactionTime,
@@ -308,6 +309,14 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
         }
 
         return data;
+    }
+
+    private getTotalTime(result: RaceEventResultMessage) {
+        if (result.reactionTime == null || result.finishTime == null || result.reactionTime < 0 || result.finishTime <= 0) {
+            return null;
+        }
+
+        return result.reactionTime + result.finishTime;
     }
 
     private getDialInAccuracy(result: RaceEventResultMessage, message: RaceEventMessage): number | null {
@@ -374,7 +383,7 @@ export interface RaceMessageViewModel {
     thousandFeetSpeed: number | null;
     finishTime: number | null;
     finishSpeed: number | null;
-
+    total: number | null;
     dialInAccuracy: number | null;
     timeDifference: number | null;
 }

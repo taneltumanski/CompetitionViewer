@@ -134,10 +134,11 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
         });
     }
 
-    public invalidate() {
+    public invalidate(messages?: RaceEventMessage[]) {
         let oldLength = this.dataSource.filteredData.length;
+        let messageList = messages || this.competitionService.filteredMessages.value;
 
-        this.dataSource.data = this.map(this.competitionService.filteredMessages.value, this.getSortFilters(this.sort));
+        this.dataSource.data = this.map(messageList, this.getSortFilters(this.sort));
 
         let newLength = this.dataSource.filteredData.length;
         let lengthDifference = newLength - oldLength;

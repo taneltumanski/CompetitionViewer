@@ -101,7 +101,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
         };
 
         let subscriptions = [
-            this.competitionService.filteredMessages.pipe(sample(interval(500))).subscribe(() => this.invalidate()),
+            this.competitionService.filteredMessages.pipe(sample(interval(500))).subscribe(x => this.invalidate(x)),
             this.contextMenu.menuClosed.subscribe(() => this.currentContextMenuTarget = null),
 
             fromEvent<MouseEvent>(document, 'click')
@@ -137,8 +137,9 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
     public invalidate(messages?: RaceEventMessage[]) {
         let oldLength = this.dataSource.filteredData.length;
         let messageList = messages || this.competitionService.filteredMessages.value;
+        let mappedMessages = this.map(messageList, this.getSortFilters(this.sort));
 
-        this.dataSource.data = this.map(messageList, this.getSortFilters(this.sort));
+        this.dataSource.data = mappedMessages;
 
         let newLength = this.dataSource.filteredData.length;
         let lengthDifference = newLength - oldLength;

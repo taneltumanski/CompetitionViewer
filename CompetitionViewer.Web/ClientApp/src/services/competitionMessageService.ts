@@ -1,7 +1,7 @@
 import { Injectable, EventEmitter } from '@angular/core';
 import { HubConnection, HubConnectionBuilder, HttpError, IHubProtocol, TransferFormat, ILogger, HubMessage, JsonHubProtocol } from '@aspnet/signalr';
 import { Observable, Subject, ReplaySubject, BehaviorSubject } from 'rxjs';
-import { RaceEventMessage } from '../models/racemessages';
+import { CompetitionMessage, RaceEventMessage } from '../models/racemessages';
 
 //import { gzipSync, gunzipSync } from 'browserify-zlib';
 
@@ -13,7 +13,7 @@ export class CompetitionMessageService {
     private connection: HubConnection | null = null;
     private reconnectTimerHandle: number = 0;
 
-    private messageStream: ReplaySubject<RaceEventMessage[]> = new ReplaySubject();
+    private messageStream: ReplaySubject<CompetitionMessage> = new ReplaySubject();
 
     public onConnected: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
@@ -21,7 +21,7 @@ export class CompetitionMessageService {
         this.connectSignalR();
     }
 
-    public getMessageStream(): Observable<RaceEventMessage[]> {
+    public getMessageStream(): Observable<CompetitionMessage> {
         return this.messageStream.asObservable();
     }
 
@@ -47,7 +47,7 @@ export class CompetitionMessageService {
             .then(
                 () => {
                     connection
-                        .on("RaceMessages", messages => this.messageStream.next(messages));
+                        .on("OnCompetitionMessage", msg => this.messageStream.next(msg));
 
                     /* TODO start event */
                     this.isConnectedToServer = true;

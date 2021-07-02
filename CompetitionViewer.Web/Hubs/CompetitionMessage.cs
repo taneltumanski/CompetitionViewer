@@ -3,6 +3,12 @@ using System.Collections.Generic;
 
 namespace CompetitionViewer.Web.Hubs
 {
+    public class CompetitionMessage
+    {
+        public int MessageIndex { get; set; }
+        public List<RaceEventMessage> Messages { get; set; }
+    }
+
     public class RaceEventMessage
     {
         public string EventId { get; set; }

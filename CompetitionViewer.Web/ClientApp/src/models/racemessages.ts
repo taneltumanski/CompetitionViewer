@@ -1,3 +1,8 @@
+export interface CompetitionMessage {
+    messageIndex: number;
+    messages: RaceEventMessage[];
+}
+
 export interface RaceEventMessage {
     eventId: string;
     eventName: string;

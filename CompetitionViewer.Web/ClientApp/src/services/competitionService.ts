@@ -1,5 +1,5 @@
 import { Injectable, EventEmitter } from '@angular/core';
-import { RaceEventMessage, RaceEventResultMessage } from '../models/racemessages';
+import { CompetitionMessage, RaceEventMessage, RaceEventResultMessage } from '../models/racemessages';
 import { CompetitionMessageService } from './competitionMessageService';
 import { RaceEvent, ObservableArray, RaceClass, RaceClassDefiningProperty, ClassParticipant, Participant, RaceEndDefiningProperty } from '../models/models';
 import { BehaviorSubject } from 'rxjs';
@@ -21,18 +21,12 @@ export class CompetitionService {
     constructor(raceMessageService: CompetitionMessageService) {
         raceMessageService
             .getMessageStream()
-            .subscribe(x => this.handleRaceMessages(x));
-
-        raceMessageService
-            .onConnected
-            .subscribe(isConnected => {
-                if (isConnected) {
-                    this.reset();
-                }
-            });
+            .subscribe(x => this.handleCompetitionMessage(x));
     }
 
     private reset(): void {
+        console.log("Resetting data");
+
         this.selectedEvent.next(null);
         this.rawMessages.clear();
         this.events.clear();
@@ -50,6 +44,14 @@ export class CompetitionService {
         }
 
         this.updateFilteredMessages();
+    }
+
+    private handleCompetitionMessage(msg: CompetitionMessage) {
+        if (msg.messageIndex == 0) {
+            this.reset();
+        }
+
+        this.handleRaceMessages(msg.messages);
     }
 
     private handleRaceMessages(messages: RaceEventMessage[]) {

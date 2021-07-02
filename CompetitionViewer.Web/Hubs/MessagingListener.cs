@@ -45,8 +45,8 @@ namespace CompetitionViewer.Web.Hubs
                 }
 
                 var observer = Observer
-                    .Create<IEnumerable<RaceEventMessage>>(
-                        async msgs => await _clients.Client(id).RaceMessages(msgs),
+                    .Create<CompetitionMessage>(
+                        async msg => await _clients.Client(id).OnCompetitionMessage(msg),
                         ex => _logger.LogError(ex, "Logger error for client {connectionId}", id));
 
                 var subscription = _liveRaceResultsService
@@ -80,6 +80,11 @@ namespace CompetitionViewer.Web.Hubs
                     })
                     .Buffer(TimeSpan.FromSeconds(1))
                     .Where(x => x.Any())
+                    .Select((x, i) => new CompetitionMessage()
+                    {
+                        MessageIndex = i,
+                        Messages = x.ToList()
+                    })
                     .Subscribe(observer);
 
                 var disposable = Disposable.Create(() =>

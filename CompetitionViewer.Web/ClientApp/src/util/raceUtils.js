@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.RaceUtils = void 0;
 var RaceUtils = /** @class */ (function () {
     function RaceUtils() {
     }
@@ -14,6 +15,18 @@ var RaceUtils = /** @class */ (function () {
             }
         }
         return defaultClass;
+    };
+    RaceUtils.getStage = function (round) {
+        if (round == null) {
+            return round;
+        }
+        for (var i = round.length - 1; i >= 0; i--) {
+            var c = round[i];
+            if (!(c >= '0' && c <= '9')) {
+                return round.substr(0, i + 1);
+            }
+        }
+        return round;
     };
     RaceUtils.isValidRaceClass = function (raceClass) {
         if (raceClass == null) {

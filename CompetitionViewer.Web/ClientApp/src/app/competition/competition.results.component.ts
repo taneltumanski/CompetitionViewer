@@ -59,8 +59,8 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
             { id: "threeThirtyFeetTime", isHidden: false, name: "330ft", type: ColumnType.RoundedNumber, isRaceProperty: true },
             { id: "sixSixtyFeetTime", isHidden: false, name: "660ft", type: ColumnType.RoundedNumber, isRaceProperty: true },
             { id: "sixSixtyFeetSpeed", isHidden: false, name: "660ft Speed", type: ColumnType.RoundedNumber, isRaceProperty: true },
-            { id: "thousandFeetTime", isHidden: false, name: "1000ft", type: ColumnType.RoundedNumber, isRaceProperty: true },
-            { id: "thousandFeetSpeed", isHidden: false, name: "1000ft Speed", type: ColumnType.RoundedNumber, isRaceProperty: true },
+            { id: "thousandFeetTime", isHidden: true, name: "1000ft", type: ColumnType.RoundedNumber, isRaceProperty: true },
+            { id: "thousandFeetSpeed", isHidden: true, name: "1000ft Speed", type: ColumnType.RoundedNumber, isRaceProperty: true },
             { id: "finishTime", isHidden: false, name: "ET", type: ColumnType.RoundedNumber, isRaceProperty: true },
             { id: "finishSpeed", isHidden: false, name: "ET Speed", type: ColumnType.RoundedNumber, isRaceProperty: true },
             { id: "total", isHidden: false, name: "RT+ET", type: ColumnType.RoundedNumber, isRaceProperty: true },
@@ -80,6 +80,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
             { type: FilterType.Racer, function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.racerId && item.racerId.toLowerCase() == filter.value.toLowerCase() },
             { type: FilterType.Result, function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.result && item.result.toLowerCase() == filter.value.toLowerCase() },
             { type: FilterType.Round, function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.round && item.round.toLowerCase() == filter.value.toLowerCase() },
+            { type: FilterType.Stage, function: (filter: FilterData, item: RaceMessageViewModel): boolean => !!item.stage && item.stage.toLowerCase() == filter.value.toLowerCase() },
             { type: FilterType.Any, function: (filter: FilterData, item: RaceMessageViewModel): boolean => originalFilterPredicate(item, filter.value.toLowerCase()) },
         ];
 
@@ -282,6 +283,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
                     eventName: msg.eventName || msg.eventId,
                     raceId: msg.raceId,
                     round: msg.round,
+                    stage: RaceUtils.getStage(msg.round),
                     raceClass: RaceUtils.getClass(result.racerId, "GENERAL") || "INVALID",
 
                     dialIn: result.dialIn,
@@ -369,6 +371,7 @@ export interface RaceMessageViewModel {
     eventName: string;
     raceId: string;
     round: string;
+    stage: string;
     timestamp: string;
     raceClass: string;
 
@@ -419,5 +422,6 @@ export enum FilterType {
     Lane = 5,
     Result = 6,
     Round = 7,
-    Any = 8
+    Stage = 8,
+    Any = 9
 }

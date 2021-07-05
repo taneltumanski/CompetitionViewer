@@ -15,6 +15,22 @@ export class RaceUtils {
         return defaultClass;
     }
 
+    public static getStage(round: string): string {
+        if (round == null) {
+            return round;
+        }
+
+        for (var i = round.length - 1; i >= 0; i--) {
+            let c = round[i];
+
+            if (!(c >= '0' && c <= '9')) {
+                return round.substr(0, i + 1);
+            }
+        }
+
+        return round;
+    }
+
     public static isValidRaceClass(raceClass: string | null): boolean {
         if (raceClass == null) {
             return false;

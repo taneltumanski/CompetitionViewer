@@ -4,6 +4,10 @@ export class RaceUtils {
             return null;
         }
 
+        if (id.toUpperCase().startsWith("RWYB")) {
+            return id.substr(0, 4);
+        }
+
         for (var i = id.length - 1; i >= 0; i--) {
             let c = id[i];
 
@@ -15,9 +19,9 @@ export class RaceUtils {
         return defaultClass;
     }
 
-    public static getStage(round: string): string {
+    public static getStage(round: string): string | null {
         if (round == null) {
-            return round;
+            return null;
         }
 
         for (var i = round.length - 1; i >= 0; i--) {

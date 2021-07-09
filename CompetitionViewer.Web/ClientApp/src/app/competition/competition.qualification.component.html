@@ -1,21 +1,32 @@
-<mat-accordion>
-  <mat-expansion-panel hideToggle *ngFor="let classVm of classViewModels">
-    <mat-expansion-panel-header>
-      <mat-panel-title><h3>Class: {{ classVm.classData.name }} - {{ classVm.participantPositions.length }} partcipants</h3></mat-panel-title>
-    </mat-expansion-panel-header>
-    <table class="table table-fit">
-      <thead>
-        <tr>
-          <th scope="col">Name</th>
-          <th scope="col">Best time</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let participant of classVm.participantPositions">
-          <td>{{ participant.participantId }}</td>
-          <td>{{ participant.bestTime }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </mat-expansion-panel>
-</mat-accordion>
+<table>
+  <tr>
+    <td>
+      <mat-accordion>
+        <mat-expansion-panel hideToggle *ngFor="let classVm of classViewModels" (opened)="onClassClick(classVm)" (closed)="onClassClick(null)">
+          <mat-expansion-panel-header>
+            <mat-panel-title><h3>Class: {{ classVm.classData.name }} - {{ classVm.qualificationPositions.length }} partcipants</h3></mat-panel-title>
+          </mat-expansion-panel-header>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Best time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let participant of classVm.qualificationPositions">
+                <td>{{ participant.participantId }}</td>
+                <td>{{ participant.bestTime }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+        </mat-expansion-panel>
+      </mat-accordion>
+    </td>
+    <td>
+      <canvas width="500" height="500" #canvas style="margin: 10px"></canvas>
+    </td>
+  </tr>
+</table>

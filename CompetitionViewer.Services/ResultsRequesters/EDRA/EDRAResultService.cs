@@ -23,8 +23,7 @@ namespace CompetitionViewer.Services.ResultsRequesters.EDRA
 
         public async Task<string> GetRaceHtml(EDRAEventInfo eventInfo, CancellationToken token)
         {
-            var client = _httpClientFactory.CreateClient("EDRAClient");
-
+            using var client = _httpClientFactory.CreateClient("EDRAClient");
             using var result = await client.GetAsync(eventInfo.FullUri, token);
 
             result.EnsureSuccessStatusCode();

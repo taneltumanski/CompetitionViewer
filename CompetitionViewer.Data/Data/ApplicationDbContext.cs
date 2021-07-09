@@ -14,7 +14,8 @@ namespace CompetitionViewer.Web.Data
 {
     public class ApplicationDbContext : ApiAuthorizationDbContext<ApplicationUser>
     {
-        public DbSet<Event> Events { get; set; }
+        public DbSet<EventItem> EventItems { get; set; }
+        public DbSet<RaceItem> RaceItems { get; set; }
 
         public ApplicationDbContext(DbContextOptions options, IOptions<OperationalStoreOptions> operationalStoreOptions) : base(options, operationalStoreOptions)
         {

@@ -26,20 +26,36 @@
   </div>
 
   <table mat-table class="table-fit result-table mat-elevation-z8"
-             [dataSource]="dataSource"
-             matSort
-             matSortActive="timestamp"
-             matSortDirection="desc"
-             matSortDisableClear>
+         [dataSource]="dataSource"
+         multiTemplateDataRows
+         matSort
+         matSortActive="timestamp"
+         matSortDirection="desc"
+         matSortDisableClear>
 
     <ng-container *ngFor="let column of getDisplayedColumns()" [matColumnDef]="column.id">
       <th mat-header-cell *matHeaderCellDef mat-sort-header disabled="false">{{ column.name }}</th>
       <ng-container *ngIf="column.id == 'index'">
-        <td mat-cell *matCellDef="let row; let i = index" (contextmenu)="onContextMenu($event, row)">{{ i + 1 }}.</td>
+        <td mat-cell *matCellDef="let row; let i = index" (click)="onClick(row)" (contextmenu)="onContextMenu($event, row)">{{ i + 1 }}.</td>
       </ng-container>
       <ng-container *ngIf="column.id != 'index'">
-        <td mat-cell *matCellDef="let row" (contextmenu)="onContextMenu($event, row)">{{ format(row[column.id], column) }}</td>
+        <td mat-cell *matCellDef="let row" (click)="onClick(row)" (contextmenu)="onContextMenu($event, row)">{{ format(row[column.id], column) }}</td>
       </ng-container>
+    </ng-container>
+
+    <ng-container matColumnDef="expandedDetail">
+      <td mat-cell *matCellDef="let row" [attr.colspan]="getDisplayedColumns().length">
+        <div class="example-element-detail" [@detailExpand]="row == expandedRow ? 'expanded' : 'collapsed'">
+          <ng-container *ngFor="let opponent of row.opponents">
+      <td>{{ opponent.racerId }}</td>
+      <td>{{ opponent.raceId }}</td>
+      <td>{{ opponent.racerId }}</td>
+      <td>{{ opponent.racerId }}</td>
+      <td>{{ opponent.racerId }}</td>
+      <td>{{ opponent.racerId }}</td>
+    </ng-container>
+        </div>
+      </td>
     </ng-container>
 
     <ng-container *ngFor="let column of getDisplayedColumns(); let i = index" [matColumnDef]="column.id + '-buttons'">
@@ -52,6 +68,7 @@
     <tr mat-header-row *matHeaderRowDef="getDisplayedColumnsSecondHeaders(); sticky: true;"></tr>
 
     <tr mat-row *matRowDef="let row; columns: getDisplayedColumnNames()"></tr>
+    <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
   </table>
 
   <mat-paginator [length]="this.dataSource.filteredData.length"
@@ -67,8 +84,22 @@
 
   <mat-menu #contextMenu="matMenu" [hasBackdrop]="false" [overlapTrigger]="false">
     <ng-template matMenuContent let-item="item">
+      <button mat-menu-item [matMenuTriggerFor]="highlightMenu" [matMenuTriggerData]="{item: item}">Highlight</button>
       <button mat-menu-item [matMenuTriggerFor]="allowMenu" [matMenuTriggerData]="{item: item}">Include</button>
       <button mat-menu-item [matMenuTriggerFor]="ignoreMenu" [matMenuTriggerData]="{item: item}">Remove</button>
+    </ng-template>
+  </mat-menu>
+
+  <mat-menu #highlightMenu="matMenu" [hasBackdrop]="false" [overlapTrigger]="false">
+    <ng-template matMenuContent let-item="item">
+      <button mat-menu-item (click)="onContextMenuHighlight(item.eventId, FilterType.Event)">Event: {{ item.eventName }}</button>
+      <button mat-menu-item (click)="onContextMenuHighlight(item.raceClass, FilterType.Class)">Class: {{ item.raceClass }}</button>
+      <button mat-menu-item (click)="onContextMenuHighlight(item.round, FilterType.Round)">Round: {{ item.round }}</button>
+      <button mat-menu-item (click)="onContextMenuHighlight(item.stage, FilterType.Stage)">Stage: {{ item.stage }}</button>
+      <button mat-menu-item (click)="onContextMenuHighlight(item.racerId, FilterType.Racer)">Racer: {{ item.racerId }}</button>
+      <button mat-menu-item (click)="onContextMenuHighlight(item.raceId, FilterType.Race)">Race: {{ item.raceId }}</button>
+      <button mat-menu-item (click)="onContextMenuHighlight(item.lane, FilterType.Lane)">Lane: {{ item.lane }}</button>
+      <button mat-menu-item (click)="onContextMenuHighlight(item.result, FilterType.Result)">Result: {{ item.result }}</button>
     </ng-template>
   </mat-menu>
 

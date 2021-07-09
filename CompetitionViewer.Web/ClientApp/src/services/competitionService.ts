@@ -87,6 +87,7 @@ export class CompetitionService {
             existingEvent = {
                 id: message.eventId,
                 name: eventInfo.name,
+                eventInfo: eventInfo,
                 classes: new ObservableArray<RaceClass>([]),
                 results: new ObservableArray<RaceEventMessage>([]),
                 participants: new ObservableArray<Participant>([]),
@@ -134,7 +135,9 @@ export class CompetitionService {
             id: message.eventId,
             name: "Unknown event: " + message.eventId,
             generalClassName: "Default class",
-            classInformations: []
+            classInformations: [],
+            qualifyingStageKey: "Q",
+            eliminatorStageKey: "E"
         };
     }
 
@@ -199,6 +202,8 @@ export interface EventInformation {
     name: string;
     generalClassName: string;
     classInformations: ClassInformation[];
+    qualifyingStageKey: string;
+    eliminatorStageKey: string;
 }
 
 export interface ClassInformation {

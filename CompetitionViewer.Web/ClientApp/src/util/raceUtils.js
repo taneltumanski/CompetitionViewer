@@ -8,6 +8,9 @@ var RaceUtils = /** @class */ (function () {
         if (id == null) {
             return null;
         }
+        if (id.toUpperCase() == "RWYB") {
+            return id.substr(3);
+        }
         for (var i = id.length - 1; i >= 0; i--) {
             var c = id[i];
             if (!(c >= '0' && c <= '9')) {

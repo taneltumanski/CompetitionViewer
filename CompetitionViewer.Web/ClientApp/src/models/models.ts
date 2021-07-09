@@ -1,9 +1,11 @@
 import { RaceEventMessage } from "./racemessages";
 import { BehaviorSubject } from "rxjs";
+import { EventInformation } from "../services/competitionService";
 
 export interface RaceEvent {
     id: string;
     name: string;
+    eventInfo: EventInformation;
     results: ObservableArray<RaceEventMessage>;
     classes: ObservableArray<RaceClass>;
     participants: ObservableArray<Participant>;

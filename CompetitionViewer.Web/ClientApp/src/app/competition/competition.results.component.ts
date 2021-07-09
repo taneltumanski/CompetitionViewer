@@ -1,4 +1,5 @@
 import { Component, Input, OnChanges, SimpleChanges, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { animate, state, style, transition, trigger } from '@angular/animations';
 import { RaceEvent } from '../../models/models';
 import { RaceEventMessage, RaceEventResultMessage } from '../../models/racemessages';
 import { RaceUtils } from '../../util/raceUtils';
@@ -24,12 +25,20 @@ import { MatMenuTrigger } from '@angular/material/menu';
     selector: 'competition-results',
     templateUrl: './competition.results.component.html',
     styleUrls: ['./competition.component.css'],
+    animations: [
+        trigger('detailExpand', [
+            state('collapsed', style({ height: '0px', minHeight: '0' })),
+            state('expanded', style({ height: '*' })),
+            transition('expanded <=> collapsed', animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)')),
+        ]),
+    ],
 })
 export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDestroy {
     private subscription: Subscription | null;
     private currentContextMenuTarget: HTMLElement | null;
     private snackbarTimeout: NodeJS.Timeout | null;
 
+    public expandedRow: RaceMessageViewModel | null;
     public dataSource = new MatTableDataSource<RaceMessageViewModel>([]);
     public filters: FilterData[] = [];
     public columns: ColumnData[] = [];
@@ -181,12 +190,25 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
         this.contextMenu.openMenu();
     }
 
+    public onClick(item: RaceMessageViewModel) {
+        if (this.expandedRow == item) {
+            this.expandedRow = null;
+        }
+        else {
+            this.expandedRow = item;
+        }
+    }
+
     public onContextMenuIgnore(item: string, filterType: FilterType) {
         this.addFilter(item, filterType, true);
     }
 
     public onContextMenuAllow(item: string, filterType: FilterType) {
         this.addFilter(item, filterType, false);
+    }
+
+    public onContextMenuHighlight(item: string, filterType: FilterType) {
+        //this.addFilter(item, filterType, false);
     }
 
     public addFilterFromInput(event: MatChipInputEvent): void {
@@ -276,6 +298,8 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
         let data = new Array<RaceMessageViewModel>();
 
         for (const msg of messages) {
+            let opponents = new Map<string, RaceMessageViewModel[]>();
+
             for (const result of msg.results) {
                 let item = {
                     timestamp: this.datePipe.transform(msg.timestamp, "yyyy-MM-dd HH:mm:ss")!,
@@ -283,7 +307,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
                     eventName: msg.eventName || msg.eventId,
                     raceId: msg.raceId,
                     round: msg.round,
-                    stage: RaceUtils.getStage(msg.round),
+                    stage: RaceUtils.getStage(msg.round) || "DEFAULT",
                     raceClass: RaceUtils.getClass(result.racerId, "GENERAL") || "INVALID",
 
                     dialIn: result.dialIn,
@@ -303,12 +327,25 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
 
                     dialInAccuracy: this.getDialInAccuracy(result, msg),
                     timeDifference: this.getTimeDifference(result, msg),
+
+                    opponents: new Array<RaceMessageViewModel>()
                 };
 
                 let canAdd = filters.every(x => x(item));
                 if (canAdd) {
                     data.push(item);
                 }
+
+                if (opponents[item.raceId] == null) {
+                    opponents[item.raceId] = new Array<RaceMessageViewModel>();
+                }
+
+                for (const racer of opponents[item.raceId]) {
+                    racer.opponents.push(item);
+                    item.opponents.push(racer);
+                }
+
+                opponents[item.raceId].push(item);
             }
         }
 
@@ -391,6 +428,8 @@ export interface RaceMessageViewModel {
     total: number | null;
     dialInAccuracy: number | null;
     timeDifference: number | null;
+
+    opponents: RaceMessageViewModel[];
 }
 
 export interface ColumnData {

@@ -156,8 +156,8 @@ namespace CompetitionViewer.Services
 
             _lastRaceId++;
 
-            var data3 = CreateRandomData(random, ts2, "LEFT", _lastRaceId.ToString(), "BB111", "Q" + _lastRoundId, "TEMPEVENT2", RaceResult.Winner);
-            var data4 = CreateRandomData(random, ts2, "RIGHT", _lastRaceId.ToString(), "BB222", "Q" + _lastRoundId, "TEMPEVENT2", RaceResult.RunnerUp);
+            var data3 = CreateRandomData(random, ts2, "LEFT", _lastRaceId.ToString(), "SB111", "Q" + _lastRoundId, "TEMPEVENT", RaceResult.Winner);
+            var data4 = CreateRandomData(random, ts2, "RIGHT", _lastRaceId.ToString(), "SB222", "Q" + _lastRoundId, "TEMPEVENT", RaceResult.RunnerUp);
 
             _lastRoundId++;
             _lastRaceId++;
@@ -165,7 +165,7 @@ namespace CompetitionViewer.Services
             yield return new EDRADragParser.ParseResult(data1, ImmutableArray<string>.Empty, data1.GetHashCode().ToString());
             yield return new EDRADragParser.ParseResult(data2, ImmutableArray<string>.Empty, data2.GetHashCode().ToString());
             yield return new EDRADragParser.ParseResult(data3, ImmutableArray<string>.Empty, data3.GetHashCode().ToString());
-            yield return new EDRADragParser.ParseResult(data4, ImmutableArray<string>.Empty, data4.GetHashCode().ToString());
+            //yield return new EDRADragParser.ParseResult(data4, ImmutableArray<string>.Empty, data4.GetHashCode().ToString());
         }
 
         private RaceData CreateRandomData(Random random, DateTimeOffset timestamp , string lane, string raceId, string racerId, string round, string eventId, RaceResult result)

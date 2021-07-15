@@ -307,7 +307,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
                     eventName: msg.eventName || msg.eventId,
                     raceId: msg.raceId,
                     round: msg.round,
-                    stage: RaceUtils.getStage(msg.round) || "DEFAULT",
+                    stage: RaceUtils.getStage(msg.round)?.name || "DEFAULT",
                     raceClass: RaceUtils.getClass(result.racerId, "GENERAL") || "INVALID",
 
                     dialIn: result.dialIn,

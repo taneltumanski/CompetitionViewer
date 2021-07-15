@@ -27,7 +27,6 @@
 
   <table mat-table class="table-fit result-table mat-elevation-z8"
          [dataSource]="dataSource"
-         multiTemplateDataRows
          matSort
          matSortActive="timestamp"
          matSortDirection="desc"
@@ -43,21 +42,6 @@
       </ng-container>
     </ng-container>
 
-    <ng-container matColumnDef="expandedDetail">
-      <td mat-cell *matCellDef="let row" [attr.colspan]="getDisplayedColumns().length">
-        <div class="example-element-detail" [@detailExpand]="row == expandedRow ? 'expanded' : 'collapsed'">
-          <ng-container *ngFor="let opponent of row.opponents">
-      <td>{{ opponent.racerId }}</td>
-      <td>{{ opponent.raceId }}</td>
-      <td>{{ opponent.racerId }}</td>
-      <td>{{ opponent.racerId }}</td>
-      <td>{{ opponent.racerId }}</td>
-      <td>{{ opponent.racerId }}</td>
-    </ng-container>
-        </div>
-      </td>
-    </ng-container>
-
     <ng-container *ngFor="let column of getDisplayedColumns(); let i = index" [matColumnDef]="column.id + '-buttons'">
       <th mat-header-cell *matHeaderCellDef>
         <button mat-icon-button (click)="hideColumn(column.id)"><mat-icon>cancel</mat-icon></button>
@@ -68,7 +52,7 @@
     <tr mat-header-row *matHeaderRowDef="getDisplayedColumnsSecondHeaders(); sticky: true;"></tr>
 
     <tr mat-row *matRowDef="let row; columns: getDisplayedColumnNames()"></tr>
-    <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
+    <!--<tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>-->
   </table>
 
   <mat-paginator [length]="this.dataSource.filteredData.length"

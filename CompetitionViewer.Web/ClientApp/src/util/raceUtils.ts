@@ -1,3 +1,5 @@
+import { RoundInformation } from "../services/competitionService";
+
 export class RaceUtils {
     public static getClass(id: string, defaultClass: string): string | null {
         if (id == null) {
@@ -19,7 +21,7 @@ export class RaceUtils {
         return defaultClass;
     }
 
-    public static getStage(round: string): string | null {
+    public static getStage(round: string): RoundInformation | null {
         if (round == null) {
             return null;
         }
@@ -28,11 +30,17 @@ export class RaceUtils {
             let c = round[i];
 
             if (!(c >= '0' && c <= '9')) {
-                return round.substr(0, i + 1);
+                return {
+                    name: round.substr(0, i + 1),
+                    round: Number.parseInt(round.substr(i + 1, round.length - i - 1))
+                };
             }
         }
 
-        return round;
+        return {
+            name: round,
+            round: null 
+        };
     }
 
     public static isValidRaceClass(raceClass: string | null): boolean {

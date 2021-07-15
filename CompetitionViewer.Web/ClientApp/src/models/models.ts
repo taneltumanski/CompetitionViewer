@@ -16,6 +16,7 @@ export interface RaceClass {
     name: string;
     qualificationDefiningProperty: RaceClassDefiningProperty;
     raceEndDefiningProperty: RaceEndDefiningProperty;
+    eliminatorType: EliminatorType;
     results: ObservableArray<RaceEventMessage>;
     participants: ObservableArray<ClassParticipant>;
 }
@@ -36,7 +37,8 @@ export enum RaceClassDefiningProperty {
     Invalid = 0,
     QuarterMileTime = 1,
     EightMileTime = 2,
-    ReactionTime = 3
+    ReactionTime = 3,
+    DialInMargin = 4
 }
 
 export enum RaceEndDefiningProperty {
@@ -45,9 +47,23 @@ export enum RaceEndDefiningProperty {
     EightMileTime = 2
 }
 
+export enum EliminatorType {
+    Invalid = 0,
+    Sportsman = 1,
+    Pro = 2
+}
+
 export class ObservableArray<T> extends BehaviorSubject<T[]> {
     public push(item: T) {
         this.value.push(item);
+        this.next(this.value);
+    }
+
+    public pushItems(items: T[]) {
+        for (let item of items) {
+            this.value.push(item);
+        }
+
         this.next(this.value);
     }
 

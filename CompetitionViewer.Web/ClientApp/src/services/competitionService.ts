@@ -1,8 +1,9 @@
 import { Injectable, EventEmitter } from '@angular/core';
 import { CompetitionMessage, RaceEventMessage, RaceEventResultMessage } from '../models/racemessages';
 import { CompetitionMessageService } from './competitionMessageService';
-import { RaceEvent, ObservableArray, RaceClass, RaceClassDefiningProperty, ClassParticipant, Participant, RaceEndDefiningProperty } from '../models/models';
-import { BehaviorSubject } from 'rxjs';
+import { RaceEvent, ObservableArray, RaceClass, RaceClassDefiningProperty, ClassParticipant, Participant, RaceEndDefiningProperty, EliminatorType } from '../models/models';
+import { BehaviorSubject, interval } from 'rxjs';
+import { sample, bufferTime } from 'rxjs/operators';
 import { RaceUtils } from '../util/raceUtils';
 
 @Injectable({
@@ -115,6 +116,7 @@ export class CompetitionService {
                     results: new ObservableArray<RaceEventMessage>([]),
                     qualificationDefiningProperty: classInfo.qualificationDefiningProperty,
                     raceEndDefiningProperty: classInfo.raceEndDefiningProperty,
+                    eliminatorType: classInfo.eliminatorType,
                     participants: new ObservableArray<ClassParticipant>([]),
                 };
 
@@ -142,14 +144,16 @@ export class CompetitionService {
     }
 
     public getDefaultClassInfo(raceClass: string): ClassInformation {
-        let qualificationProp = ["BB", "SET", "PET", "J/BR",].includes(raceClass) ? RaceClassDefiningProperty.ReactionTime : RaceClassDefiningProperty.QuarterMileTime;
+        let qualificationProp = ["BB", "J/BR", "ST",].includes(raceClass) ? RaceClassDefiningProperty.ReactionTime : ["SET", "PET", "SPET"].includes(raceClass) ? RaceClassDefiningProperty.DialInMargin : RaceClassDefiningProperty.QuarterMileTime;
         let raceEndProp = ["J/BR"].includes(raceClass) ? RaceEndDefiningProperty.EightMileTime : RaceEndDefiningProperty.QuarterMileTime;
+        let eliminatorType = ["OL", "PB"].includes(raceClass) ? EliminatorType.Pro : EliminatorType.Sportsman;
 
         return {
             id: raceClass,
             name: raceClass,
             qualificationDefiningProperty: qualificationProp,
-            raceEndDefiningProperty: raceEndProp
+            raceEndDefiningProperty: raceEndProp,
+            eliminatorType: eliminatorType
         };
     }
 
@@ -211,4 +215,10 @@ export interface ClassInformation {
     name: string;
     qualificationDefiningProperty: RaceClassDefiningProperty;
     raceEndDefiningProperty: RaceEndDefiningProperty;
+    eliminatorType: EliminatorType;
+}
+
+export interface RoundInformation {
+    name: string;
+    round: number | null;
 }

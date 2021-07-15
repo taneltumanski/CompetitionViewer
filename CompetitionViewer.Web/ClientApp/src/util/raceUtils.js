@@ -8,8 +8,8 @@ var RaceUtils = /** @class */ (function () {
         if (id == null) {
             return null;
         }
-        if (id.toUpperCase() == "RWYB") {
-            return id.substr(3);
+        if (id.toUpperCase().startsWith("RWYB")) {
+            return id.substr(0, 4);
         }
         for (var i = id.length - 1; i >= 0; i--) {
             var c = id[i];
@@ -21,15 +21,21 @@ var RaceUtils = /** @class */ (function () {
     };
     RaceUtils.getStage = function (round) {
         if (round == null) {
-            return round;
+            return null;
         }
         for (var i = round.length - 1; i >= 0; i--) {
             var c = round[i];
             if (!(c >= '0' && c <= '9')) {
-                return round.substr(0, i + 1);
+                return {
+                    name: round.substr(0, i + 1),
+                    round: Number.parseInt(round.substr(i + 1, round.length - i - 1))
+                };
             }
         }
-        return round;
+        return {
+            name: round,
+            round: null
+        };
     };
     RaceUtils.isValidRaceClass = function (raceClass) {
         if (raceClass == null) {

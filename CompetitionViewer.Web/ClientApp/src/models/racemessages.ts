@@ -14,16 +14,16 @@ export interface RaceEventMessage {
 
 export interface RaceEventResultMessage {
     racerId: string;
-    lane: string | null;
-    result: number | null;
-    dialIn: number | null;
-    reactionTime: number | null;
-    sixtyFeetTime: number | null;
-    threeThirtyFeetTime: number | null;
-    sixSixtyFeetTime: number | null;
-    sixSixtyFeetSpeed: number | null;
-    thousandFeetTime: number | null;
-    thousandFeetSpeed: number | null;
-    finishTime: number | null;
-    finishSpeed: number | null;
+    lane: string | undefined;
+    result: number | undefined;
+    dialIn: number | undefined;
+    reactionTime: number | undefined;
+    sixtyFeetTime: number | undefined;
+    threeThirtyFeetTime: number | undefined;
+    sixSixtyFeetTime: number | undefined;
+    sixSixtyFeetSpeed: number | undefined;
+    thousandFeetTime: number | undefined;
+    thousandFeetSpeed: number | undefined;
+    finishTime: number | undefined;
+    finishSpeed: number | undefined;
 }

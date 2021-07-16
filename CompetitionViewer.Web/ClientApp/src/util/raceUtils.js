@@ -5,9 +5,6 @@ var RaceUtils = /** @class */ (function () {
     function RaceUtils() {
     }
     RaceUtils.getClass = function (id, defaultClass) {
-        if (id == null) {
-            return null;
-        }
         if (id.toUpperCase().startsWith("RWYB")) {
             return id.substr(0, 4);
         }
@@ -20,9 +17,6 @@ var RaceUtils = /** @class */ (function () {
         return defaultClass;
     };
     RaceUtils.getStage = function (round) {
-        if (round == null) {
-            return null;
-        }
         for (var i = round.length - 1; i >= 0; i--) {
             var c = round[i];
             if (!(c >= '0' && c <= '9')) {
@@ -34,11 +28,11 @@ var RaceUtils = /** @class */ (function () {
         }
         return {
             name: round,
-            round: null
+            round: undefined
         };
     };
     RaceUtils.isValidRaceClass = function (raceClass) {
-        if (raceClass == null) {
+        if (raceClass == undefined) {
             return false;
         }
         if (raceClass.toUpperCase() == "BYE") {
@@ -47,17 +41,17 @@ var RaceUtils = /** @class */ (function () {
         return true;
     };
     RaceUtils.getTotalTime = function (result) {
-        if (result.reactionTime == null || result.finishTime == null || result.reactionTime < 0 || result.finishTime <= 0) {
-            return null;
+        if (result.reactionTime == undefined || result.finishTime == undefined || result.reactionTime < 0 || result.finishTime <= 0) {
+            return undefined;
         }
         return result.reactionTime + result.finishTime;
     };
-    RaceUtils.getDialInAccuracy = function (result, message) {
-        if (result == null || result.finishTime == null) {
-            return null;
+    RaceUtils.getDialInAccuracy = function (result) {
+        if (result == undefined || result.finishTime == undefined) {
+            return undefined;
         }
-        if (result.dialIn == 0 || result.dialIn == null) {
-            return null;
+        if (result.dialIn == 0 || result.dialIn == undefined) {
+            return undefined;
         }
         return result.finishTime - result.dialIn;
     };
@@ -70,20 +64,16 @@ var RaceUtils = /** @class */ (function () {
         else {
             winnerResult = message.results.find(function (x) { return x.result == 0; });
         }
-        if (winnerResult === null || winnerResult === undefined) {
-            return null;
-        }
-        ;
         if (winnerResult == undefined || result == undefined || winnerResult.racerId == result.racerId || winnerResult.racerId.toLowerCase() == "bye" || result.racerId.toLowerCase() == "bye") {
-            return null;
+            return undefined;
         }
         if (result.finishTime == 0) {
-            return null;
+            return undefined;
         }
-        if (result.reactionTime == null || result.finishTime == null || winnerResult.reactionTime == null || winnerResult.finishTime == null) {
-            return null;
+        if (result.reactionTime == undefined || result.finishTime == undefined || winnerResult.reactionTime == undefined || winnerResult.finishTime == undefined) {
+            return undefined;
         }
-        if (result.dialIn != null && winnerResult.dialIn != null && result.dialIn > 0 && winnerResult.dialIn > 0) {
+        if (result.dialIn != undefined && winnerResult.dialIn != undefined && result.dialIn > 0 && winnerResult.dialIn > 0) {
             var currentResultDialInDifference = result.reactionTime + result.finishTime - result.dialIn;
             var winnerResultDialInDifference = winnerResult.reactionTime + winnerResult.finishTime - winnerResult.dialIn;
             var difference = currentResultDialInDifference - winnerResultDialInDifference;

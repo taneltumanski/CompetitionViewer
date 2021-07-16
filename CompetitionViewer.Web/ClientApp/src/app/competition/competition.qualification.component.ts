@@ -4,8 +4,6 @@ import { RaceEvent, RaceClassDefiningProperty, RaceClass, EliminatorType } from 
 import { RaceUtils } from '../../util/raceUtils';
 import { CompetitionService } from '../../services/competitionService';
 import { Subscription } from 'rxjs';
-import { C } from '@angular/cdk/keycodes';
-import { isNullOrUndefined, isUndefined } from 'util';
 
 @Component({
     selector: 'competition-qualification',
@@ -13,14 +11,14 @@ import { isNullOrUndefined, isUndefined } from 'util';
     styleUrls: ['./competition.component.css'],
 })
 export class CompetitionQualificationComponent implements OnInit {
-    public selectedEvent: RaceEvent | null = null;
-    public selectedClass: QualificationClassViewModel | null = null;
+    public selectedEvent: RaceEvent | undefined;
+    public selectedClass: QualificationClassViewModel | undefined;
     public classViewModels: QualificationClassViewModel[] = [];
 
-    private subscription: Subscription | null;
+    private subscription: Subscription | undefined;
 
     @ViewChild('canvas', { static: true })
-    canvas: ElementRef<HTMLCanvasElement>;
+    canvas!: ElementRef<HTMLCanvasElement>;
 
     constructor(private competitionService: CompetitionService) {
     }
@@ -33,25 +31,25 @@ export class CompetitionQualificationComponent implements OnInit {
                 this.classViewModels = [];
                 this.invalidateCanvas();
 
-                if (this.subscription != null) {
+                if (this.subscription != undefined) {
                     this.subscription.unsubscribe();
-                    this.subscription = null;
+                    this.subscription = undefined;
                 }
 
-                if (this.selectedEvent != null) {
+                if (this.selectedEvent != undefined) {
                     this.subscription = this.selectedEvent.results.subscribe(x => this.invalidate(x));
                 }
             });
     }
 
-    public onClassClick(clickItem: QualificationClassViewModel | null) {
-        if (clickItem != null) {
+    public onClassClick(clickItem: QualificationClassViewModel | undefined) {
+        if (clickItem != undefined) {
             setTimeout(() => {
                 this.selectedClass = clickItem;
                 this.invalidateCanvas();
             }, 200);
         } else {
-            this.selectedClass = null;
+            this.selectedClass = undefined;
             this.invalidateCanvas();
         }
     }
@@ -68,15 +66,15 @@ export class CompetitionQualificationComponent implements OnInit {
 
         this.classViewModels.forEach(x => x.update());
 
-        if (selected != null) {
-            this.selectedClass = this.classViewModels.find(x => x.classData.id == selected?.classData.id) ?? null;
+        if (selected != undefined) {
+            this.selectedClass = this.classViewModels.find(x => x.classData.id == selected?.classData.id);
         }
 
         this.invalidateCanvas();
     }
 
     private updateWithMessage(message: RaceEventMessage, result: RaceEventResultMessage) {
-        if (this.selectedEvent == null) {
+        if (this.selectedEvent == undefined) {
             return;
         }
 
@@ -102,16 +100,16 @@ export class CompetitionQualificationComponent implements OnInit {
         existingClassVM.updateMessage(message, result, this.selectedEvent);
     }
 
-    private getMatchInfo(): BracketInfo | null {
-        if (this.selectedEvent == null || this.selectedClass == null) {
-            return null;
+    private getMatchInfo(): BracketInfo | undefined {
+        if (this.selectedEvent == undefined || this.selectedClass == undefined) {
+            return undefined;
         }
 
         let classData = this.selectedClass.classData;
         let participants = this.selectedClass.qualificationPositions.filter(x => !x.isRemoved);
         let seeds = this.getSeeds(participants.length, classData.eliminatorType);
-        if (seeds == null) {
-            return null;
+        if (seeds == undefined) {
+            return undefined;
         }
 
         let roundCount = Math.ceil(Math.log(participants.length) / Math.log(2));
@@ -122,8 +120,8 @@ export class CompetitionQualificationComponent implements OnInit {
 
             for (var i = 0; i < Math.pow(2, roundCount) / Math.pow(2, round - 1) / 2; i++) {
                 matches.push({
-                    firstSeed: null,
-                    secondSeed: null
+                    firstSeed: undefined,
+                    secondSeed: undefined
                 });
             }
 
@@ -134,11 +132,11 @@ export class CompetitionQualificationComponent implements OnInit {
                     let seedMatch = seeds[i];
 
                     matches[i] = {
-                        firstSeed: seedMatch.firstSeed == null ? null : qualificationRacers[seedMatch.firstSeed - 1].racer,
-                        secondSeed: seedMatch.secondSeed == null ? null : qualificationRacers[seedMatch.secondSeed - 1].racer,
+                        firstSeed: seedMatch.firstSeed == undefined ? undefined : qualificationRacers[seedMatch.firstSeed - 1].racer,
+                        secondSeed: seedMatch.secondSeed == undefined ? undefined : qualificationRacers[seedMatch.secondSeed - 1].racer,
                     }
                 }
-            } else {
+            } else if (round > 1) {
                 let foundMatches = this.findMatches(this.selectedClass.eliminatorResults, round, roundInfos);
                 for (let existingMatch of foundMatches) {
                     let newMatchIndex = Math.floor(existingMatch.lastMatchIndex / 2);
@@ -157,7 +155,7 @@ export class CompetitionQualificationComponent implements OnInit {
             });
         }
 
-        let winner: RaceResultData | null = null;
+        let winner: RaceResultData | undefined;
         let winnerMatches = this.findMatches(this.selectedClass.eliminatorResults, roundCount + 1, roundInfos);
         if (winnerMatches.length == 1) {
             winner = winnerMatches[0].raceData;
@@ -175,6 +173,7 @@ export class CompetitionQualificationComponent implements OnInit {
         for (let finishedMatch of eliminatorResults) {
             let stageInfo = RaceUtils.getStage(finishedMatch.round);
             if (stageInfo?.round == round - 1 && finishedMatch.raceData.result == 0) {
+                console.log(roundInfos);
                 let lastRoundMatches = roundInfos[round - 2].matches.map(x => ({
                     firstSeed: (x.firstSeed as QualificationPosition)?.racerId ?? (x.firstSeed as RaceResultData)?.raceData?.racerId,
                     secondSeed: (x.secondSeed as QualificationPosition)?.racerId ?? (x.secondSeed as RaceResultData)?.raceData?.racerId
@@ -193,13 +192,13 @@ export class CompetitionQualificationComponent implements OnInit {
         return list;
     }
 
-    private getSeeds(participantCount: number, eliminatorType: EliminatorType): SeedMatch[] | null {
+    private getSeeds(participantCount: number, eliminatorType: EliminatorType): SeedMatch[] | undefined {
         let seedData = this.getSeedData(participantCount, eliminatorType);
-        if (seedData == null) {
-            return null;
+        if (seedData == undefined) {
+            return undefined;
         }
 
-        let seeds = seedData.split(" ").map(x => x == "x" ? null : Number.parseInt(x));
+        let seeds = seedData.split(" ").map(x => x == "x" ? undefined : Number.parseInt(x));
         let matchArray = new Array<SeedMatch>();
 
         for (var i = 0; i < seeds.length; i += 2) {
@@ -209,9 +208,10 @@ export class CompetitionQualificationComponent implements OnInit {
         return matchArray;
     }
 
-    private getSeedData(participantCount: number, eliminatorType: EliminatorType): string | null {
+    private getSeedData(participantCount: number, eliminatorType: EliminatorType): string | undefined {
         if (eliminatorType == EliminatorType.Sportsman) {
             switch (participantCount) {
+                case 1: return "1";
                 case 2: return "1 2";
                 case 3: return "1 x 2 3";
                 case 4: return "1 3 2 4";
@@ -234,6 +234,7 @@ export class CompetitionQualificationComponent implements OnInit {
             }
         } else if (eliminatorType == EliminatorType.Pro) {
             switch (participantCount) {
+                case 1: return "1";
                 case 2: return "1 2";
                 case 3: return "1 x 2 3";
                 case 4: return "1 4 2 3";
@@ -241,7 +242,7 @@ export class CompetitionQualificationComponent implements OnInit {
             }
         }
 
-        return null;
+        return undefined;
     }
 
     private invalidateCanvas() {
@@ -255,7 +256,7 @@ export class CompetitionQualificationComponent implements OnInit {
         ctx.clearRect(0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
 
         let matchInfo = this.getMatchInfo();
-        if (matchInfo == null) {
+        if (matchInfo == undefined) {
             return;
         }
 
@@ -272,7 +273,7 @@ export class CompetitionQualificationComponent implements OnInit {
         for (let i = 0; i < matchInfo.rounds.length; i++) {
             let round = matchInfo.rounds[i];
             let groupSize = round.matches.length * 2;
-            let prevRound = i == 0 ? null : matchInfo.rounds[i - 1];
+            let prevRound = i == 0 ? undefined : matchInfo.rounds[i - 1];
 
             for (let matchIndex = 0; matchIndex < round.matches.length; matchIndex++) {
                 let match = round.matches[matchIndex];
@@ -287,7 +288,7 @@ export class CompetitionQualificationComponent implements OnInit {
         this.drawBox(matchInfo.winner, ctx, matchInfo.rounds[matchInfo.rounds.length - 1], matchInfo.rounds.length, false, matchInfo.rounds.length, 0, 0, boxWidth, boxHeight, boxMargin, startMargin, 1);
     }
 
-    private isByeRound(rounds: RoundInfo[], roundIndex: number, matchIndex: number, seed: number, iteration: number) {
+    private isByeRound(rounds: RoundInfo[], roundIndex: number, matchIndex: number, seed: number, iteration: number): boolean {
         if (roundIndex == 0 && iteration == 0) {
             return false;
         }
@@ -299,14 +300,14 @@ export class CompetitionQualificationComponent implements OnInit {
         let prevMatchIndex = matchIndex * 2 + seed;
         let prevMatchSeed = rounds[roundIndex - 1].matches[prevMatchIndex];
 
-        if (prevMatchSeed.firstSeed !== null || prevMatchSeed.secondSeed !== null) {
+        if (prevMatchSeed.firstSeed !== undefined || prevMatchSeed.secondSeed !== undefined) {
             return false;
         }
 
         return this.isByeRound(rounds, roundIndex - 1, prevMatchIndex, seed, iteration + 1);
     }
 
-    private drawBox(seed: QualificationPosition | RaceResultData | null, ctx: CanvasRenderingContext2D, prevRound: RoundInfo | null, roundIndex: number, isBye: boolean, xIndex: number, yIndex: number, seedIndex: number, boxWidth: number, boxHeight: number, boxMargin: number, startMargin: number, groupSize: number) {
+    private drawBox(seed: QualificationPosition | RaceResultData | undefined, ctx: CanvasRenderingContext2D, prevRound: RoundInfo | undefined, roundIndex: number, isBye: boolean, xIndex: number, yIndex: number, seedIndex: number, boxWidth: number, boxHeight: number, boxMargin: number, startMargin: number, groupSize: number) {
         let firstBoxX = this.getBoxX(xIndex, boxWidth, boxMargin, startMargin);
         let firstBoxY = this.getBoxY(yIndex, groupSize, boxHeight);
 
@@ -314,7 +315,7 @@ export class CompetitionQualificationComponent implements OnInit {
         ctx.fillStyle = "gray";
         ctx.lineWidth = 1;
 
-        if ((roundIndex == 1 && seed == null) || isBye) {
+        if ((roundIndex == 1 && seed == undefined) || isBye) {
             ctx.fillRect(firstBoxX, firstBoxY, boxWidth, boxHeight);
         }
 
@@ -324,7 +325,7 @@ export class CompetitionQualificationComponent implements OnInit {
         ctx.lineWidth = 3;
         ctx.font = '15px verdana';
 
-        if (seed != null) {
+        if (seed != undefined) {
             ctx.textAlign = "start";
             ctx.textBaseline = "top";
 
@@ -343,7 +344,7 @@ export class CompetitionQualificationComponent implements OnInit {
 
         ctx.lineWidth = 1;
 
-        if ((roundIndex == 1 && seed == null) || isBye) {
+        if ((roundIndex == 1 && seed == undefined) || isBye) {
             ctx.strokeStyle = "gray";
         } else {
             ctx.strokeStyle = "black";
@@ -366,16 +367,17 @@ export class CompetitionQualificationComponent implements OnInit {
         ctx.stroke();
 
         let raceData = seed as RaceResultData;
-        if (prevRound != null && raceData != null && raceData.opponentData !== undefined && raceData.raceData.result == 0) {
+        if (prevRound != undefined && raceData != undefined && raceData.opponentData !== undefined && raceData.raceData.result == 0) {
             let resultDifferences = raceData
                 .opponentData
                 .map(x => RaceUtils.getTimeDifference(raceData.raceData, x))
-                .filter(x => x != null)
+                .filter(x => x != undefined)
                 .map(x => <number>x);
 
             if (resultDifferences.length > 0) {
                 let minDiff = Math.min(...resultDifferences);
                 let prevRace = prevRound.matches.find(x => x.firstSeed?.racerId == seed?.racerId || x.secondSeed?.racerId == seed?.racerId);
+
                 if (prevRace != undefined) {
                     let seedOffset = prevRace.firstSeed?.racerId == raceData.racerId ? 0 : 1;
                     let prevYIndex = yIndex * 2 + seedOffset;
@@ -400,7 +402,7 @@ export class CompetitionQualificationComponent implements OnInit {
         }
 
         let pos = seed as QualificationPosition;
-        if (pos != null && pos.qualifyingPosition !== undefined && pos.qualifyingPosition !== -1) {
+        if (pos != undefined && pos.qualifyingPosition !== undefined && pos.qualifyingPosition !== -1) {
             ctx.fillStyle = "black";
             ctx.lineWidth = 3;
             ctx.font = '15px verdana';
@@ -430,7 +432,7 @@ export class CompetitionQualificationComponent implements OnInit {
 
 interface BracketInfo {
     rounds: RoundInfo[];
-    winner: RaceResultData | null;
+    winner: RaceResultData | undefined;
 }
 
 interface RoundInfo {
@@ -439,8 +441,8 @@ interface RoundInfo {
 }
 
 interface MatchInfo {
-    firstSeed: QualificationPosition | RaceResultData | null;
-    secondSeed: QualificationPosition | RaceResultData | null;
+    firstSeed: QualificationPosition | RaceResultData | undefined;
+    secondSeed: QualificationPosition | RaceResultData | undefined;
 }
 
 export class QualificationClassViewModel {
@@ -463,9 +465,9 @@ export class QualificationClassViewModel {
             if (existingItem == undefined) {
                 existingItem = {
                     racerId: result.racerId,
-                    reactionTime: null,
-                    finishTime: null,
-                    bestTime: null,
+                    reactionTime: undefined,
+                    finishTime: undefined,
+                    bestTime: undefined,
                     qualifyingPosition: -1,
                     isRemoved: false
                 };
@@ -473,8 +475,8 @@ export class QualificationClassViewModel {
                 this.qualificationPositions.push(existingItem);
             }
 
-            if (currentTime != null && ((this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.QuarterMileTime && currentTime > 0) || (this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.ReactionTime && currentTime >= 0) || (this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.DialInMargin && currentTime > 0))) {
-                if ((existingItem.bestTime == null || currentTime < existingItem.bestTime) && (this.classData.classIndex == null || currentTime >= this.classData.classIndex.QuarterMileIndex)) {
+            if (currentTime != undefined && ((this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.QuarterMileTime && currentTime > 0) || (this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.ReactionTime && currentTime >= 0) || (this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.DialInMargin && currentTime > 0))) {
+                if ((existingItem.bestTime == undefined || currentTime < existingItem.bestTime) && (this.classData.classIndex == undefined || currentTime >= this.classData.classIndex.QuarterMileIndex)) {
                     existingItem.reactionTime = result.reactionTime;
                     existingItem.finishTime = result.finishTime;
                     existingItem.bestTime = currentTime;
@@ -486,19 +488,18 @@ export class QualificationClassViewModel {
                 opponentData: message.results.filter(x => x.racerId != result.racerId),
                 raceId: message.raceId,
                 racerId: result.racerId,
-                round: message.round,
-                bestTime: currentTime
+                round: message.round
             });
         }
     }
 
     public update() {
         this.qualificationPositions.sort((a, b) => {
-            if (a.bestTime == null) {
+            if (a.bestTime == undefined) {
                 return 1;
             }
 
-            if (b.bestTime == null) {
+            if (b.bestTime == undefined) {
                 return -1;
             }
 
@@ -511,7 +512,7 @@ export class QualificationClassViewModel {
 
     private updateRemovedQualifiers() {
         let eliminatorRound = this.getCurrentEliminatorRound();
-        if (eliminatorRound === null || eliminatorRound < 2) {
+        if (eliminatorRound === undefined || eliminatorRound < 2) {
             return;
         }
 
@@ -523,18 +524,18 @@ export class QualificationClassViewModel {
         }
     }
 
-    private getCurrentEliminatorRound(): number | null {
+    private getCurrentEliminatorRound(): number | undefined {
         let roundNumbers = this.eliminatorResults.map(x => RaceUtils.getStage(x.round)?.round ?? -1);
         let maxRound = Math.max(...roundNumbers);
 
         if (maxRound <= 0) {
-            return null;
+            return undefined;
         }
 
         return maxRound;
     }
 
-    private getCurrentTime(result: RaceEventResultMessage, raceClass: RaceClass): number | null {
+    private getCurrentTime(result: RaceEventResultMessage, raceClass: RaceClass): number | undefined {
         if (raceClass.qualificationDefiningProperty == RaceClassDefiningProperty.QuarterMileTime) {
             return result.finishTime;
         }
@@ -544,12 +545,12 @@ export class QualificationClassViewModel {
         }
 
         if (raceClass.qualificationDefiningProperty == RaceClassDefiningProperty.DialInMargin) {
-            if (result.finishTime !== null && result.finishTime !== undefined && result.dialIn !== null && result.dialIn !== undefined) {
+            if (result.finishTime !== undefined && result.dialIn !== undefined) {
                 return result.finishTime - result.dialIn;
             }
         }
 
-        return null;
+        return undefined;
     }
 }
 
@@ -559,19 +560,18 @@ export interface RaceResultData {
     racerId: string;
     raceId: string;
     round: string;
-    bestTime: number | null;
 }
 
 export interface QualificationPosition {
     qualifyingPosition: number;
     racerId: string;
-    reactionTime: number | null;
-    finishTime: number | null;
-    bestTime: number | null;
+    reactionTime: number | undefined;
+    finishTime: number | undefined;
+    bestTime: number | undefined;
     isRemoved: boolean;
 }
 
 interface SeedMatch {
-    firstSeed: number | null;
-    secondSeed: number | null;
+    firstSeed: number | undefined;
+    secondSeed: number | undefined;
 }

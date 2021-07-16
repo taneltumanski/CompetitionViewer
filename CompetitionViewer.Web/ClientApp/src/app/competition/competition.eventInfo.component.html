@@ -1,4 +1,4 @@
-<div *ngIf="selectedEvent != null">
+<div *ngIf="selectedEvent != undefined">
   <h2>Selected event: {{ selectedEvent.name }}</h2>
   <h2>First race at: {{ getFirstDate(selectedEvent) | date:'yyyy-MM-dd HH:mm:ss' }}</h2>
   <h2>Last race at: {{ getLastDate(selectedEvent) | date:'yyyy-MM-dd HH:mm:ss' }}</h2>

@@ -14,7 +14,7 @@ export interface RaceEvent {
 export interface RaceClass {
     id: string;
     name: string;
-    classIndex: ClassTimeIndex | null;
+    classIndex: ClassTimeIndex | undefined;
     qualificationDefiningProperty: RaceClassDefiningProperty;
     raceEndDefiningProperty: RaceEndDefiningProperty;
     eliminatorType: EliminatorType;
@@ -24,7 +24,7 @@ export interface RaceClass {
 
 export interface ClassParticipant {
     participantId: string;
-    participant: Participant | null;
+    participant: Participant | undefined;
 }
 
 export interface Participant {

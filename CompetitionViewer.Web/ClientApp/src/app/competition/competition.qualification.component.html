@@ -2,7 +2,7 @@
   <tr>
     <td>
       <mat-accordion>
-        <mat-expansion-panel hideToggle *ngFor="let classVm of classViewModels" (opened)="onClassClick(classVm)" (closed)="onClassClick(null)">
+        <mat-expansion-panel hideToggle *ngFor="let classVm of classViewModels" (opened)="onClassClick(classVm)" (closed)="onClassClick(undefined)">
           <mat-expansion-panel-header>
             <mat-panel-title><h3>Class: {{ classVm.classData.name }} - {{ classVm.qualificationPositions.length }} partcipants</h3></mat-panel-title>
           </mat-expansion-panel-header>
@@ -27,7 +27,7 @@
         </mat-expansion-panel>
       </mat-accordion>
     </td>
-    <td>
+    <td style="vertical-align: top">
       <canvas width="500" height="500" #canvas style="margin: 10px"></canvas>
     </td>
   </tr>

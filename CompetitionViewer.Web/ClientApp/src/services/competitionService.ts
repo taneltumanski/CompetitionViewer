@@ -12,11 +12,11 @@ import { RaceUtils } from '../util/raceUtils';
 export class CompetitionService {
     private rawMessages = new ObservableArray<RaceEventMessage>([]);
     private eventInformations: EventInformation[] = [];
-    private selectedEventId: string | null = null;
+    private selectedEventId: string | undefined;
 
     public filteredMessages = new BehaviorSubject<RaceEventMessage[]>([]);
     public events = new ObservableArray<RaceEvent>([]);
-    public selectedEvent = new BehaviorSubject<RaceEvent | null>(null);
+    public selectedEvent = new BehaviorSubject<RaceEvent | undefined>(undefined);
     public messageFilters = new ObservableArray<MessageFilter>([]);
 
     constructor(raceMessageService: CompetitionMessageService) {
@@ -28,20 +28,20 @@ export class CompetitionService {
     private reset(): void {
         console.log("Resetting data");
 
-        this.selectedEvent.next(null);
+        this.selectedEvent.next(undefined);
         this.rawMessages.clear();
         this.events.clear();
         this.updateFilteredMessages();
     }
 
-    public selectEvent(eventId: string | null) {
+    public selectEvent(eventId: string | undefined) {
         this.selectedEventId = eventId;
 
         let selectedEvent = this.events.value.find(x => x.id == eventId);
         if (selectedEvent != undefined) {
             this.selectedEvent.next(selectedEvent);
         } else {
-            this.selectedEvent.next(null);
+            this.selectedEvent.next(undefined);
         }
 
         this.updateFilteredMessages();
@@ -67,7 +67,7 @@ export class CompetitionService {
         let messages = this.rawMessages.value.filter(x => this.isValidEvent(x));
         let selectedEventId = this.selectedEventId;
 
-        if (selectedEventId != null) {
+        if (selectedEventId != undefined) {
             messages = messages.filter(x => x.eventId == selectedEventId);
         }
 
@@ -104,7 +104,7 @@ export class CompetitionService {
             let racerId = result.racerId;
             let raceClass = RaceUtils.getClass(racerId, eventInfo.generalClassName);
 
-            if (raceClass == null || !RaceUtils.isValidRaceClass(raceClass)) {
+            if (raceClass == undefined || !RaceUtils.isValidRaceClass(raceClass)) {
                 continue;
             }
 
@@ -129,7 +129,7 @@ export class CompetitionService {
 
             let existingParticipant = existingEventClass.participants.value.find(x => x.participantId == racerId);
             if (existingParticipant == undefined) {
-                existingEventClass.participants.push({ participant: null, participantId: racerId });
+                existingEventClass.participants.push({ participant: undefined, participantId: racerId });
             }
         }
     }
@@ -161,7 +161,7 @@ export class CompetitionService {
         };
     }
 
-    private getClassIndex(raceClass: string, year: number): ClassTimeIndex | null {
+    private getClassIndex(raceClass: string, year: number): ClassTimeIndex | undefined {
         if (year == 2021) {
             if (raceClass.toLocaleUpperCase() == "ST") {
                 return {
@@ -234,7 +234,7 @@ export class CompetitionService {
             }
         }
 
-        return null;
+        return undefined;
     }
 
     private isValidEvent(message: RaceEventMessage) {
@@ -242,7 +242,7 @@ export class CompetitionService {
             && message.timestamp > 0
             && message.results.length > 0
             && message.results.every(x =>
-                x.result != null && x.result >= 0
+                x.result != undefined && x.result >= 0
             )
             ;
     }
@@ -254,10 +254,10 @@ export interface ClassTimeIndex {
 }
 
 export interface MessageFilter {
-    racerId: string | null;
-    raceId: string | null;
-    classId: string | null;
-    eventId: string | null;
+    racerId: string | undefined;
+    raceId: string | undefined;
+    classId: string | undefined;
+    eventId: string | undefined;
 }
 
 export interface RaceEventModel {
@@ -272,18 +272,18 @@ export interface RaceEventModel {
 
 export interface RaceEventResultModel {
     racerId: string;
-    lane: string | null;
-    result: number | null;
-    dialIn: number | null;
-    reactionTime: number | null;
-    sixtyFeetTime: number | null;
-    threeThirtyFeetTime: number | null;
-    sixSixtyFeetTime: number | null;
-    sixSixtyFeetSpeed: number | null;
-    thousandFeetTime: number | null;
-    thousandFeetSpeed: number | null;
-    finishTime: number | null;
-    finishSpeed: number | null;
+    lane: string | undefined;
+    result: number | undefined;
+    dialIn: number | undefined;
+    reactionTime: number | undefined;
+    sixtyFeetTime: number | undefined;
+    threeThirtyFeetTime: number | undefined;
+    sixSixtyFeetTime: number | undefined;
+    sixSixtyFeetSpeed: number | undefined;
+    thousandFeetTime: number | undefined;
+    thousandFeetSpeed: number | undefined;
+    finishTime: number | undefined;
+    finishSpeed: number | undefined;
 }
 
 export interface EventInformation {
@@ -298,7 +298,7 @@ export interface EventInformation {
 export interface ClassInformation {
     id: string;
     name: string;
-    index: ClassTimeIndex | null;
+    index: ClassTimeIndex | undefined;
     qualificationDefiningProperty: RaceClassDefiningProperty;
     raceEndDefiningProperty: RaceEndDefiningProperty;
     eliminatorType: EliminatorType;
@@ -306,5 +306,5 @@ export interface ClassInformation {
 
 export interface RoundInformation {
     name: string;
-    round: number | null;
+    round: number | undefined;
 }

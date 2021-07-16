@@ -11,11 +11,11 @@
 </div>
 
 <mat-tab-group animationDuration="0ms">
-  <mat-tab label="Event info" *ngIf="selectedEventId != null">
+  <mat-tab label="Event info" *ngIf="selectedEventId != undefined">
     <competition-eventInfo></competition-eventInfo>
   </mat-tab>
 
-  <mat-tab label="Qualifications" *ngIf="selectedEventId != null">
+  <mat-tab label="Qualifications" *ngIf="selectedEventId != undefined">
     <competition-qualification></competition-qualification>
   </mat-tab>
 

@@ -2,11 +2,7 @@ import { RaceEventMessage, RaceEventResultMessage } from "../models/racemessages
 import { RoundInformation } from "../services/competitionService";
 
 export class RaceUtils {
-    public static getClass(id: string, defaultClass: string): string | null {
-        if (id == null) {
-            return null;
-        }
-
+    public static getClass(id: string, defaultClass: string): string | undefined {
         if (id.toUpperCase().startsWith("RWYB")) {
             return id.substr(0, 4);
         }
@@ -22,11 +18,7 @@ export class RaceUtils {
         return defaultClass;
     }
 
-    public static getStage(round: string): RoundInformation | null {
-        if (round == null) {
-            return null;
-        }
-
+    public static getStage(round: string): RoundInformation | undefined {
         for (var i = round.length - 1; i >= 0; i--) {
             let c = round[i];
 
@@ -40,12 +32,12 @@ export class RaceUtils {
 
         return {
             name: round,
-            round: null
+            round: undefined
         };
     }
 
-    public static isValidRaceClass(raceClass: string | null): boolean {
-        if (raceClass == null) {
+    public static isValidRaceClass(raceClass: string | undefined): boolean {
+        if (raceClass == undefined) {
             return false;
         }
 
@@ -57,27 +49,27 @@ export class RaceUtils {
     }
 
     public static getTotalTime(result: RaceEventResultMessage) {
-        if (result.reactionTime == null || result.finishTime == null || result.reactionTime < 0 || result.finishTime <= 0) {
-            return null;
+        if (result.reactionTime == undefined || result.finishTime == undefined || result.reactionTime < 0 || result.finishTime <= 0) {
+            return undefined;
         }
 
         return result.reactionTime + result.finishTime;
     }
 
-    public static getDialInAccuracy(result: RaceEventResultMessage, message: RaceEventMessage): number | null {
-        if (result == null || result.finishTime == null) {
-            return null;
+    public static getDialInAccuracy(result: RaceEventResultMessage): number | undefined {
+        if (result == undefined || result.finishTime == undefined) {
+            return undefined;
         }
 
-        if (result.dialIn == 0 || result.dialIn == null) {
-            return null;
+        if (result.dialIn == 0 || result.dialIn == undefined) {
+            return undefined;
         }
 
         return result.finishTime - result.dialIn;
     }
 
-    public static getTimeDifference(result: RaceEventResultMessage, message: RaceEventMessage | RaceEventResultMessage): number | null {
-        let winnerResult: RaceEventResultMessage;
+    public static getTimeDifference(result: RaceEventResultMessage, message: RaceEventMessage | RaceEventResultMessage): number | undefined {
+        let winnerResult: RaceEventResultMessage | undefined;
 
         if (this.isRaceEventResultMessage(message)) {
             winnerResult = message;;
@@ -85,23 +77,19 @@ export class RaceUtils {
             winnerResult = (<RaceEventMessage>message).results.find(x => x.result == 0);
         }
 
-        if (winnerResult === null || winnerResult === undefined) {
-            return null;
-        };
-
         if (winnerResult == undefined || result == undefined || winnerResult.racerId == result.racerId || winnerResult.racerId.toLowerCase() == "bye" || result.racerId.toLowerCase() == "bye") {
-            return null;
+            return undefined;
         }
 
         if (result.finishTime == 0) {
-            return null;
+            return undefined;
         }
 
-        if (result.reactionTime == null || result.finishTime == null || winnerResult.reactionTime == null || winnerResult.finishTime == null) {
-            return null;
+        if (result.reactionTime == undefined || result.finishTime == undefined || winnerResult.reactionTime == undefined || winnerResult.finishTime == undefined) {
+            return undefined;
         }
 
-        if (result.dialIn != null && winnerResult.dialIn != null && result.dialIn > 0 && winnerResult.dialIn > 0) {
+        if (result.dialIn != undefined && winnerResult.dialIn != undefined && result.dialIn > 0 && winnerResult.dialIn > 0) {
             let currentResultDialInDifference = result.reactionTime + result.finishTime - result.dialIn;
             let winnerResultDialInDifference = winnerResult.reactionTime + winnerResult.finishTime - winnerResult.dialIn;
             let difference = currentResultDialInDifference - winnerResultDialInDifference;

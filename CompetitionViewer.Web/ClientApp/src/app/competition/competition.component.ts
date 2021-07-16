@@ -12,7 +12,7 @@ import { CompetitionService } from '../../services/competitionService';
 })
 export class CompetitionComponent {
     public eventList: RaceEvent[] = [];
-    public selectedEventId: string | null = null;
+    public selectedEventId: string | undefined;
     private hasEventBeenSelected: boolean = false;
 
     constructor(private competitionService: CompetitionService) {
@@ -21,7 +21,7 @@ export class CompetitionComponent {
             .subscribe(x => {
                 this.eventList = x.sort((a, b) => a.id.localeCompare(b.id));
 
-                if (this.selectedEventId != null) {
+                if (this.selectedEventId != undefined) {
                     let matchingEvent = this.eventList.find(x => x.id == this.selectedEventId);
                     if (matchingEvent == undefined) {
                         this.hasEventBeenSelected = false;
@@ -37,7 +37,7 @@ export class CompetitionComponent {
         competitionService
             .selectedEvent
             .subscribe(x => {
-                this.selectedEventId = x == null ? null : x.id;
+                this.selectedEventId = x == undefined ? undefined : x.id;
             });
     }
 

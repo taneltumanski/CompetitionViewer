@@ -10,12 +10,12 @@ import { CompetitionMessage, RaceEventMessage } from '../models/racemessages';
 })
 export class CompetitionMessageService {
     private isConnectedToServer: boolean = false;
-    private connection: HubConnection | null = null;
+    private connection: HubConnection | undefined;
     private reconnectTimerHandle: number = 0;
 
     private messageStream: ReplaySubject<CompetitionMessage> = new ReplaySubject();
 
-    public onConnected: BehaviorSubject<boolean> = new BehaviorSubject(false);
+    public onConnected: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
     constructor() {
         this.connectSignalR();
@@ -82,7 +82,7 @@ export class CompetitionMessageService {
     private reconnectSignalR() {
         const timeout = 5000;
 
-        this.connection = null;
+        this.connection = undefined;
 
         clearTimeout(this.reconnectTimerHandle);
 

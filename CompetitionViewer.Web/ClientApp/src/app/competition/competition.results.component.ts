@@ -33,11 +33,11 @@ import { MatMenuTrigger } from '@angular/material/menu';
     ],
 })
 export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDestroy {
-    private subscription: Subscription | null;
-    private currentContextMenuTarget: HTMLElement | null;
-    private snackbarTimeout: NodeJS.Timeout | null;
+    private subscription: Subscription | undefined;
+    private currentContextMenuTarget: HTMLElement | undefined;
+    private snackbarTimeout: NodeJS.Timeout | undefined;
 
-    public expandedRow: RaceMessageViewModel | null;
+    public expandedRow: RaceMessageViewModel | undefined;
     public dataSource = new MatTableDataSource<RaceMessageViewModel>([]);
     public filters: FilterData[] = [];
     public columns: ColumnData[] = [];
@@ -45,9 +45,9 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
     public readonly separatorKeysCodes: number[] = [ENTER, COMMA];
     public contextMenuPosition = { x: '0px', y: '0px' };
 
-    @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
-    @ViewChild(MatSort, { static: true }) sort: MatSort;
-    @ViewChild(MatMenuTrigger, { static: true }) contextMenu: MatMenuTrigger;
+    @ViewChild(MatPaginator, { static: true }) paginator!: MatPaginator;
+    @ViewChild(MatSort, { static: true }) sort!: MatSort;
+    @ViewChild(MatMenuTrigger, { static: true }) contextMenu!: MatMenuTrigger;
 
     public get FilterType(): typeof FilterType {
         return FilterType;
@@ -111,7 +111,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
 
         let subscriptions = [
             this.competitionService.filteredMessages.pipe(sample(interval(500))).subscribe(x => this.invalidate(x)),
-            this.contextMenu.menuClosed.subscribe(() => this.currentContextMenuTarget = null),
+            this.contextMenu.menuClosed.subscribe(() => this.currentContextMenuTarget = undefined),
 
             fromEvent<MouseEvent>(document, 'click')
                 .pipe(
@@ -132,7 +132,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
     public ngOnDestroy() {
         if (this.subscription) {
             this.subscription.unsubscribe();
-            this.subscription = null;
+            this.subscription = undefined;
         }
     }
 
@@ -152,7 +152,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
 
         let newLength = this.dataSource.filteredData.length;
         let lengthDifference = newLength - oldLength;
-        let message: string | null = null;
+        let message: string | undefined;
 
         if (lengthDifference > 0) {
             message = "Added " + lengthDifference + " results";
@@ -168,12 +168,12 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
     private pushSnackbarMessage(message: string): void {
         if (this.snackbarTimeout) {
             clearTimeout(this.snackbarTimeout);
-            this.snackbarTimeout = null;
+            this.snackbarTimeout = undefined;
         }
 
         this.snackbarTimeout = setTimeout(() => {
             this.snackBar.open(message, "Ok", { duration: 3000, politeness: "polite" });
-            this.snackbarTimeout = null;
+            this.snackbarTimeout = undefined;
         }, 1000);
     }
 
@@ -191,7 +191,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
 
     public onClick(item: RaceMessageViewModel) {
         if (this.expandedRow == item) {
-            this.expandedRow = null;
+            this.expandedRow = undefined;
         }
         else {
             this.expandedRow = item;
@@ -260,7 +260,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
     }
 
     private isNumber(value: string | number): boolean {
-        return (value != null) && (value !== '') && !isNaN(Number(value.toString()));
+        return (value != undefined) && (value !== '') && !isNaN(Number(value.toString()));
     }
 
     public getDisplayedColumns() {
@@ -281,16 +281,16 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
 
         if (column != undefined && column.isRaceProperty) {
             if (sort.active == "reactionTime") {
-                filters.push(x => x[sort.active] >= 0);
+                filters.push(x => x[sort.active]! >= 0);
             } else {
-                filters.push(x => x[sort.active] > 0);
+                filters.push(x => x[sort.active]! > 0);
             }
 
-            filters.push(x => x[sort.active] < 1000);
+            filters.push(x => x[sort.active]! < 1000);
         }
 
         if (sort.active != "timestamp") {
-            filters.push(x => x.racerId != null && x.racerId.toUpperCase() != "BYE");
+            filters.push(x => x.racerId != undefined && x.racerId.toUpperCase() != "BYE");
         }
 
         return filters;
@@ -323,7 +323,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
                     finishSpeed: result.finishSpeed,
                     finishTime: result.finishTime,
                     total: RaceUtils.getTotalTime(result),
-                    lane: result.lane ? result.lane.toUpperCase() : null,
+                    lane: result.lane ? result.lane.toUpperCase() : undefined,
                     racerId: result.racerId,
                     reactionTime: result.reactionTime,
                     result: this.getRaceResult(result.result),
@@ -334,7 +334,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
                     thousandFeetTime: result.thousandFeetTime,
                     threeThirtyFeetTime: result.threeThirtyFeetTime,
 
-                    dialInAccuracy: RaceUtils.getDialInAccuracy(result, msg),
+                    dialInAccuracy: RaceUtils.getDialInAccuracy(result),
                     timeDifference: RaceUtils.getTimeDifference(result, msg),
 
                     opponents: new Array<RaceMessageViewModel>()
@@ -345,24 +345,24 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
                     data.push(item);
                 }
 
-                if (opponents[item.raceId] == null) {
-                    opponents[item.raceId] = new Array<RaceMessageViewModel>();
+                if (!opponents.has(item.raceId)) {
+                    opponents.set(item.raceId, new Array<RaceMessageViewModel>());
                 }
 
-                for (const racer of opponents[item.raceId]) {
+                for (const racer of opponents.get(item.raceId)!) {
                     racer.opponents.push(item);
                     item.opponents.push(racer);
                 }
 
-                opponents[item.raceId].push(item);
+                opponents.get(item.raceId)!.push(item);
             }
         }
 
         return data;
     }
 
-    private getRaceResult(result: number | null) {
-        if (result == null) {
+    private getRaceResult(result: number | undefined) {
+        if (result == undefined) {
             return "---";
         }
 
@@ -380,23 +380,25 @@ export interface RaceMessageViewModel {
     raceClass: string;
 
     racerId: string;
-    lane: string | null;
-    result: string | null;
-    dialIn: number | null;
-    reactionTime: number | null;
-    sixtyFeetTime: number | null;
-    threeThirtyFeetTime: number | null;
-    sixSixtyFeetTime: number | null;
-    sixSixtyFeetSpeed: number | null;
-    thousandFeetTime: number | null;
-    thousandFeetSpeed: number | null;
-    finishTime: number | null;
-    finishSpeed: number | null;
-    total: number | null;
-    dialInAccuracy: number | null;
-    timeDifference: number | null;
+    lane: string | undefined;
+    result: string | undefined;
+    dialIn: number | undefined;
+    reactionTime: number | undefined;
+    sixtyFeetTime: number | undefined;
+    threeThirtyFeetTime: number | undefined;
+    sixSixtyFeetTime: number | undefined;
+    sixSixtyFeetSpeed: number | undefined;
+    thousandFeetTime: number | undefined;
+    thousandFeetSpeed: number | undefined;
+    finishTime: number | undefined;
+    finishSpeed: number | undefined;
+    total: number | undefined;
+    dialInAccuracy: number | undefined;
+    timeDifference: number | undefined;
 
     opponents: RaceMessageViewModel[];
+
+    [key: string]: string | number | undefined | RaceMessageViewModel[];
 }
 
 export interface ColumnData {

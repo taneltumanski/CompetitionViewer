@@ -10,9 +10,16 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowJs": true,
+
     "strictNullChecks": true,
-    //"alwaysStrict": true,
-    //"strict": true,
+    "alwaysStrict": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strictPropertyInitialization": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+
     "target": "ES2015",
     "typeRoots": [
       "node_modules/@types"

@@ -47,6 +47,10 @@ html {
   background-color: #f2f2f2;
 }
 
+.removedQualifier {
+  background-color: indianred;
+}
+
 .whitelistChip {
   background-color: aquamarine;
 }

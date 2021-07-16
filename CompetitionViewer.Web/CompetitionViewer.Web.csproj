@@ -47,7 +47,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="ClientApp\src\app\competition\competition.pipes.ts" />
     <None Remove="ClientApp\src\util\raceUtils.ts" />
   </ItemGroup>
 
@@ -61,7 +60,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TypeScriptCompile Include="ClientApp\src\app\competition\competition.pipes.ts" />
     <TypeScriptCompile Include="ClientApp\src\util\raceUtils.ts" />
   </ItemGroup>
 

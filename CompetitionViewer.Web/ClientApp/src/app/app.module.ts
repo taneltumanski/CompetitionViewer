@@ -13,7 +13,6 @@ import { CompetitionComponent } from './competition/competition.component';
 import { ApiAuthorizationModule } from 'src/api-authorization/api-authorization.module';
 import { AuthorizeGuard } from 'src/api-authorization/authorize.guard';
 import { AuthorizeInterceptor } from 'src/api-authorization/authorize.interceptor';
-import { LanePipe, RaceResultPipe, TimeDifferencePipe, DialInAccuracyPipe, MyNumberPipe } from './competition/competition.pipes';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CompetitionQualificationComponent } from './competition/competition.qualification.component';
 import { CompetitionEventInfoComponent } from './competition/competition.eventInfo.component';
@@ -42,12 +41,6 @@ import { MatOptionModule } from '@angular/material/core';
         CompetitionQualificationComponent,
         CompetitionEventInfoComponent,
         CompetitionResultsComponent,
-
-        LanePipe,
-        RaceResultPipe,
-        TimeDifferencePipe,
-        DialInAccuracyPipe,
-        MyNumberPipe
     ],
     imports: [
         BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),

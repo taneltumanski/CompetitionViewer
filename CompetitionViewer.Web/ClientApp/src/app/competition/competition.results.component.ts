@@ -14,7 +14,6 @@ import { ActivatedRoute } from '@angular/router';
 import { debounceTime, distinctUntilChanged, tap, filter, take, sample } from 'rxjs/operators';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CompetitionService } from '../../services/competitionService';
-import { LanePipe, MyNumberPipe, RaceResultPipe } from './competition.pipes';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -244,7 +243,13 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
 
     public format(item: any, column: ColumnData): any {
         if (column.type == ColumnType.SignedNumber) {
-            return new MyNumberPipe().transform(item, null);
+            if (this.isNumber(item)) {
+                let val = item as number;
+
+                return (val > 0 ? "+" : "") + val.toFixed(5);
+            }
+
+            return null;
         }
 
         if (column.type == ColumnType.RoundedNumber) {
@@ -252,6 +257,10 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
         }
 
         return item;
+    }
+
+    private isNumber(value: string | number): boolean {
+        return (value != null) && (value !== '') && !isNaN(Number(value.toString()));
     }
 
     public getDisplayedColumns() {
@@ -313,11 +322,11 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
                     dialIn: result.dialIn,
                     finishSpeed: result.finishSpeed,
                     finishTime: result.finishTime,
-                    total: this.getTotalTime(result),
+                    total: RaceUtils.getTotalTime(result),
                     lane: result.lane ? result.lane.toUpperCase() : null,
                     racerId: result.racerId,
                     reactionTime: result.reactionTime,
-                    result: new RaceResultPipe().transform(result.result),
+                    result: this.getRaceResult(result.result),
                     sixSixtyFeetSpeed: result.sixSixtyFeetSpeed,
                     sixSixtyFeetTime: result.sixSixtyFeetTime,
                     sixtyFeetTime: result.sixtyFeetTime,
@@ -325,8 +334,8 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
                     thousandFeetTime: result.thousandFeetTime,
                     threeThirtyFeetTime: result.threeThirtyFeetTime,
 
-                    dialInAccuracy: this.getDialInAccuracy(result, msg),
-                    timeDifference: this.getTimeDifference(result, msg),
+                    dialInAccuracy: RaceUtils.getDialInAccuracy(result, msg),
+                    timeDifference: RaceUtils.getTimeDifference(result, msg),
 
                     opponents: new Array<RaceMessageViewModel>()
                 };
@@ -352,54 +361,12 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
         return data;
     }
 
-    private getTotalTime(result: RaceEventResultMessage) {
-        if (result.reactionTime == null || result.finishTime == null || result.reactionTime < 0 || result.finishTime <= 0) {
-            return null;
+    private getRaceResult(result: number | null) {
+        if (result == null) {
+            return "---";
         }
 
-        return result.reactionTime + result.finishTime;
-    }
-
-    private getDialInAccuracy(result: RaceEventResultMessage, message: RaceEventMessage): number | null {
-        if (result == null || result.finishTime == null) {
-            return null;
-        }
-
-        if (result.dialIn == 0 || result.dialIn == null) {
-            return null;
-        }
-
-        return result.finishTime - result.dialIn;
-    }
-
-    private getTimeDifference(result: RaceEventResultMessage, message: RaceEventMessage): number | null {
-        let winnerResult = message.results.find(x => x.result == 0);
-
-        if (winnerResult == undefined || winnerResult.racerId == result.racerId || winnerResult.racerId.toLowerCase() == "bye" || result.racerId.toLowerCase() == "bye") {
-            return null;
-        }
-
-        if (result.finishTime == 0) {
-            return null;
-        }
-
-        if (result.dialIn == null || winnerResult.dialIn == null || result.reactionTime == null || result.finishTime == null || winnerResult.reactionTime == null || winnerResult.finishTime == null) {
-            return null;
-        }
-
-        if (result.dialIn > 0 || winnerResult.dialIn > 0) {
-            let currentResultDialInDifference = result.reactionTime + result.finishTime - result.dialIn;
-            let winnerResultDialInDifference = winnerResult.reactionTime + winnerResult.finishTime - winnerResult.dialIn;
-            let difference = currentResultDialInDifference - winnerResultDialInDifference;
-
-            return difference;
-        } else {
-            let currentResultDiff = result.reactionTime + result.finishTime;
-            let winnerResultDiff = winnerResult.reactionTime + winnerResult.finishTime;
-            let difference = currentResultDiff - winnerResultDiff;
-
-            return difference;
-        }
+        return result == 0 ? "Winner" : "Runnerup";
     }
 }
 

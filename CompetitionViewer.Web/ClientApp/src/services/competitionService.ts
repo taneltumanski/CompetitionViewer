@@ -82,6 +82,7 @@ export class CompetitionService {
 
         this.rawMessages.push(message);
 
+        let year = new Date(message.timestamp).getFullYear();
         let eventInfo = this.eventInformations.find(x => x.id == message.eventId) || this.getDefaultEventInfo(message);
         let existingEvent = this.events.value.find(x => x.id == message.eventId);
         if (existingEvent == undefined) {
@@ -107,12 +108,13 @@ export class CompetitionService {
                 continue;
             }
 
-            let classInfo = eventInfo.classInformations.find(x => x.id == raceClass) || this.getDefaultClassInfo(raceClass);
+            let classInfo = eventInfo.classInformations.find(x => x.id == raceClass) || this.getDefaultClassInfo(raceClass, year);
             let existingEventClass = existingEvent.classes.value.find(x => x.id == raceClass);
             if (existingEventClass == undefined) {
                 existingEventClass = {
                     id: raceClass,
                     name: raceClass,
+                    classIndex: classInfo.index,
                     results: new ObservableArray<RaceEventMessage>([]),
                     qualificationDefiningProperty: classInfo.qualificationDefiningProperty,
                     raceEndDefiningProperty: classInfo.raceEndDefiningProperty,
@@ -143,18 +145,96 @@ export class CompetitionService {
         };
     }
 
-    public getDefaultClassInfo(raceClass: string): ClassInformation {
+    public getDefaultClassInfo(raceClass: string, year: number): ClassInformation {
         let qualificationProp = ["BB", "J/BR", "ST",].includes(raceClass) ? RaceClassDefiningProperty.ReactionTime : ["SET", "PET", "SPET"].includes(raceClass) ? RaceClassDefiningProperty.DialInMargin : RaceClassDefiningProperty.QuarterMileTime;
         let raceEndProp = ["J/BR"].includes(raceClass) ? RaceEndDefiningProperty.EightMileTime : RaceEndDefiningProperty.QuarterMileTime;
         let eliminatorType = ["OL", "PB"].includes(raceClass) ? EliminatorType.Pro : EliminatorType.Sportsman;
+        let classIndex = this.getClassIndex(raceClass, year);
 
         return {
             id: raceClass,
             name: raceClass,
+            index: classIndex,
             qualificationDefiningProperty: qualificationProp,
             raceEndDefiningProperty: raceEndProp,
             eliminatorType: eliminatorType
         };
+    }
+
+    private getClassIndex(raceClass: string, year: number): ClassTimeIndex | null {
+        if (year == 2021) {
+            if (raceClass.toLocaleUpperCase() == "ST") {
+                return {
+                    EightMileIndex: 8.88,
+                    QuarterMileIndex: 13.9
+                }
+            }
+
+            if (raceClass.toLocaleUpperCase() == "ST/A") {
+                return {
+                    EightMileIndex: 8.23,
+                    QuarterMileIndex: 12.9
+                }
+            }
+
+            if (raceClass.toLocaleUpperCase() == "ST/B") {
+                return {
+                    EightMileIndex: 7.6,
+                    QuarterMileIndex: 11.9
+                }
+            }
+
+            if (raceClass.toLocaleUpperCase() == "SST") {
+                return {
+                    EightMileIndex: 7.04,
+                    QuarterMileIndex: 10.9
+                }
+            }
+
+            if (raceClass.toLocaleUpperCase() == "OL") {
+                return {
+                    EightMileIndex: 4.5,
+                    QuarterMileIndex: 7.5
+                }
+            }
+        }
+
+        if (raceClass.toLocaleUpperCase() == "ST") {
+            return {
+                EightMileIndex: 8.88,
+                QuarterMileIndex: 13.9
+            }
+        }
+
+        if (raceClass.toLocaleUpperCase() == "ST/A") {
+            return {
+                EightMileIndex: 8.23,
+                QuarterMileIndex: 12.9
+            }
+        }
+
+        if (raceClass.toLocaleUpperCase() == "ST/B") {
+            return {
+                EightMileIndex: 7.6,
+                QuarterMileIndex: 11.9
+            }
+        }
+
+        if (raceClass.toLocaleUpperCase() == "SST") {
+            return {
+                EightMileIndex: 7.04,
+                QuarterMileIndex: 10.9
+            }
+        }
+
+        if (raceClass.toLocaleUpperCase() == "OL") {
+            return {
+                EightMileIndex: 4.5,
+                QuarterMileIndex: 7.5
+            }
+        }
+
+        return null;
     }
 
     private isValidEvent(message: RaceEventMessage) {
@@ -166,6 +246,11 @@ export class CompetitionService {
             )
             ;
     }
+}
+
+export interface ClassTimeIndex {
+    EightMileIndex: number;
+    QuarterMileIndex: number;
 }
 
 export interface MessageFilter {
@@ -213,6 +298,7 @@ export interface EventInformation {
 export interface ClassInformation {
     id: string;
     name: string;
+    index: ClassTimeIndex | null;
     qualificationDefiningProperty: RaceClassDefiningProperty;
     raceEndDefiningProperty: RaceEndDefiningProperty;
     eliminatorType: EliminatorType;

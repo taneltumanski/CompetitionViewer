@@ -1,6 +1,6 @@
 import { RaceEventMessage } from "./racemessages";
 import { BehaviorSubject } from "rxjs";
-import { EventInformation } from "../services/competitionService";
+import { ClassTimeIndex, EventInformation } from "../services/competitionService";
 
 export interface RaceEvent {
     id: string;
@@ -14,6 +14,7 @@ export interface RaceEvent {
 export interface RaceClass {
     id: string;
     name: string;
+    classIndex: ClassTimeIndex | null;
     qualificationDefiningProperty: RaceClassDefiningProperty;
     raceEndDefiningProperty: RaceEndDefiningProperty;
     eliminatorType: EliminatorType;

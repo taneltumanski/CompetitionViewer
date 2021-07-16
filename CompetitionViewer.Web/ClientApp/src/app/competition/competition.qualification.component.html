@@ -10,13 +10,15 @@
           <table class="table">
             <thead>
               <tr>
+                <th></th>
                 <th scope="col">Name</th>
                 <th scope="col">Best time</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let participant of classVm.qualificationPositions">
-                <td>{{ participant.participantId }}</td>
+              <tr *ngFor="let participant of classVm.qualificationPositions" [ngClass]="{'removedQualifier': participant.isRemoved}">
+                <td>{{ participant.qualifyingPosition }}.</td>
+                <td>{{ participant.racerId }}</td>
                 <td>{{ participant.bestTime | number: '1.5-5' }}</td>
               </tr>
             </tbody>

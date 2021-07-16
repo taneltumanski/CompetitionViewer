@@ -10,9 +10,6 @@ import { AppComponent } from './app.component';
 import { NavMenuComponent } from './nav-menu/nav-menu.component';
 import { HomeComponent } from './home/home.component';
 import { CompetitionComponent } from './competition/competition.component';
-import { ApiAuthorizationModule } from 'src/api-authorization/api-authorization.module';
-import { AuthorizeGuard } from 'src/api-authorization/authorize.guard';
-import { AuthorizeInterceptor } from 'src/api-authorization/authorize.interceptor';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CompetitionQualificationComponent } from './competition/competition.qualification.component';
 import { CompetitionEventInfoComponent } from './competition/competition.eventInfo.component';
@@ -47,7 +44,6 @@ import { MatOptionModule } from '@angular/material/core';
         HttpClientModule,
         FormsModule,
         ReactiveFormsModule,
-        ApiAuthorizationModule,
 
         MatSelectModule,
         MatTabsModule,
@@ -75,8 +71,6 @@ import { MatOptionModule } from '@angular/material/core';
     providers: [
         DatePipe,
         DecimalPipe,
-
-        { provide: HTTP_INTERCEPTORS, useClass: AuthorizeInterceptor, multi: true }
     ],
     bootstrap: [AppComponent]
 })

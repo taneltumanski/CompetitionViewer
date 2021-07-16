@@ -14,14 +14,14 @@ namespace ConsoleApp1
         static void Main(string[] args)
         {
             var color = Console.ForegroundColor;
-            var participants = 18;
+            var participants = 64;
             var participantLists = Enumerable.Range(2, participants - 1).ToArray();
             var brackets = participantLists
                 .Select(x => new
                 {
                     Count = x,
                     KnownBracket = GetKnownBracket(x).ToArray(),
-                    Bracket = Generate(x).ToArray()
+                    Bracket = GetBracket(x).ToArray()
                 })
                 .ToArray();
 
@@ -29,9 +29,10 @@ namespace ConsoleApp1
 
             foreach (var bracket in brackets)
             {
+                var result = Simulate(bracket.KnownBracket);
                 Console.Write($"Bracket with {bracket.Count} is ");
 
-                if (bracket.KnownBracket.SequenceEqual(bracket.Bracket))
+                if (bracket.KnownBracket.SequenceEqual(bracket.Bracket) && result)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine("SUCCESS");
@@ -41,6 +42,12 @@ namespace ConsoleApp1
                     //isFail = true;
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine("-KNOWN BRACKET NOT FOUND-");
+                }
+                else if (!result)
+                {
+                    //isFail = true;
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("-SIMULATION FAILED-");
                 }
                 else
                 {
@@ -61,12 +68,12 @@ namespace ConsoleApp1
 
             Console.WriteLine();
 
-            foreach (var bracket in brackets)
-            {
-                Console.WriteLine(bracket.Count + " = " + string.Join(", ", bracket.Bracket.Select(x => x == null ? " " : x.ToString())));
-                Console.WriteLine(bracket.Count + " = " + string.Join(", ", bracket.KnownBracket.Select(x => x == null ? " " : x.ToString())));
-                Console.WriteLine();
-            }
+            //foreach (var bracket in brackets)
+            //{
+            //    Console.WriteLine(bracket.Count + " = " + string.Join(", ", bracket.Bracket.Select(x => x == null ? " " : x.ToString())));
+            //    Console.WriteLine(bracket.Count + " = " + string.Join(", ", bracket.KnownBracket.Select(x => x == null ? " " : x.ToString())));
+            //    Console.WriteLine();
+            //}
 
             //return;
 
@@ -85,6 +92,74 @@ namespace ConsoleApp1
                 //}
             }
 
+        }
+
+        private static bool Simulate(int?[] bracket)
+        {
+            var requredByeOrder = GetByes(bracket.Count(x => x != null)).ToImmutableArray();
+            var requredByeOrder2 = Enumerable.Range(1, requredByeOrder.Length).ToImmutableArray();
+            var matches = GetMatches(bracket);
+            var byeOrder = new List<int>();
+            var byeOrder2 = new List<int>();
+            var round = 1;
+
+            while (matches != null)
+            {
+                var newBracket = new int?[matches.Length];
+
+                for (int i = 0; i < matches.Length; i++)
+                {
+                    var match = matches[i];
+
+                    if (match.first != null && match.second != null)
+                    {
+                        newBracket[i] = Math.Min(match.first.Value, match.second.Value);
+                    }
+                    else if (match.first != null || match.second != null)
+                    {
+                        var value = Math.Min(match.first ?? int.MaxValue, match.second ?? int.MaxValue);
+
+                        newBracket[i] = value;
+                        byeOrder.Add(round);
+                        byeOrder2.Add(value);
+                    }
+                    else
+                    {
+                        newBracket[i] = null;
+                    }
+                }
+
+                matches = GetMatches(newBracket);
+                round++;
+            }
+
+            return requredByeOrder.SequenceEqual(byeOrder) && requredByeOrder2.SequenceEqual(byeOrder2);
+
+            (int? first, int? second)[] GetMatches(int?[] bracket)
+            {
+                if (bracket.Length <= 1)
+                {
+                    return null;
+                }
+
+                var matches = new (int? first, int? second)[bracket.Length / 2];
+
+                for (int i = 0; i < bracket.Length; i++)
+                {
+                    var matchIndex = i / 2;
+
+                    if (i % 2 == 0)
+                    {
+                        matches[matchIndex].first = bracket[i];
+                    }
+                    else
+                    {
+                        matches[matchIndex].second = bracket[i];
+                    }
+                }
+
+                return matches;
+            }
         }
 
         private static IEnumerable<int> GetByes(int nr)
@@ -149,24 +224,18 @@ namespace ConsoleApp1
             var rounds = (int)Math.Ceiling(Math.Log(participantCount) / Math.Log(2));
             var bracketSize = (int)Math.Pow(2, rounds);
             var random = new Random();
-            var seeds = Enumerable.Range(1, participantCount).Select(x => new Seed(x)).ToList();
+            var seeds = Enumerable.Range(1, bracketSize).Select(x => new Seed()).ToArray();
             var byes = GetByes(participantCount).ToArray();
-            var nextByeSeed = 1;
-            var currentRound = 1;
-            var seedList = new Seed[bracketSize];
 
-            if (IsPowerOfTwo(participantCount))
+            var currentByePosition = 1;
+            var currentRound = rounds;
+
+            while (rounds-- > 0)
             {
-                return GetBracketImpl(rounds, seeds.ToImmutableList(), byes.ToImmutableList());
+
             }
 
             return Enumerable.Range(1, bracketSize).Cast<int?>().OrderBy(x => random.Next());
-        }
-
-        private static IEnumerable<int?> GetBracketImpl(int currentRound, ImmutableList<Seed> currentSeeds, ImmutableList<int> currentByes)
-        {
-            yield break;
-            //throw new NotImplementedException();
         }
 
         public static bool IsPowerOfTwo(int x)
@@ -174,17 +243,10 @@ namespace ConsoleApp1
             return (x > 0) && ((x & (x - 1)) == 0);
         }
 
-        private struct Seed
+        private class Seed
         {
-            public static readonly Seed None = new Seed(-1);
-            public static readonly Seed Bye = new Seed(null);
-
-            public static int? Id;
-
-            public Seed(int? id)
-            {
-                Id = id;
-            }
+            public int Value { get; set; }
+            public bool IsSet => Value > 0;
         }
 
         public static IEnumerable<int?> GetKnownBracket(int participantCount)

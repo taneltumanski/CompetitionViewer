@@ -17,21 +17,16 @@ using System.Threading.Tasks;
 
 namespace CompetitionViewer.Services
 {
-    public interface ILiveRaceResultsService
-    {
-        IObservable<RaceDataDto> GetStream();
-    }
-
-    public class LiveRaceResultsService : ILiveRaceResultsService, IDisposable
+    public class CachedLiveRaceResultsService : ILiveRaceResultsService, IDisposable
     {
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
         private readonly IEventInfoProvider _eventUriProvider;
-        private readonly ILogger<LiveRaceResultsService> _logger;
+        private readonly ILogger<CachedLiveRaceResultsService> _logger;
         private readonly IObservable<RaceDataDto> _stream;
         private readonly EDRAResultService _resultService;
 
-        public LiveRaceResultsService(EDRAResultService resultService, IEventInfoProvider eventUriProvider, ILogger<LiveRaceResultsService> logger)
+        public CachedLiveRaceResultsService(EDRAResultService resultService, IEventInfoProvider eventUriProvider, ILogger<CachedLiveRaceResultsService> logger)
         {
             _resultService = resultService;
             _eventUriProvider = eventUriProvider;

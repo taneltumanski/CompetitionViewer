@@ -29,15 +29,16 @@ namespace ConsoleApp1
 
             foreach (var bracket in brackets)
             {
-                var result = Simulate(bracket.KnownBracket);
+                var bracketList = bracket.KnownBracket;
+                var result = Simulate(bracketList);
                 Console.Write($"Bracket with {bracket.Count} is ");
 
-                if (bracket.KnownBracket.SequenceEqual(bracket.Bracket) && result)
+                if (bracket.KnownBracket.SequenceEqual(bracketList) && result)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine("SUCCESS");
                 }
-                else if (bracket.KnownBracket.Length == 0)
+                else if (bracketList.Length == 0)
                 {
                     //isFail = true;
                     Console.ForegroundColor = ConsoleColor.Yellow;
@@ -100,7 +101,6 @@ namespace ConsoleApp1
             var requredByeOrder2 = Enumerable.Range(1, requredByeOrder.Length).ToImmutableArray();
             var matches = GetMatches(bracket);
             var byeOrder = new List<int>();
-            var byeOrder2 = new List<int>();
             var round = 1;
 
             while (matches != null)
@@ -121,7 +121,6 @@ namespace ConsoleApp1
 
                         newBracket[i] = value;
                         byeOrder.Add(round);
-                        byeOrder2.Add(value);
                     }
                     else
                     {
@@ -133,7 +132,7 @@ namespace ConsoleApp1
                 round++;
             }
 
-            return requredByeOrder.SequenceEqual(byeOrder) && requredByeOrder2.SequenceEqual(byeOrder2);
+            return requredByeOrder.SequenceEqual(byeOrder);
 
             (int? first, int? second)[] GetMatches(int?[] bracket)
             {
@@ -223,19 +222,20 @@ namespace ConsoleApp1
         {
             var rounds = (int)Math.Ceiling(Math.Log(participantCount) / Math.Log(2));
             var bracketSize = (int)Math.Pow(2, rounds);
-            var random = new Random();
             var seeds = Enumerable.Range(1, bracketSize).Select(x => new Seed()).ToArray();
             var byes = GetByes(participantCount).ToArray();
 
             var currentByePosition = 1;
             var currentRound = rounds;
 
-            while (rounds-- > 0)
+            while (rounds > 0)
             {
 
+
+                rounds--;
             }
 
-            return Enumerable.Range(1, bracketSize).Cast<int?>().OrderBy(x => random.Next());
+            return seeds.Select(x => x.IsSet ? x.Value : (int?)null);
         }
 
         public static bool IsPowerOfTwo(int x)

@@ -231,6 +231,10 @@ export class CompetitionQualificationComponent implements OnInit {
                 case 18: return "1 10 x x 4 13 8 17 2 11 6 15 x x x x 3 12 7 16 5 14 9 18 x x x x x x x x";
                 case 19: return "1 x 6 15 4 13 9 18 2 11 7 16 x x x x 3 12 8 17 5 14 10 19 x x x x x x x x";
                 case 20: return "1 11 6 16 x x x x 3 13 8 18 5 15 10 20 2 12 7 17 4 14 9 19 x x x x x x x x";
+                case 21: return "1 x 7 17 4 14 9 19 2 12 x x 5 15 10 20 3 13 8 18 6 16 11 21 x x x x x x x x";
+                case 22: return "1 12 x x 4 15 9 20 3 14 8 19 6 17 11 22 2 13 7 18 5 16 10 21 x x x x x x x x";
+                case 23: return "1 x 7 18 4 15 10 21 3 14 9 20 6 17 12 23 2 13 8 19 5 16 11 22 x x x x x x x x";
+                case 24: return "1 13 7 19 4 16 10 22 x x x x x x x x 2 14 8 20 5 17 11 23 3 15 9 21 6 18 12 24";
             }
         } else if (eliminatorType == EliminatorType.Pro) {
             switch (participantCount) {
@@ -239,6 +243,11 @@ export class CompetitionQualificationComponent implements OnInit {
                 case 3: return "1 x 2 3";
                 case 4: return "1 4 2 3";
                 case 5: return "1 x 3 4 2 5 x x";
+                case 6: return "1 6 x x 2 5 3 4";
+                case 7: return "1 x 4 5 2 7 3 6";
+                case 8: return "1 8 4 5 2 7 3 6";
+                case 9: return "1 x 5 6 2 9 x x 3 8 4 7 x x x x";
+                case 10: return "1 10 x x 3 8 4 7 2 9 5 6 x x x x";
             }
         }
 

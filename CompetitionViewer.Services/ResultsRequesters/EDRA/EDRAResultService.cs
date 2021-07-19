@@ -49,7 +49,7 @@ namespace CompetitionViewer.Services.ResultsRequesters.EDRA
 
             return rows
                 .Select(x => string.Join("|", x.Descendants("td").Select(y => y.InnerText)))
-                .Select(x => parser.Parse(x, eventInfo.Id))
+                .Select(x => parser.Parse(x))
                 .ToImmutableArray();
         }
     }

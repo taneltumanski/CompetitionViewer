@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 
 namespace CompetitionViewer.Services
 {
-    public class RaceDataDto
+    public sealed class RaceDataDto
     {
         public DateTimeOffset? Timestamp { get; set; }
         public string EventId { get; set; }
@@ -13,7 +13,7 @@ namespace CompetitionViewer.Services
         public ImmutableArray<RaceResultDto> Results { get; set; }
     }
 
-    public class RaceResultDto
+    public sealed class RaceResultDto
     {
         public string RacerId { get; set; }
         public int? Result { get; set; }
@@ -34,7 +34,6 @@ namespace CompetitionViewer.Services
     public class RaceData
     {
         public DateTimeOffset? Timestamp { get; set; }
-        public string EventId { get; set; }
         public string RaceId { get; set; }
         public string Round { get; set; }
 

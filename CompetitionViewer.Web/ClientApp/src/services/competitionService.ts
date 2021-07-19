@@ -63,6 +63,25 @@ export class CompetitionService {
         this.updateFilteredMessages();
     }
 
+    private getOrAddEvent(id: string, name: string): RaceEvent {
+        let eventInfo = this.eventInformations.find(x => x.id == id) || this.getDefaultEventInfo(id, name);
+        let existingEvent = this.events.value.find(x => x.id == id);
+        if (existingEvent == undefined) {
+            existingEvent = {
+                id: eventInfo.id,
+                name: eventInfo.name,
+                eventInfo: eventInfo,
+                classes: new ObservableArray<RaceClass>([]),
+                results: new ObservableArray<RaceEventMessage>([]),
+                participants: new ObservableArray<Participant>([]),
+            };
+
+            this.events.push(existingEvent);
+        }
+
+        return existingEvent;
+    }
+
     private updateFilteredMessages() {
         let messages = this.rawMessages.value.filter(x => this.isValidEvent(x));
         let selectedEventId = this.selectedEventId;
@@ -83,32 +102,19 @@ export class CompetitionService {
         this.rawMessages.push(message);
 
         let year = new Date(message.timestamp).getFullYear();
-        let eventInfo = this.eventInformations.find(x => x.id == message.eventId) || this.getDefaultEventInfo(message);
-        let existingEvent = this.events.value.find(x => x.id == message.eventId);
-        if (existingEvent == undefined) {
-            existingEvent = {
-                id: message.eventId,
-                name: eventInfo.name,
-                eventInfo: eventInfo,
-                classes: new ObservableArray<RaceClass>([]),
-                results: new ObservableArray<RaceEventMessage>([]),
-                participants: new ObservableArray<Participant>([]),
-            };
-
-            this.events.push(existingEvent);
-        }
+        let existingEvent = this.getOrAddEvent(message.eventId, message.eventName);
 
         existingEvent.results.push(message);
 
         for (const result of message.results) {
             let racerId = result.racerId;
-            let raceClass = RaceUtils.getClass(racerId, eventInfo.generalClassName);
+            let raceClass = RaceUtils.getClass(racerId, existingEvent.eventInfo.generalClassName);
 
             if (raceClass == undefined || !RaceUtils.isValidRaceClass(raceClass)) {
                 continue;
             }
 
-            let classInfo = eventInfo.classInformations.find(x => x.id == raceClass) || this.getDefaultClassInfo(raceClass, year);
+            let classInfo = existingEvent.eventInfo.classInformations.find(x => x.id == raceClass) || this.getDefaultClassInfo(raceClass, year);
             let existingEventClass = existingEvent.classes.value.find(x => x.id == raceClass);
             if (existingEventClass == undefined) {
                 existingEventClass = {
@@ -134,10 +140,10 @@ export class CompetitionService {
         }
     }
 
-    private getDefaultEventInfo(message: RaceEventMessage): EventInformation {
+    private getDefaultEventInfo(id: string, name: string | undefined): EventInformation {
         return {
-            id: message.eventId,
-            name: "Unknown event: " + message.eventId,
+            id: id,
+            name: name ?? "Unknown event: " + id,
             generalClassName: "Default class",
             classInformations: [],
             qualifyingStageKey: "Q",

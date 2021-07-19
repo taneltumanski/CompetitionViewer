@@ -33,7 +33,6 @@ namespace CompetitionViewer.Services
             _logger = logger;
 
             _stream = CreateObservable()
-                .Distinct(x => HashCode.Combine(x.RaceId, x.EventId, x.Timestamp))
                 .Replay()
                 .RefCount();
         }
@@ -114,7 +113,7 @@ namespace CompetitionViewer.Services
 
                         //var results = GetTempResults();
 
-                        var mappedResults = Map(results);
+                        var mappedResults = Map(info.Id, results);
 
                         foreach (var result in mappedResults)
                         {
@@ -174,8 +173,7 @@ namespace CompetitionViewer.Services
                 RacerId = racerId,
                 ReactionTime = TimeSpan.FromSeconds(random.NextDouble() * 1),
                 Result = result,
-                Round = round,
-                EventId = eventId
+                Round = round
             };
 
             data.SixtyFeetTime = TimeSpan.FromSeconds(random.NextDouble() * 3);
@@ -191,11 +189,11 @@ namespace CompetitionViewer.Services
             return data;
         }
 
-        private IEnumerable<RaceDataDto> Map(IEnumerable<EDRADragParser.ParseResult> results)
+        private IEnumerable<RaceDataDto> Map(string eventId, IEnumerable<EDRADragParser.ParseResult> results)
         {
             var grouping = results
                 .Select(x => x.RaceData)
-                .GroupBy(x => (x.EventId, x.RaceId, x.Timestamp, x.Round));
+                .GroupBy(x => (x.RaceId, x.Timestamp, x.Round));
 
             foreach (var item in grouping)
             {
@@ -220,7 +218,7 @@ namespace CompetitionViewer.Services
 
                 yield return new RaceDataDto()
                 {
-                    EventId = item.Key.EventId,
+                    EventId = eventId,
                     RaceId = item.Key.RaceId,
                     Timestamp = item.Key.Timestamp,
                     Round = item.Key.Round,

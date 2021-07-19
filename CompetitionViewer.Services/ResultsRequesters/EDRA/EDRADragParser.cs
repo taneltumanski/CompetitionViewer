@@ -34,11 +34,11 @@ namespace CompetitionViewer.Services.ResultsRequesters.EDRA
             [16] = new Action<RaceData, string>((d, v) => d.Result = string.IsNullOrEmpty(v) ? RaceResult.Undefined : (RaceResult)Enum.Parse(typeof(RaceResult), v, true)),
         }.ToImmutableDictionary();
 
-        public ParseResult Parse(string row, string eventId)
+        public ParseResult Parse(string row)
         {
             var hash = GetHash(row);
             var columns = row.Split('|');
-            var data = new RaceData() { EventId = eventId };
+            var data = new RaceData();
 
             var results = columns
                 .Select((x, i) => columns[i]?.Trim() ?? string.Empty)
@@ -53,12 +53,13 @@ namespace CompetitionViewer.Services.ResultsRequesters.EDRA
             return new ParseResult(data, errors, hash);
         }
 
-        private string GetHash(string data)
+        private static string GetHash(string data)
         {
-            using var sha = SHA256.Create();
+            //using var hashAlgo = new SHA256();
+            using var hashAlgo = SHA256.Create();
 
             var bytes = Encoding.UTF8.GetBytes(data);
-            var hashBytes = sha.ComputeHash(bytes);
+            var hashBytes = hashAlgo.ComputeHash(bytes);
             var hash = Encoding.UTF8.GetString(hashBytes);
 
             return hash;

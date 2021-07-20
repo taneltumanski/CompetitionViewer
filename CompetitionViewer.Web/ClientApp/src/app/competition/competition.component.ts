@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { RaceEventMessage } from '../../models/racemessages';
 import { CompetitionMessageService } from '../../services/competitionMessageService';
 import { RaceEvent, RaceClassDefiningProperty, ObservableArray, RaceClass, ClassParticipant, Participant } from '../../models/models';
 import { RaceUtils } from '../../util/raceUtils';

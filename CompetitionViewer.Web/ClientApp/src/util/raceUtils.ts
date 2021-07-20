@@ -1,8 +1,12 @@
-import { RaceEventMessage, RaceEventResultMessage } from "../models/racemessages";
+import { RaceEventDto, RaceEventResultDto } from "../models/racemessages";
 import { RoundInformation } from "../services/competitionService";
 
 export class RaceUtils {
-    public static getClass(id: string, defaultClass: string): string | undefined {
+    public static getClass(id: string | undefined, defaultClass: string): string | undefined {
+        if (id == undefined || id.length == 0) {
+            return undefined;
+        }
+
         if (id.toUpperCase().startsWith("RWYB")) {
             return id.substr(0, 4);
         }
@@ -48,7 +52,7 @@ export class RaceUtils {
         return true;
     }
 
-    public static getTotalTime(result: RaceEventResultMessage) {
+    public static getTotalTime(result: RaceEventResultDto) {
         if (result.reactionTime == undefined || result.finishTime == undefined || result.reactionTime < 0 || result.finishTime <= 0) {
             return undefined;
         }
@@ -56,7 +60,7 @@ export class RaceUtils {
         return result.reactionTime + result.finishTime;
     }
 
-    public static getDialInAccuracy(result: RaceEventResultMessage): number | undefined {
+    public static getDialInAccuracy(result: RaceEventResultDto): number | undefined {
         if (result == undefined || result.finishTime == undefined) {
             return undefined;
         }
@@ -68,13 +72,13 @@ export class RaceUtils {
         return result.finishTime - result.dialIn;
     }
 
-    public static getTimeDifference(result: RaceEventResultMessage, message: RaceEventMessage | RaceEventResultMessage): number | undefined {
-        let winnerResult: RaceEventResultMessage | undefined;
+    public static getTimeDifference(result: RaceEventResultDto, message: RaceEventDto | RaceEventResultDto): number | undefined {
+        let winnerResult: RaceEventResultDto | undefined;
 
         if (this.isRaceEventResultMessage(message)) {
             winnerResult = message;;
         } else {
-            winnerResult = (<RaceEventMessage>message).results.find(x => x.result == 0);
+            winnerResult = (<RaceEventDto>message).results.find(x => x.result == 0);
         }
 
         if (winnerResult == undefined || result == undefined || winnerResult.racerId == result.racerId || winnerResult.racerId.toLowerCase() == "bye" || result.racerId.toLowerCase() == "bye") {
@@ -104,7 +108,7 @@ export class RaceUtils {
         }
     }
 
-    private static isRaceEventResultMessage(msg: RaceEventMessage | RaceEventResultMessage): msg is RaceEventResultMessage { //magic happens here
-        return (<RaceEventResultMessage>msg).threeThirtyFeetTime !== undefined;
+    private static isRaceEventResultMessage(msg: RaceEventDto | RaceEventResultDto): msg is RaceEventResultDto {
+        return (<RaceEventResultDto>msg).threeThirtyFeetTime !== undefined;
     }
 }

@@ -1,7 +1,7 @@
 import { Injectable, EventEmitter } from '@angular/core';
 import { HubConnection, HubConnectionBuilder, HttpError, IHubProtocol, TransferFormat, ILogger, HubMessage, JsonHubProtocol } from '@aspnet/signalr';
 import { Observable, Subject, ReplaySubject, BehaviorSubject } from 'rxjs';
-import { CompetitionMessage, RaceEventMessage } from '../models/racemessages';
+import { CompetitionMessage } from '../models/racemessages';
 
 //import { gzipSync, gunzipSync } from 'browserify-zlib';
 

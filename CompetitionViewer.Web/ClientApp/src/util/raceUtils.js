@@ -5,6 +5,9 @@ var RaceUtils = /** @class */ (function () {
     function RaceUtils() {
     }
     RaceUtils.getClass = function (id, defaultClass) {
+        if (id == undefined || id.length == 0) {
+            return undefined;
+        }
         if (id.toUpperCase().startsWith("RWYB")) {
             return id.substr(0, 4);
         }

@@ -1,5 +1,5 @@
 import { Component, OnChanges, SimpleChanges, Input, ElementRef, ViewChild, OnInit, OnDestroy } from '@angular/core';
-import { RaceEventMessage, RaceEventResultMessage } from '../../models/racemessages';
+import { RaceEventDto, RaceEventResultDto } from '../../models/racemessages';
 import { RaceEvent, RaceClassDefiningProperty, RaceClass, EliminatorType } from '../../models/models';
 import { RaceUtils } from '../../util/raceUtils';
 import { CompetitionService } from '../../services/competitionService';
@@ -54,7 +54,7 @@ export class CompetitionQualificationComponent implements OnInit {
         }
     }
 
-    public invalidate(messages: RaceEventMessage[]) {
+    public invalidate(messages: RaceEventDto[]) {
         let selected = this.selectedClass;
         this.classViewModels = [];
 
@@ -73,7 +73,7 @@ export class CompetitionQualificationComponent implements OnInit {
         this.invalidateCanvas();
     }
 
-    private updateWithMessage(message: RaceEventMessage, result: RaceEventResultMessage) {
+    private updateWithMessage(message: RaceEventDto, result: RaceEventResultDto) {
         if (this.selectedEvent == undefined) {
             return;
         }
@@ -461,7 +461,7 @@ export class QualificationClassViewModel {
     constructor(public classData: RaceClass) {
     }
 
-    public updateMessage(message: RaceEventMessage, result: RaceEventResultMessage, event: RaceEvent) {
+    public updateMessage(message: RaceEventDto, result: RaceEventResultDto, event: RaceEvent) {
         if (this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.Invalid) {
             return;
         }
@@ -544,7 +544,7 @@ export class QualificationClassViewModel {
         return maxRound;
     }
 
-    private getCurrentTime(result: RaceEventResultMessage, raceClass: RaceClass): number | undefined {
+    private getCurrentTime(result: RaceEventResultDto, raceClass: RaceClass): number | undefined {
         if (raceClass.qualificationDefiningProperty == RaceClassDefiningProperty.QuarterMileTime) {
             return result.finishTime;
         }
@@ -564,8 +564,8 @@ export class QualificationClassViewModel {
 }
 
 export interface RaceResultData {
-    raceData: RaceEventResultMessage;
-    opponentData: RaceEventResultMessage[];
+    raceData: RaceEventResultDto;
+    opponentData: RaceEventResultDto[];
     racerId: string;
     raceId: string;
     round: string;

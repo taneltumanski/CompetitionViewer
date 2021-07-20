@@ -35,6 +35,7 @@ export interface RaceEventDto {
 }
 
 export interface RaceEventResultDto {
+    messageId: string;
     racerId: string;
     lane: string | undefined;
     result: number | undefined;

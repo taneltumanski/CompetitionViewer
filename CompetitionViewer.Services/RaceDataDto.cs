@@ -1,20 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace CompetitionViewer.Services
 {
-    public sealed class RaceDataDto
+    public class RaceDataDto
     {
         public DateTimeOffset? Timestamp { get; set; }
+        public string Hashcode { get; set; }
         public string EventId { get; set; }
         public string RaceId { get; set; }
         public string Round { get; set; }
-
-        public ImmutableArray<RaceResultDto> Results { get; set; }
-    }
-
-    public sealed class RaceResultDto
-    {
         public string RacerId { get; set; }
         public int? Result { get; set; }
         public string Lane { get; set; }
@@ -31,13 +27,12 @@ namespace CompetitionViewer.Services
         public double? FinishSpeed { get; set; }
     }
 
-    public class RaceData
+    public class RaceDataParseModel
     {
         public DateTimeOffset? Timestamp { get; set; }
         public string RaceId { get; set; }
-        public string Round { get; set; }
-
         public string RacerId { get; set; }
+        public string Round { get; set; }
         public RaceResult? Result { get; set; }
 
         public string Lane { get; set; }

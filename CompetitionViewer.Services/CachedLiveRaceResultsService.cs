@@ -162,9 +162,9 @@ namespace CompetitionViewer.Services
             //yield return new EDRADragParser.ParseResult(data4, ImmutableArray<string>.Empty, data4.GetHashCode().ToString());
         }
 
-        private RaceData CreateRandomData(Random random, DateTimeOffset timestamp , string lane, string raceId, string racerId, string round, string eventId, RaceResult result)
+        private RaceDataParseModel CreateRandomData(Random random, DateTimeOffset timestamp , string lane, string raceId, string racerId, string round, string eventId, RaceResult result)
         {
-            var data = new RaceData()
+            var data = new RaceDataParseModel()
             {
                 Timestamp = timestamp,
                 DialIn = TimeSpan.Zero,
@@ -191,40 +191,28 @@ namespace CompetitionViewer.Services
 
         private IEnumerable<RaceDataDto> Map(string eventId, IEnumerable<EDRADragParser.ParseResult> results)
         {
-            var grouping = results
-                .Select(x => x.RaceData)
-                .GroupBy(x => (x.RaceId, x.Timestamp, x.Round));
-
-            foreach (var item in grouping)
-            {
-                var itemResults = item
-                    .Select(x => new RaceResultDto()
-                    {
-                        DialIn = x.DialIn,
-                        FinishSpeed = x.FinishSpeed,
-                        FinishTime = x.FinishTime,
-                        Lane = x.Lane,
-                        RacerId = x.RacerId,
-                        ReactionTime = x.ReactionTime,
-                        Result = x.Result == RaceResult.Winner ? 0 : x.Result == RaceResult.RunnerUp ? 1 : (int?)null,
-                        SixSixtyFeetSpeed = x.SixSixtyFeetSpeed,
-                        SixSixtyFeetTime = x.SixSixtyFeetTime,
-                        SixtyFeetTime = x.SixtyFeetTime,
-                        ThousandFeetSpeed = x.ThousandFeetSpeed,
-                        ThousandFeetTime = x.ThousandFeetTime,
-                        ThreeThirtyFeetTime = x.ThreeThirtyFeetTime
-                    })
-                    .ToImmutableArray();
-
-                yield return new RaceDataDto()
+            return results
+                .Select(x => new RaceDataDto()
                 {
+                    Hashcode = x.Hashcode,
                     EventId = eventId,
-                    RaceId = item.Key.RaceId,
-                    Timestamp = item.Key.Timestamp,
-                    Round = item.Key.Round,
-                    Results = itemResults
-                };
-            }
+                    RaceId = x.RaceData.RaceId,
+                    Timestamp = x.RaceData.Timestamp,
+                    Round = x.RaceData.Round,
+                    DialIn = x.RaceData.DialIn,
+                    FinishSpeed = x.RaceData.FinishSpeed,
+                    FinishTime = x.RaceData.FinishTime,
+                    Lane = x.RaceData.Lane,
+                    RacerId = x.RaceData.RacerId,
+                    ReactionTime = x.RaceData.ReactionTime,
+                    Result = x.RaceData.Result == RaceResult.Winner ? 0 : x.RaceData.Result == RaceResult.RunnerUp ? 1 : (int?)null,
+                    SixSixtyFeetSpeed = x.RaceData.SixSixtyFeetSpeed,
+                    SixSixtyFeetTime = x.RaceData.SixSixtyFeetTime,
+                    SixtyFeetTime = x.RaceData.SixtyFeetTime,
+                    ThousandFeetSpeed = x.RaceData.ThousandFeetSpeed,
+                    ThousandFeetTime = x.RaceData.ThousandFeetTime,
+                    ThreeThirtyFeetTime = x.RaceData.ThreeThirtyFeetTime
+                });
         }
 
         public void Dispose()

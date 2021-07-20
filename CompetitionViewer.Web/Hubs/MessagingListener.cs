@@ -14,7 +14,8 @@ namespace CompetitionViewer.Web.Hubs
     public class MessagingListener : IDisposable
     {
         private readonly IHubClients<ICompetitionClient> _clients;
-        private readonly ILiveRaceResultsService _liveRaceResultsService;
+        private readonly IRaceUpdateService _updateService;
+        private readonly IRaceService _liveRaceResultsService;
         private readonly ILogger<MessagingListener> _logger;
 
         private readonly ConcurrentDictionary<string, IDisposable> _subscribers = new ConcurrentDictionary<string, IDisposable>();
@@ -23,10 +24,11 @@ namespace CompetitionViewer.Web.Hubs
 
         private bool _isDisposed = false;
 
-        public MessagingListener(IHubContext<CompetitionHub, ICompetitionClient> hubContext, ILiveRaceResultsService liveRaceResultsService, ILogger<MessagingListener> logger)
+        public MessagingListener(IHubContext<CompetitionHub, ICompetitionClient> hubContext, IRaceUpdateService updateService, IRaceService raceService, ILogger<MessagingListener> logger)
         {
             _clients = hubContext.Clients;
-            _liveRaceResultsService = liveRaceResultsService;
+            _updateService = updateService;
+            _liveRaceResultsService = raceService;
             _logger = logger;
         }
 
@@ -50,7 +52,9 @@ namespace CompetitionViewer.Web.Hubs
                         ex => _logger.LogError(ex, "Logger error for client {connectionId}", id));
 
                 var subscription = _liveRaceResultsService
-                    .GetStream()
+                    .GetDataEventStream()
+                    .Where(x => x.Type == RaceDataEventType.AddOrUpdate)
+                    .Select(x => x.Data)
                     .Where(x => x.EventId != null && x.RaceId != null && x.Timestamp.HasValue)
                     .Select(data => new RaceEventMessage()
                     {
@@ -58,32 +62,26 @@ namespace CompetitionViewer.Web.Hubs
                         RaceId = data.RaceId,
                         Round = data.Round,
                         Timestamp = data.Timestamp.Value.ToUnixTimeMilliseconds(),
-                        Results = data
-                            .Results
-                            .Select(x => new RaceEventResult()
-                            {
-                                DialIn = x.DialIn?.TotalSeconds,
-                                FinishSpeed = x.FinishSpeed,
-                                FinishTime = x.FinishTime?.TotalSeconds,
-                                Lane = x.Lane,
-                                RacerId = x.RacerId,
-                                ReactionTime = x.ReactionTime?.TotalSeconds,
-                                Result = x.Result,
-                                SixSixtyFeetSpeed = x.SixSixtyFeetSpeed,
-                                SixSixtyFeetTime = x.SixSixtyFeetTime?.TotalSeconds,
-                                SixtyFeetTime = x.SixtyFeetTime?.TotalSeconds,
-                                ThousandFeetSpeed = x.ThousandFeetSpeed,
-                                ThousandFeetTime = x.ThousandFeetTime?.TotalSeconds,
-                                ThreeThirtyFeetTime = x.ThreeThirtyFeetTime?.TotalSeconds,
-                            })
-                            .ToList()
+                        DialIn = data.DialIn?.TotalSeconds,
+                        FinishSpeed = data.FinishSpeed,
+                        FinishTime = data.FinishTime?.TotalSeconds,
+                        Lane = data.Lane,
+                        RacerId = data.RacerId,
+                        ReactionTime = data.ReactionTime?.TotalSeconds,
+                        Result = data.Result,
+                        SixSixtyFeetSpeed = data.SixSixtyFeetSpeed,
+                        SixSixtyFeetTime = data.SixSixtyFeetTime?.TotalSeconds,
+                        SixtyFeetTime = data.SixtyFeetTime?.TotalSeconds,
+                        ThousandFeetSpeed = data.ThousandFeetSpeed,
+                        ThousandFeetTime = data.ThousandFeetTime?.TotalSeconds,
+                        ThreeThirtyFeetTime = data.ThreeThirtyFeetTime?.TotalSeconds
                     })
                     .Buffer(TimeSpan.FromSeconds(1))
                     .Where(x => x.Any())
                     .Select((x, i) => new CompetitionMessage()
                     {
                         MessageIndex = i,
-                        Messages = x.ToList()
+                        Messages = x
                     })
                     .Subscribe(observer);
 
@@ -93,6 +91,11 @@ namespace CompetitionViewer.Web.Hubs
                 });
 
                 _subscribers.TryAdd(id, disposable);
+
+                if (_subscribers.Any())
+                {
+                    _updateService.Start();
+                }
             }
         }
 
@@ -101,6 +104,11 @@ namespace CompetitionViewer.Web.Hubs
             if (_subscribers.TryRemove(id, out var subscription))
             {
                 subscription.Dispose();
+            }
+
+            if (!_subscribers.Any())
+            {
+                _updateService.Stop();
             }
         }
 

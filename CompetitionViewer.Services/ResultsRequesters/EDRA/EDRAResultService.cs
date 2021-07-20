@@ -28,7 +28,7 @@ namespace CompetitionViewer.Services.ResultsRequesters.EDRA
 
             result.EnsureSuccessStatusCode();
 
-            return await result.Content.ReadAsStringAsync();
+            return await result.Content.ReadAsStringAsync(token);
         }
 
         public async Task<ImmutableArray<EDRADragParser.ParseResult>> GetRaceData(EDRAEventInfo eventInfo, CancellationToken token)

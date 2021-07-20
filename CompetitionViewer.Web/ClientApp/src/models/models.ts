@@ -1,4 +1,4 @@
-import { RaceEventMessage } from "./racemessages";
+import { RaceEventDto, RaceEventMessage } from "./racemessages";
 import { BehaviorSubject } from "rxjs";
 import { ClassTimeIndex, EventInformation } from "../services/competitionService";
 
@@ -6,7 +6,7 @@ export interface RaceEvent {
     id: string;
     name: string;
     eventInfo: EventInformation;
-    results: ObservableArray<RaceEventMessage>;
+    results: ObservableArray<RaceEventDto>;
     classes: ObservableArray<RaceClass>;
     participants: ObservableArray<Participant>;
 }
@@ -18,7 +18,7 @@ export interface RaceClass {
     qualificationDefiningProperty: RaceClassDefiningProperty;
     raceEndDefiningProperty: RaceEndDefiningProperty;
     eliminatorType: EliminatorType;
-    results: ObservableArray<RaceEventMessage>;
+    results: ObservableArray<RaceEventDto>;
     participants: ObservableArray<ClassParticipant>;
 }
 
@@ -31,7 +31,7 @@ export interface Participant {
     name: string;
     identificationCodes: ObservableArray<string>;
     classes: ObservableArray<RaceClass>;
-    results: ObservableArray<RaceEventMessage>;
+    results: ObservableArray<RaceEventDto>;
 }
 
 export enum RaceClassDefiningProperty {

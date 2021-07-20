@@ -4,15 +4,37 @@ export interface CompetitionMessage {
 }
 
 export interface RaceEventMessage {
+    hashcode: string;
     eventId: string;
     eventName: string;
     raceId: string;
     round: string;
     timestamp: number;
-    results: RaceEventResultMessage[];
+    racerId: string;
+    lane: string | undefined;
+    result: number | undefined;
+    dialIn: number | undefined;
+    reactionTime: number | undefined;
+    sixtyFeetTime: number | undefined;
+    threeThirtyFeetTime: number | undefined;
+    sixSixtyFeetTime: number | undefined;
+    sixSixtyFeetSpeed: number | undefined;
+    thousandFeetTime: number | undefined;
+    thousandFeetSpeed: number | undefined;
+    finishTime: number | undefined;
+    finishSpeed: number | undefined;
 }
 
-export interface RaceEventResultMessage {
+export interface RaceEventDto {
+    eventId: string;
+    eventName: string;
+    raceId: string;
+    round: string;
+    timestamp: number;
+    results: RaceEventResultDto[];
+}
+
+export interface RaceEventResultDto {
     racerId: string;
     lane: string | undefined;
     result: number | undefined;

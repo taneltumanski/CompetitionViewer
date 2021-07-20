@@ -28,6 +28,7 @@ using Microsoft.Extensions.Options;
 using CompetitionViewer.Services.ResultsRequesters.EDRA;
 using System.Net.Http;
 using System.Net;
+using System.Reactive.Concurrency;
 
 namespace CompetitionViewer.Web
 {
@@ -120,6 +121,9 @@ namespace CompetitionViewer.Web
             services.AddTransient<IEventInfoProvider, EventInfoProvider>();
             services.AddSingleton<MessagingListener>();
             services.AddSingleton<HostedServiceManager>();
+            services.AddSingleton<IRaceService, RaceService>();
+            services.AddSingleton<IRaceUpdateService, RaceUpdateService>();
+            services.AddSingleton<IScheduler>(Scheduler.Default);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

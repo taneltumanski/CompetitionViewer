@@ -1,5 +1,5 @@
 import { Injectable, EventEmitter } from '@angular/core';
-import { CompetitionMessage, RaceEventMessage, RaceEventResultMessage } from '../models/racemessages';
+import { CompetitionMessage, RaceEventMessage, RaceEventDto, RaceEventResultDto } from '../models/racemessages';
 import { CompetitionMessageService } from './competitionMessageService';
 import { RaceEvent, ObservableArray, RaceClass, RaceClassDefiningProperty, ClassParticipant, Participant, RaceEndDefiningProperty, EliminatorType } from '../models/models';
 import { BehaviorSubject, interval } from 'rxjs';
@@ -10,11 +10,11 @@ import { RaceUtils } from '../util/raceUtils';
     providedIn: 'root',
 })
 export class CompetitionService {
-    private rawMessages = new ObservableArray<RaceEventMessage>([]);
+    private rawMessages = new Array<RaceEventMessage>();
     private eventInformations: EventInformation[] = [];
     private selectedEventId: string | undefined;
 
-    public filteredMessages = new BehaviorSubject<RaceEventMessage[]>([]);
+    public filteredMessages = new BehaviorSubject<RaceEventDto[]>([]);
     public events = new ObservableArray<RaceEvent>([]);
     public selectedEvent = new BehaviorSubject<RaceEvent | undefined>(undefined);
     public messageFilters = new ObservableArray<MessageFilter>([]);
@@ -26,8 +26,6 @@ export class CompetitionService {
     }
 
     private reset(): void {
-        console.log("Resetting data");
-
         this.selectedEvent.next(undefined);
         this.rawMessages.clear();
         this.events.clear();
@@ -49,7 +47,9 @@ export class CompetitionService {
 
     private handleCompetitionMessage(msg: CompetitionMessage) {
         if (msg.messageIndex == 0) {
+            let selectedEvent = this.selectedEventId;
             this.reset();
+            this.selectEvent(selectedEvent);
         }
 
         this.handleRaceMessages(msg.messages);
@@ -72,7 +72,7 @@ export class CompetitionService {
                 name: eventInfo.name,
                 eventInfo: eventInfo,
                 classes: new ObservableArray<RaceClass>([]),
-                results: new ObservableArray<RaceEventMessage>([]),
+                results: new ObservableArray<RaceEventDto>([]),
                 participants: new ObservableArray<Participant>([]),
             };
 
@@ -83,7 +83,7 @@ export class CompetitionService {
     }
 
     private updateFilteredMessages() {
-        let messages = this.rawMessages.value.filter(x => this.isValidEvent(x));
+        let messages = this.mapToDto(this.rawMessages).filter(x => this.isValidEvent(x));
         let selectedEventId = this.selectedEventId;
 
         if (selectedEventId != undefined) {
@@ -93,8 +93,12 @@ export class CompetitionService {
         this.filteredMessages.next(messages);
     }
 
+    private mapToDto(rawMessages: RaceEventMessage[]): RaceEventDto[] {
+        throw new Error('Method not implemented.');
+    }
+
     private handleRaceMessage(message: RaceEventMessage) {
-        let existingMessage = this.rawMessages.value.find(x => x.eventId == message.eventId && x.raceId == message.raceId && x.timestamp == message.timestamp)
+        let existingMessage = this.rawMessages.find(x => x.hashcode == message.hashcode)
         if (existingMessage != undefined) {
             return;
         }
@@ -243,7 +247,7 @@ export class CompetitionService {
         return undefined;
     }
 
-    private isValidEvent(message: RaceEventMessage) {
+    private isValidEvent(message: RaceEventDto) {
         return message.raceId
             && message.timestamp > 0
             && message.results.length > 0

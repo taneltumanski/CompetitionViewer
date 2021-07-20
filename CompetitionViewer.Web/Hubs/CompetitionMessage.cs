@@ -6,21 +6,16 @@ namespace CompetitionViewer.Web.Hubs
     public class CompetitionMessage
     {
         public int MessageIndex { get; set; }
-        public List<RaceEventMessage> Messages { get; set; }
+        public IEnumerable<RaceEventMessage> Messages { get; set; }
     }
 
     public class RaceEventMessage
     {
+        public string Hashcode { get; set; }
         public string EventId { get; set; }
         public string RaceId { get; set; }
         public string Round { get; set; }
         public long Timestamp { get; set; }
-
-        public List<RaceEventResult> Results { get; set; }
-    }
-
-    public class RaceEventResult
-    {
         public string RacerId { get; set; }
         public string Lane { get; set; }
         public int? Result { get; set; }

@@ -1,0 +1,5 @@
+<div *ngIf="selectedEvent != undefined">
+  <button (click)="updateEvent(this.selectedEvent)">Update event</button>
+</div>
+
+<button (click)="updateAllEvents()">Update all events</button>

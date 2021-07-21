@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CompetitionViewer.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
@@ -11,11 +12,13 @@ namespace CompetitionViewer.Web.Hubs
     {
         private readonly ILogger<CompetitionHub> _logger;
         private readonly MessagingListener _listener;
+        private readonly IRaceUpdateService _raceUpdateService;
 
-        public CompetitionHub(ILogger<CompetitionHub> logger, MessagingListener listener)
+        public CompetitionHub(ILogger<CompetitionHub> logger, MessagingListener listener, IRaceUpdateService raceUpdateService)
         {
             _logger = logger;
             _listener = listener;
+            _raceUpdateService = raceUpdateService;
         }
 
         public override async Task OnConnectedAsync()
@@ -41,6 +44,22 @@ namespace CompetitionViewer.Web.Hubs
             _listener.Unsubscribe(Context.ConnectionId);
 
             await base.OnDisconnectedAsync(exception);
+        }
+
+        public Task UpdateEvent(string id)
+        {
+            _logger.LogInformation("Requested update event {eventId}", id);
+            _raceUpdateService.Update(id);
+
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateAllEvents()
+        {
+            _logger.LogInformation("Requested update all events");
+            _raceUpdateService.UpdateAll();
+
+            return Task.CompletedTask;
         }
     }
 }

@@ -27,6 +27,7 @@ import { MatMenuModule } from '@angular/material/menu'
 import { MatSnackBarModule } from '@angular/material/snack-bar'
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatOptionModule } from '@angular/material/core';
+import { CompetitionOptionsComponent } from './competition/competition.options.component';
 
 @NgModule({
     declarations: [
@@ -38,6 +39,7 @@ import { MatOptionModule } from '@angular/material/core';
         CompetitionQualificationComponent,
         CompetitionEventInfoComponent,
         CompetitionResultsComponent,
+        CompetitionOptionsComponent
     ],
     imports: [
         BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),

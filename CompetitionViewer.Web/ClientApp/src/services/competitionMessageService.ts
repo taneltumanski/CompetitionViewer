@@ -26,6 +26,14 @@ export class CompetitionMessageService {
         return this.messageStream.asObservable();
     }
 
+    public requestEventUpdate(id: string) {
+        this.connection?.invoke("UpdateEvent", id);
+    }
+
+    public requestAllEventUpdates() {
+        this.connection?.invoke("UpdateAllEvents");
+    }
+
     private connectSignalR() {
         if (this.connection) {
             this.connection.stop();

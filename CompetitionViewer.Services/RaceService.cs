@@ -22,6 +22,7 @@ namespace CompetitionViewer.Services
         IEnumerable<RaceDataDto> GetEventData(string eventId);
         ImmutableDictionary<string, IEnumerable<RaceDataDto>> GetEventData();
 
+        void Clear();
         void AddOrUpdate(string eventId, IEnumerable<RaceDataDto> data);
     }
 
@@ -102,6 +103,7 @@ namespace CompetitionViewer.Services
 
             _isRunning = false;
             _schedulerDisposables.RemoveAll();
+            _raceService.Clear();
         }
 
         public void Update(string eventId)
@@ -149,7 +151,10 @@ namespace CompetitionViewer.Services
                     _logger.LogError(e, "Polling event {eventUri} failed", evtInfo.FullUri);
                 }
 
-                ScheduleUpdateEvent(evtInfo, false);
+                if (_isRunning)
+                {
+                    ScheduleUpdateEvent(evtInfo, false);
+                }
             });
 
             _schedulerDisposables.AddOrUpdate(evtInfo.Id, action);
@@ -205,7 +210,7 @@ namespace CompetitionViewer.Services
                 var difference = _scheduler.Now - timestamp;
                 if (difference < TimeSpan.FromHours(48))
                 {
-                    return TimeSpan.FromSeconds(2);
+                    return TimeSpan.FromSeconds(3);
                 }
                 else if (difference < TimeSpan.FromDays(14))
                 {
@@ -295,6 +300,11 @@ namespace CompetitionViewer.Services
             }
 
             return Enumerable.Empty<RaceDataDto>();
+        }
+
+        public void Clear()
+        {
+            _raceItems.Clear();
         }
 
         public void AddOrUpdate(string eventId, IEnumerable<RaceDataDto> data)

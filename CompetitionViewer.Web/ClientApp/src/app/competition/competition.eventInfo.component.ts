@@ -28,7 +28,7 @@ export class CompetitionEventInfoComponent {
             return 0;
         }
 
-        return event.results.value.length;
+        return event.races.value.length;
     }
 
     public getFirstDate(event: RaceEvent | undefined): number | undefined {
@@ -36,7 +36,7 @@ export class CompetitionEventInfoComponent {
             return 0;
         }
 
-        return event.results.value.map(x => x.timestamp).sort((a, b) => b - a).pop();
+        return event.races.value.map(x => x.timestamp).sort((a, b) => b - a).pop();
     }
 
     public getLastDate(event: RaceEvent | undefined): number | undefined {
@@ -44,6 +44,6 @@ export class CompetitionEventInfoComponent {
             return 0;
         }
 
-        return event.results.value.map(x => x.timestamp).sort((a, b) => a - b).pop();
+        return event.races.value.map(x => x.timestamp).sort((a, b) => a - b).pop();
     }
 }

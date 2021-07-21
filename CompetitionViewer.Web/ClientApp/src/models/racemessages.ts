@@ -1,6 +1,7 @@
 export interface CompetitionMessage {
     messageIndex: number;
     messages: RaceEventMessage[];
+    removedMessageIds: string[];
 }
 
 export interface RaceEventMessage {

@@ -1,6 +1,7 @@
 import { Injectable, EventEmitter } from '@angular/core';
 import { HubConnection, HubConnectionBuilder, HttpError, IHubProtocol, TransferFormat, ILogger, HubMessage, JsonHubProtocol } from '@aspnet/signalr';
 import { Observable, Subject, ReplaySubject, BehaviorSubject } from 'rxjs';
+import { connect } from 'tls';
 import { CompetitionMessage } from '../models/racemessages';
 
 //import { gzipSync, gunzipSync } from 'browserify-zlib';
@@ -13,7 +14,7 @@ export class CompetitionMessageService {
     private connection: HubConnection | undefined;
     private reconnectTimerHandle: number = 0;
 
-    private messageStream: ReplaySubject<CompetitionMessage> = new ReplaySubject();
+    private messageStream: Subject<CompetitionMessage> = new Subject();
 
     public onConnected: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
@@ -32,7 +33,6 @@ export class CompetitionMessageService {
 
         this.connection = new HubConnectionBuilder()
             .withUrl("/messaging")
-            //.withHubProtocol(new CompressedJsonProtocol())
             .build();
 
         this.setupEvents(this.connection);
@@ -68,12 +68,11 @@ export class CompetitionMessageService {
         } else if (error instanceof Error) {
             console.error('Connection closed with error: ' + error.name + " " + error.message);
         } else if (error) {
-            console.error(error);
+            console.error('Error: ' + error);
         } else {
             console.error('Connection disconnected');
         }
 
-        /* TODO stop event */
         this.isConnectedToServer = false;
         this.onConnected.next(false);
         this.reconnectSignalR();
@@ -91,27 +90,3 @@ export class CompetitionMessageService {
         this.reconnectTimerHandle = window.setTimeout(() => this.connectSignalR(), timeout);
     }
 }
-
-//export class CompressedJsonProtocol implements IHubProtocol {
-//    public name: string = "compressedJson";
-//    public transferFormat: TransferFormat = TransferFormat.Binary;
-//    public get version(): number { return this.jsonProtocol.version; };
-
-//    private jsonProtocol = new JsonHubProtocol();
-
-//    public parseMessages(input: string | ArrayBuffer | Buffer, logger: ILogger): HubMessage[] {
-//        const decompressedMessageData = gunzipSync(input);
-//        const decompressedMessage = decompressedMessageData.toString("utf8");
-
-//        return this.jsonProtocol.parseMessages(decompressedMessage, logger);
-//    }
-
-//    public writeMessage(message: HubMessage): string | ArrayBuffer {
-//        console.log(gunzipSync);
-//        console.log(gzipSync);
-//        const jsonResult = this.jsonProtocol.writeMessage(message);
-//        const compressedMessage = gzipSync(jsonResult, { level: 9 });
-
-//        return compressedMessage;
-//    }
-//}

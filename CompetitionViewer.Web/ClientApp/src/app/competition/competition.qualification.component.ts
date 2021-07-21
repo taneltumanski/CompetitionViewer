@@ -37,7 +37,7 @@ export class CompetitionQualificationComponent implements OnInit {
                 }
 
                 if (this.selectedEvent != undefined) {
-                    this.subscription = this.selectedEvent.results.subscribe(x => this.invalidate(x));
+                    this.subscription = this.selectedEvent.races.subscribe(x => this.invalidate(x));
                 }
             });
     }
@@ -173,7 +173,6 @@ export class CompetitionQualificationComponent implements OnInit {
         for (let finishedMatch of eliminatorResults) {
             let stageInfo = RaceUtils.getStage(finishedMatch.round);
             if (stageInfo?.round == round - 1 && finishedMatch.raceData.result == 0) {
-                console.log(roundInfos);
                 let lastRoundMatches = roundInfos[round - 2].matches.map(x => ({
                     firstSeed: (x.firstSeed as QualificationPosition)?.racerId ?? (x.firstSeed as RaceResultData)?.raceData?.racerId,
                     secondSeed: (x.secondSeed as QualificationPosition)?.racerId ?? (x.secondSeed as RaceResultData)?.raceData?.racerId
@@ -276,7 +275,7 @@ export class CompetitionQualificationComponent implements OnInit {
         let boxMargin = boxWidth * 0.25;
         let startMargin = boxWidth * 0.25;
 
-        this.canvas.nativeElement.width = boxWidth * (rounds + 1) + boxMargin - boxMargin * (rounds - 1) + startMargin;
+        this.canvas.nativeElement.width = boxWidth * (rounds + 1) + boxMargin - boxMargin * (rounds - 1) + startMargin + 1;
         this.canvas.nativeElement.height = boxHeight * 1.5 * matchInfo.rounds[0].matches.length * 2;
 
         for (let i = 0; i < matchInfo.rounds.length; i++) {
@@ -289,12 +288,12 @@ export class CompetitionQualificationComponent implements OnInit {
                 let isByeFirstSeed = this.isByeRound(matchInfo.rounds, i, matchIndex, 0, 0);
                 let isByeSecondSeed = this.isByeRound(matchInfo.rounds, i, matchIndex, 1, 0);
 
-                this.drawBox(match.firstSeed, ctx, prevRound, round.roundIndex, isByeFirstSeed, i, matchIndex * 2, 0, boxWidth, boxHeight, boxMargin, startMargin, groupSize);
-                this.drawBox(match.secondSeed, ctx, prevRound, round.roundIndex, isByeSecondSeed, i, matchIndex * 2 + 1, 1, boxWidth, boxHeight, boxMargin, startMargin, groupSize);
+                this.drawBox(match.firstSeed, ctx, prevRound, round.roundIndex, isByeFirstSeed, i, matchIndex * 2, boxWidth, boxHeight, boxMargin, startMargin, groupSize);
+                this.drawBox(match.secondSeed, ctx, prevRound, round.roundIndex, isByeSecondSeed, i, matchIndex * 2 + 1, boxWidth, boxHeight, boxMargin, startMargin, groupSize);
             }
         }
 
-        this.drawBox(matchInfo.winner, ctx, matchInfo.rounds[matchInfo.rounds.length - 1], matchInfo.rounds.length, false, matchInfo.rounds.length, 0, 0, boxWidth, boxHeight, boxMargin, startMargin, 1);
+        this.drawBox(matchInfo.winner, ctx, matchInfo.rounds[matchInfo.rounds.length - 1], matchInfo.rounds.length, false, matchInfo.rounds.length, 0, boxWidth, boxHeight, boxMargin, startMargin, 1);
     }
 
     private isByeRound(rounds: RoundInfo[], roundIndex: number, matchIndex: number, seed: number, iteration: number): boolean {
@@ -316,9 +315,18 @@ export class CompetitionQualificationComponent implements OnInit {
         return this.isByeRound(rounds, roundIndex - 1, prevMatchIndex, seed, iteration + 1);
     }
 
-    private drawBox(seed: QualificationPosition | RaceResultData | undefined, ctx: CanvasRenderingContext2D, prevRound: RoundInfo | undefined, roundIndex: number, isBye: boolean, xIndex: number, yIndex: number, seedIndex: number, boxWidth: number, boxHeight: number, boxMargin: number, startMargin: number, groupSize: number) {
+    private drawBox(seed: QualificationPosition | RaceResultData | undefined, ctx: CanvasRenderingContext2D, prevRound: RoundInfo | undefined, roundIndex: number, isBye: boolean, xIndex: number, yIndex: number, boxWidth: number, boxHeight: number, boxMargin: number, startMargin: number, groupSize: number) {
         let firstBoxX = this.getBoxX(xIndex, boxWidth, boxMargin, startMargin);
         let firstBoxY = this.getBoxY(yIndex, groupSize, boxHeight);
+        let currentX = firstBoxX + boxWidth;
+        let currentY = firstBoxY + boxHeight / 2;
+        let connectingLineOffset = 3 * boxWidth / 4;
+        let nextBoxCenterX = this.getBoxX(xIndex + 1, boxWidth, boxMargin, startMargin) + connectingLineOffset;
+        let nextBoxCenterY = this.getBoxY(Math.floor(yIndex / 2), groupSize / 2, boxHeight);
+
+        if (yIndex % 2 == 1) {
+            nextBoxCenterY += boxHeight;
+        }
 
         ctx.strokeStyle = "black";
         ctx.fillStyle = "gray";
@@ -350,30 +358,6 @@ export class CompetitionQualificationComponent implements OnInit {
             ctx.textAlign = "end";
             ctx.fillText(finishTime?.toFixed(5) ?? "---", firstBoxX + boxWidth - boxWidth * 0.05, firstBoxY + boxHeight - boxHeight * 0.1, boxWidth);
         }
-
-        ctx.lineWidth = 1;
-
-        if ((roundIndex == 1 && seed == undefined) || isBye) {
-            ctx.strokeStyle = "gray";
-        } else {
-            ctx.strokeStyle = "black";
-        }
-
-        let currentX = firstBoxX + boxWidth;
-        let currentY = firstBoxY + boxHeight / 2;
-        let connectingLineOffset = 3 * boxWidth / 4;
-        let nextBoxCenterX = this.getBoxX(xIndex + 1, boxWidth, boxMargin, startMargin) + connectingLineOffset;
-        let nextBoxCenterY = this.getBoxY(Math.floor(yIndex / 2), groupSize / 2, boxHeight);
-
-        if (yIndex % 2 == 1) {
-            nextBoxCenterY += boxHeight;
-        }
-
-        ctx.beginPath();
-        ctx.moveTo(currentX, currentY);
-        ctx.lineTo(nextBoxCenterX, currentY)
-        ctx.lineTo(nextBoxCenterX, nextBoxCenterY)
-        ctx.stroke();
 
         let raceData = seed as RaceResultData;
         if (prevRound != undefined && raceData != undefined && raceData.opponentData !== undefined && raceData.raceData.result == 0) {
@@ -420,6 +404,24 @@ export class CompetitionQualificationComponent implements OnInit {
 
             ctx.fillText(pos.qualifyingPosition + ".", startMargin / 2, firstBoxY + boxHeight / 2, startMargin);
         }
+
+        if (groupSize == 1) {
+            return;
+        }
+
+        ctx.lineWidth = 1;
+
+        if ((roundIndex == 1 && seed == undefined) || isBye) {
+            ctx.strokeStyle = "gray";
+        } else {
+            ctx.strokeStyle = "black";
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(currentX, currentY);
+        ctx.lineTo(nextBoxCenterX, currentY)
+        ctx.lineTo(nextBoxCenterX, nextBoxCenterY)
+        ctx.stroke();
     }
 
     private getBoxX(roundIndex: number, boxWidth: number, boxMargin: number, startMargin: number): number {

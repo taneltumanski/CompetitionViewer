@@ -7,8 +7,6 @@ var __extends = (this && this.__extends) || (function () {
         return extendStatics(d, b);
     };
     return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -20,17 +18,17 @@ var rxjs_1 = require("rxjs");
 var raceUtils_1 = require("../util/raceUtils");
 var RaceDataModel = /** @class */ (function () {
     function RaceDataModel() {
-        this.events = new Array();
+        this.events = new ObservableArray([]);
     }
     RaceDataModel.prototype.clear = function () {
-        this.events = [];
+        this.events.clear();
     };
     RaceDataModel.prototype.remove = function (messageId) {
         var foundMessage = false;
-        for (var eventIndex = 0; eventIndex < this.events.length; eventIndex++) {
-            var event_1 = this.events[eventIndex];
-            for (var raceIndex = 0; raceIndex < event_1.races.length; raceIndex++) {
-                var race = event_1.races[raceIndex];
+        for (var eventIndex = 0; eventIndex < this.events.value.length; eventIndex++) {
+            var event_1 = this.events.value[eventIndex];
+            for (var raceIndex = 0; raceIndex < event_1.races.value.length; raceIndex++) {
+                var race = event_1.races.value[raceIndex];
                 for (var resultIndex = 0; resultIndex < race.results.length; resultIndex++) {
                     var result = race.results[resultIndex];
                     if (result.messageId == messageId) {
@@ -40,14 +38,14 @@ var RaceDataModel = /** @class */ (function () {
                     }
                 }
                 if (race.results.length == 0) {
-                    event_1.races.splice(raceIndex, 1);
+                    event_1.races.remove(raceIndex);
                 }
                 if (foundMessage) {
                     break;
                 }
             }
-            if (event_1.races.length == 0) {
-                this.events.splice(eventIndex, 1);
+            if (event_1.races.value.length == 0) {
+                this.events.remove(eventIndex);
             }
             if (foundMessage) {
                 break;
@@ -61,7 +59,7 @@ var RaceDataModel = /** @class */ (function () {
         if (raceClass == undefined || !raceUtils_1.RaceUtils.isValidRaceClass(raceClass)) {
             return;
         }
-        var existingRace = existingEvent.races.find(function (x) { return x.raceId == message.raceId; });
+        var existingRace = existingEvent.races.value.find(function (x) { return x.raceId == message.raceId; });
         if (existingRace == undefined) {
             existingRace = {
                 eventId: message.eventId,
@@ -94,37 +92,37 @@ var RaceDataModel = /** @class */ (function () {
             existingRace.results.push(existingResult);
         }
         var classInfo = existingEvent.eventInfo.classInformations.find(function (x) { return x.id == raceClass; }) || this.getDefaultClassInfo(raceClass, year);
-        var existingEventClass = existingEvent.classes.find(function (x) { return x.id == raceClass; });
+        var existingEventClass = existingEvent.classes.value.find(function (x) { return x.id == raceClass; });
         if (existingEventClass == undefined) {
             existingEventClass = {
                 id: raceClass,
                 name: raceClass,
                 classIndex: classInfo.index,
-                results: new Array(),
+                results: new ObservableArray([]),
                 qualificationDefiningProperty: classInfo.qualificationDefiningProperty,
                 raceEndDefiningProperty: classInfo.raceEndDefiningProperty,
                 eliminatorType: classInfo.eliminatorType,
-                participants: new Array(),
+                participants: new ObservableArray([]),
             };
             existingEvent.classes.push(existingEventClass);
         }
         existingEventClass.results.push(existingRace);
-        var existingParticipant = existingEventClass.participants.find(function (x) { return x.participantId == existingResult.racerId; });
+        var existingParticipant = existingEventClass.participants.value.find(function (x) { return x.participantId == existingResult.racerId; });
         if (existingParticipant == undefined) {
             existingEventClass.participants.push({ participant: undefined, participantId: existingResult.racerId });
         }
     };
     RaceDataModel.prototype.getOrAddEvent = function (id, name) {
         var eventInfo = this.getDefaultEventInfo(id, name);
-        var existingEvent = this.events.find(function (x) { return x.id == id; });
+        var existingEvent = this.events.value.find(function (x) { return x.id == id; });
         if (existingEvent == undefined) {
             existingEvent = {
                 id: eventInfo.id,
                 name: eventInfo.name,
                 eventInfo: eventInfo,
-                classes: new Array(),
-                races: new Array(),
-                participants: new Array(),
+                classes: new ObservableArray([]),
+                races: new ObservableArray([]),
+                participants: new ObservableArray([])
             };
             this.events.push(existingEvent);
         }
@@ -256,13 +254,27 @@ var ObservableArray = /** @class */ (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     ObservableArray.prototype.push = function (item) {
-        this.value.push(item);
+        if (item.push == undefined) {
+            this.value.push(item);
+        }
+        else {
+            for (var _i = 0, _a = item; _i < _a.length; _i++) {
+                var i = _a[_i];
+                this.value.push(i);
+            }
+        }
         this.next(this.value);
     };
-    ObservableArray.prototype.pushItems = function (items) {
-        for (var _i = 0, items_1 = items; _i < items_1.length; _i++) {
-            var item = items_1[_i];
-            this.value.push(item);
+    ObservableArray.prototype.remove = function (index) {
+        if (index.push == undefined) {
+            this.value.splice(index, 1);
+        }
+        else {
+            var sorted = index.sort(function (a, b) { return b - a; });
+            for (var _i = 0, sorted_1 = sorted; _i < sorted_1.length; _i++) {
+                var i = sorted_1[_i];
+                this.value.splice(i, 1);
+            }
         }
         this.next(this.value);
     };

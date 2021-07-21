@@ -16,6 +16,7 @@ export class CompetitionComponent {
 
     constructor(private competitionService: CompetitionService) {
         competitionService
+            .dataModel
             .events
             .subscribe(x => {
                 this.eventList = x.sort((a, b) => a.id.localeCompare(b.id));

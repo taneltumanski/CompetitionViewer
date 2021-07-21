@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using CompetitionViewer.Services;
@@ -16,7 +17,9 @@ namespace CompetitionViewer.Web.Hubs
         private readonly IHubClients<ICompetitionClient> _clients;
         private readonly IRaceUpdateService _updateService;
         private readonly IRaceService _liveRaceResultsService;
+        private readonly IScheduler _scheduler;
         private readonly ILogger<MessagingListener> _logger;
+        private readonly SerialDisposable _stopDisposable = new SerialDisposable();
 
         private readonly ConcurrentDictionary<string, IDisposable> _subscribers = new ConcurrentDictionary<string, IDisposable>();
 
@@ -24,11 +27,12 @@ namespace CompetitionViewer.Web.Hubs
 
         private bool _isDisposed = false;
 
-        public MessagingListener(IHubContext<CompetitionHub, ICompetitionClient> hubContext, IRaceUpdateService updateService, IRaceService raceService, ILogger<MessagingListener> logger)
+        public MessagingListener(IHubContext<CompetitionHub, ICompetitionClient> hubContext, IRaceUpdateService updateService, IRaceService raceService, IScheduler scheduler, ILogger<MessagingListener> logger)
         {
             _clients = hubContext.Clients;
             _updateService = updateService;
             _liveRaceResultsService = raceService;
+            _scheduler = scheduler;
             _logger = logger;
         }
 
@@ -51,10 +55,26 @@ namespace CompetitionViewer.Web.Hubs
                         async msg => await _clients.Client(id).OnCompetitionMessage(msg),
                         ex => _logger.LogError(ex, "Logger error for client {connectionId}", id));
 
-                var subscription = _liveRaceResultsService
+                var existingDataObservable = _liveRaceResultsService
+                    .GetEventData()
+                    .SelectMany(x => x.Value)
+                    .ToObservable();
+
+                var dataStreamObservable = _liveRaceResultsService
                     .GetDataEventStream()
                     .Where(x => x.Type == RaceDataEventType.AddOrUpdate)
-                    .Select(x => x.Data)
+                    .Select(x => x.Data);
+
+                var removedStreamObservable = _liveRaceResultsService
+                    .GetDataEventStream()
+                    .Where(x => x.Type == RaceDataEventType.Delete)
+                    .Select(x => x.Id)
+                    .Buffer(TimeSpan.FromSeconds(1))
+                    .Where(x => x.Any())
+                    .Select(x => (messages: Enumerable.Empty<RaceEventMessage>(), removedIds: x.AsEnumerable()));
+
+                var fullDataObservable = existingDataObservable
+                    .Concat(dataStreamObservable)
                     .Where(x => x.EventId != null && x.RaceId != null && x.Timestamp.HasValue)
                     .Select(data => new RaceEventMessage()
                     {
@@ -78,10 +98,15 @@ namespace CompetitionViewer.Web.Hubs
                     })
                     .Buffer(TimeSpan.FromSeconds(1))
                     .Where(x => x.Any())
+                    .Select(x => (messages: x.AsEnumerable(), removedIds: Enumerable.Empty<string>()));
+
+                var subscription = Observable
+                    .Merge(fullDataObservable, removedStreamObservable)
                     .Select((x, i) => new CompetitionMessage()
                     {
                         MessageIndex = i,
-                        Messages = x
+                        Messages = x.messages ?? Enumerable.Empty<RaceEventMessage>(),
+                        RemovedMessageIds = x.removedIds ?? Enumerable.Empty<string>(),
                     })
                     .Subscribe(observer);
 
@@ -95,6 +120,7 @@ namespace CompetitionViewer.Web.Hubs
                 if (_subscribers.Any())
                 {
                     _updateService.Start();
+                    _stopDisposable.Disposable = Disposable.Empty;
                 }
             }
         }
@@ -108,7 +134,7 @@ namespace CompetitionViewer.Web.Hubs
 
             if (!_subscribers.Any())
             {
-                _updateService.Stop();
+                _stopDisposable.Disposable = _scheduler.Schedule(TimeSpan.FromMinutes(1), () => _updateService.Stop());
             }
         }
 

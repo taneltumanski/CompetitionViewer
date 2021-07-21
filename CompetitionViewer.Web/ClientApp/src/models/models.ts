@@ -1,23 +1,23 @@
 import { RaceEventDto, RaceEventMessage } from "./racemessages";
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ClassInformation, ClassTimeIndex, EventInformation } from "../services/competitionService";
 import { RaceUtils } from "../util/raceUtils";
 
 export class RaceDataModel {
-    public events = new Array<RaceEvent>();
+    public events = new ObservableArray<RaceEvent>([]);
 
     public clear() {
-        this.events = [];
+        this.events.clear()
     }
 
     public remove(messageId: string) {
         let foundMessage = false;
 
-        for (let eventIndex = 0; eventIndex < this.events.length; eventIndex++) {
-            let event = this.events[eventIndex];
+        for (let eventIndex = 0; eventIndex < this.events.value.length; eventIndex++) {
+            let event = this.events.value[eventIndex];
 
-            for (let raceIndex = 0; raceIndex < event.races.length; raceIndex++) {
-                let race = event.races[raceIndex];
+            for (let raceIndex = 0; raceIndex < event.races.value.length; raceIndex++) {
+                let race = event.races.value[raceIndex];
 
                 for (var resultIndex = 0; resultIndex < race.results.length; resultIndex++) {
                     let result = race.results[resultIndex];
@@ -29,7 +29,7 @@ export class RaceDataModel {
                 }
 
                 if (race.results.length == 0) {
-                    event.races.splice(raceIndex, 1);
+                    event.races.remove(raceIndex);
                 }
 
                 if (foundMessage) {
@@ -37,8 +37,8 @@ export class RaceDataModel {
                 }
             }
 
-            if (event.races.length == 0) {
-                this.events.splice(eventIndex, 1);
+            if (event.races.value.length == 0) {
+                this.events.remove(eventIndex);
             }
 
             if (foundMessage) {
@@ -56,7 +56,7 @@ export class RaceDataModel {
             return;
         }
 
-        let existingRace = existingEvent.races.find(x => x.raceId == message.raceId);
+        let existingRace = existingEvent.races.value.find(x => x.raceId == message.raceId);
         if (existingRace == undefined) {
             existingRace = {
                 eventId: message.eventId,
@@ -93,17 +93,17 @@ export class RaceDataModel {
         }
 
         let classInfo = existingEvent.eventInfo.classInformations.find(x => x.id == raceClass) || this.getDefaultClassInfo(raceClass, year);
-        let existingEventClass = existingEvent.classes.find(x => x.id == raceClass);
+        let existingEventClass = existingEvent.classes.value.find(x => x.id == raceClass);
         if (existingEventClass == undefined) {
             existingEventClass = {
                 id: raceClass,
                 name: raceClass,
                 classIndex: classInfo.index,
-                results: new Array<RaceEventDto>(),
+                results: new ObservableArray<RaceEventDto>([]),
                 qualificationDefiningProperty: classInfo.qualificationDefiningProperty,
                 raceEndDefiningProperty: classInfo.raceEndDefiningProperty,
                 eliminatorType: classInfo.eliminatorType,
-                participants: new Array<ClassParticipant>(),
+                participants: new ObservableArray<ClassParticipant>([]),
             };
 
             existingEvent.classes.push(existingEventClass);
@@ -111,7 +111,7 @@ export class RaceDataModel {
 
         existingEventClass.results.push(existingRace);
 
-        let existingParticipant = existingEventClass.participants.find(x => x.participantId == existingResult.racerId);
+        let existingParticipant = existingEventClass.participants.value.find(x => x.participantId == existingResult!.racerId);
         if (existingParticipant == undefined) {
             existingEventClass.participants.push({ participant: undefined, participantId: existingResult.racerId });
         }
@@ -119,15 +119,15 @@ export class RaceDataModel {
 
     private getOrAddEvent(id: string, name: string): RaceEvent {
         let eventInfo = this.getDefaultEventInfo(id, name);
-        let existingEvent = this.events.find(x => x.id == id);
+        let existingEvent = this.events.value.find(x => x.id == id);
         if (existingEvent == undefined) {
             existingEvent = {
                 id: eventInfo.id,
                 name: eventInfo.name,
                 eventInfo: eventInfo,
-                classes: new Array<RaceClass>(),
-                races: new Array<RaceEventDto>(),
-                participants: new Array<Participant>(),
+                classes: new ObservableArray<RaceClass>([]),
+                races: new ObservableArray<RaceEventDto>([]),
+                participants: new ObservableArray<Participant>([])
             };
 
             this.events.push(existingEvent);
@@ -254,9 +254,9 @@ export interface RaceEvent {
     id: string;
     name: string;
     eventInfo: EventInformation;
-    races: Array<RaceEventDto>;
-    classes: Array<RaceClass>;
-    participants: Array<Participant>;
+    races: ObservableArray<RaceEventDto>;
+    classes: ObservableArray<RaceClass>;
+    participants: ObservableArray<Participant>;
 }
 
 export interface RaceClass {
@@ -266,8 +266,8 @@ export interface RaceClass {
     qualificationDefiningProperty: RaceClassDefiningProperty;
     raceEndDefiningProperty: RaceEndDefiningProperty;
     eliminatorType: EliminatorType;
-    results: Array<RaceEventDto>;
-    participants: Array<ClassParticipant>;
+    results: ObservableArray<RaceEventDto>;
+    participants: ObservableArray<ClassParticipant>;
 }
 
 export interface ClassParticipant {
@@ -303,16 +303,29 @@ export enum EliminatorType {
 }
 
 export class ObservableArray<T> extends BehaviorSubject<T[]> {
-    public push(item: T) {
-        this.value.push(item);
-        this.next(this.value);
-    }
-
-    public pushItems(items: T[]) {
-        for (let item of items) {
-            this.value.push(item);
+    public push(item: T | T[]) {
+        if ((<T[]>item).push == undefined) {
+            this.value.push(<T>item);
+        } else {
+            for (let i of <T[]>item) {
+                this.value.push(i);
+            } 
         }
 
+        this.next(this.value);        
+    }
+
+    public remove(index: number | number[]) {
+        if ((<number[]>index).push == undefined) {
+            this.value.splice(<number>index, 1);
+        } else {
+            let sorted = (<number[]>index).sort((a, b) => b - a);
+
+            for (let i of sorted) {
+                this.value.splice(i, 1);
+            }
+        }
+        
         this.next(this.value);
     }
 

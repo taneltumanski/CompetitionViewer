@@ -116,7 +116,6 @@ namespace CompetitionViewer.Web
             //    });
             //});
 
-            services.AddSingleton<ILiveRaceResultsService, CachedLiveRaceResultsService>();
             services.AddTransient<EDRAResultService>();
             services.AddTransient<IEventInfoProvider, EventInfoProvider>();
             services.AddSingleton<MessagingListener>();

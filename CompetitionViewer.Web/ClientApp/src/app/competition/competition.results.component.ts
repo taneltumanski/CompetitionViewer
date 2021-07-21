@@ -69,11 +69,11 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
             { id: "sixSixtyFeetSpeed", isHidden: false, name: "660ft Speed", type: ColumnType.RoundedNumber, isRaceProperty: true },
             { id: "thousandFeetTime", isHidden: true, name: "1000ft", type: ColumnType.RoundedNumber, isRaceProperty: true },
             { id: "thousandFeetSpeed", isHidden: true, name: "1000ft Speed", type: ColumnType.RoundedNumber, isRaceProperty: true },
+            { id: "dialIn", isHidden: false, name: "Dial In", type: ColumnType.RoundedNumber, isRaceProperty: true },
             { id: "finishTime", isHidden: false, name: "ET", type: ColumnType.RoundedNumber, isRaceProperty: true },
             { id: "finishSpeed", isHidden: false, name: "ET Speed", type: ColumnType.RoundedNumber, isRaceProperty: true },
-            { id: "total", isHidden: false, name: "RT+ET", type: ColumnType.RoundedNumber, isRaceProperty: true },
-            { id: "dialIn", isHidden: false, name: "Dial In", type: ColumnType.RoundedNumber, isRaceProperty: true },
             { id: "dialInAccuracy", isHidden: false, name: "Dial In difference", type: ColumnType.SignedNumber, isRaceProperty: true },
+            { id: "total", isHidden: false, name: "RT+ET", type: ColumnType.RoundedNumber, isRaceProperty: true },
             { id: "timeDifference", isHidden: false, name: "RT+ET difference", type: ColumnType.SignedNumber, isRaceProperty: true }
         ];
     }

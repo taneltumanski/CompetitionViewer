@@ -31,7 +31,7 @@ export class CompetitionService {
     public selectEvent(eventId: string | undefined) {
         this.selectedEventId = eventId;
 
-        let selectedEvent = this.dataModel.events.find(x => x.id == eventId);
+        let selectedEvent = this.dataModel.events.value.find(x => x.id == eventId);
         if (selectedEvent != undefined) {
             this.selectedEvent.next(selectedEvent);
         } else {
@@ -64,9 +64,9 @@ export class CompetitionService {
         let selectedEventId = this.selectedEventId;
 
         if (selectedEventId != undefined) {
-            messages = this.dataModel.events.find(x => x.id == selectedEventId)?.races;
+            messages = this.dataModel.events.value.find(x => x.id == selectedEventId)?.races.value;
         } else {
-            messages = Array.prototype.concat(...this.dataModel.events.map(x => x.races));
+            messages = Array.prototype.concat(...this.dataModel.events.value.map(x => x.races.value));
         }
 
         if (messages != undefined) {
@@ -78,13 +78,6 @@ export class CompetitionService {
 export interface ClassTimeIndex {
     EightMileIndex: number;
     QuarterMileIndex: number;
-}
-
-export interface MessageFilter {
-    racerId: string | undefined;
-    raceId: string | undefined;
-    classId: string | undefined;
-    eventId: string | undefined;
 }
 
 export interface RaceEventModel {

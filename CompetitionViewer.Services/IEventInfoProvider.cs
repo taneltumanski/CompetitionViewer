@@ -15,7 +15,7 @@ namespace CompetitionViewer.Services
             return Enumerable
                 .Range(20, 200)
                 .Select(x => x.ToString())
-                .Select(x => new EDRAEventInfo(x, $"http://www.edra.ee/tulemused.php?eventID={x}"))
+                .Select((x, i) => new EDRAEventInfo(x, $"http://www.edra.ee/tulemused.php?eventID={x}", i))
                 .ToArray();
         }
     }

@@ -71,6 +71,7 @@ namespace CompetitionViewer.Services
         private readonly DisposableDictionary _schedulerDisposables = new();
 
         private bool _isRunning;
+        private readonly HashSet<string> _writtenLogsForHashcodes = new HashSet<string>();
 
         public RaceUpdateService(IEventInfoProvider eventInfoProvider, EDRAResultService resultService, IRaceService raceService, IScheduler scheduler, ILogger<RaceUpdateService> logger)
         {
@@ -111,7 +112,7 @@ namespace CompetitionViewer.Services
 
             if (eventInfo != null)
             {
-                UpdateEvent(eventInfo, true);
+                ScheduleUpdateEvent(eventInfo, true);
             }
         }
 
@@ -123,21 +124,13 @@ namespace CompetitionViewer.Services
         private void UpdateAllEvents(bool isForced)
         {
             var eventInfos = _eventInfoProvider.GetEventInfos();
-            var latestEvent = _raceService
-                .GetEventData()
-                .Values
-                .SelectMany(x => x.Select(y => (key: y.EventId, timestamp: y.Timestamp)))
-                .Where(x => x.timestamp.HasValue)
-                .MaxBy(x => x.timestamp.Value)
-                .FirstOrDefault();
-
             foreach (var evtInfo in eventInfos)
             {
-                UpdateEvent(evtInfo, isForced);
+                ScheduleUpdateEvent(evtInfo, isForced);
             }
         }
 
-        private void UpdateEvent(EDRAEventInfo evtInfo, bool isForced)
+        private void ScheduleUpdateEvent(EDRAEventInfo evtInfo, bool isForced)
         {
             var latestDataItem = _raceService
                 .GetEventData(evtInfo.Id)
@@ -155,6 +148,8 @@ namespace CompetitionViewer.Services
                 {
                     _logger.LogError(e, "Polling event {eventUri} failed", evtInfo.FullUri);
                 }
+
+                ScheduleUpdateEvent(evtInfo, false);
             });
 
             _schedulerDisposables.AddOrUpdate(evtInfo.Id, action);
@@ -164,6 +159,13 @@ namespace CompetitionViewer.Services
         {
             var data = await _resultService.GetRaceData(evtInfo, CancellationToken.None);
             var mappedData = data
+                .Pipe(x =>
+                {
+                    if (x.Errors.Any() && _writtenLogsForHashcodes.Add(x.Hashcode))
+                    {
+                        _logger.LogError("Data errors: [ {message} ]", string.Join(", ", x.Errors));
+                    }
+                })
                 .Where(x => !x.Errors.Any())
                 .Select(x => Map(evtInfo.Id, x));
 
@@ -197,7 +199,6 @@ namespace CompetitionViewer.Services
 
         private TimeSpan GetDelayTime(RaceDataDto item)
         {
-            return TimeSpan.FromSeconds(5);
             var timestamp = item?.Timestamp;
             if (timestamp != null)
             {
@@ -301,8 +302,15 @@ namespace CompetitionViewer.Services
             var eventItems = _raceItems.GetOrAdd(eventId, _ => new ConcurrentDictionary<string, RaceDataDto>());
             var existingKeys = Enumerable.ToHashSet(_raceItems.Select(x => x.Key));
 
-            var temp = data.GroupBy(x => x.Hashcode).Select(x => x.ToArray()).Where(x => x.Length > 1).ToArray();
-            var newItems = data.ToDictionary(x => x.Hashcode, x => x);
+            var newItems = data
+                .GroupBy(x => x.Hashcode)
+                .Select(x => x.First())
+                .ToDictionary(x => x.Hashcode, x => x);
+
+            if (!newItems.Any())
+            {
+                return;
+            }
 
             foreach (var item in newItems)
             {

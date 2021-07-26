@@ -31,8 +31,6 @@ using System.Net;
 using System.Reactive.Concurrency;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using MessagePack.AspNetCoreMvcFormatter;
-using MessagePack.Resolvers;
 
 namespace CompetitionViewer.Web
 {

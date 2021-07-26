@@ -13,7 +13,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ObservableArray = exports.EliminatorType = exports.RaceEndDefiningProperty = exports.RaceClassDefiningProperty = exports.RaceDataModel = void 0;
+exports.ObservableArray = exports.EliminatorType = exports.RaceEndDefiningProperty = exports.RaceQualificationDefiningProperty = exports.RaceDataModel = void 0;
 var rxjs_1 = require("rxjs");
 var raceUtils_1 = require("../util/raceUtils");
 var RaceDataModel = /** @class */ (function () {
@@ -157,7 +157,7 @@ var RaceDataModel = /** @class */ (function () {
         };
     };
     RaceDataModel.prototype.getDefaultClassInfo = function (raceClass, year) {
-        var qualificationProp = ["BB", "J/BR", "ST",].includes(raceClass) ? RaceClassDefiningProperty.ReactionTime : ["SET", "PET", "SPET"].includes(raceClass) ? RaceClassDefiningProperty.DialInMargin : RaceClassDefiningProperty.QuarterMileTime;
+        var qualificationProp = ["BB", "J/BR"].includes(raceClass) ? RaceQualificationDefiningProperty.ReactionTime : ["SET", "PET", "SPET"].includes(raceClass) ? RaceQualificationDefiningProperty.DialInMargin : RaceQualificationDefiningProperty.QuarterMileTime;
         var raceEndProp = ["J/BR"].includes(raceClass) ? RaceEndDefiningProperty.EightMileTime : RaceEndDefiningProperty.QuarterMileTime;
         var eliminatorType = ["OL", "PB"].includes(raceClass) ? EliminatorType.Pro : EliminatorType.Sportsman;
         var classIndex = this.getClassIndex(raceClass, year);
@@ -238,14 +238,14 @@ var RaceDataModel = /** @class */ (function () {
     return RaceDataModel;
 }());
 exports.RaceDataModel = RaceDataModel;
-var RaceClassDefiningProperty;
-(function (RaceClassDefiningProperty) {
-    RaceClassDefiningProperty[RaceClassDefiningProperty["Invalid"] = 0] = "Invalid";
-    RaceClassDefiningProperty[RaceClassDefiningProperty["QuarterMileTime"] = 1] = "QuarterMileTime";
-    RaceClassDefiningProperty[RaceClassDefiningProperty["EightMileTime"] = 2] = "EightMileTime";
-    RaceClassDefiningProperty[RaceClassDefiningProperty["ReactionTime"] = 3] = "ReactionTime";
-    RaceClassDefiningProperty[RaceClassDefiningProperty["DialInMargin"] = 4] = "DialInMargin";
-})(RaceClassDefiningProperty = exports.RaceClassDefiningProperty || (exports.RaceClassDefiningProperty = {}));
+var RaceQualificationDefiningProperty;
+(function (RaceQualificationDefiningProperty) {
+    RaceQualificationDefiningProperty[RaceQualificationDefiningProperty["Invalid"] = 0] = "Invalid";
+    RaceQualificationDefiningProperty[RaceQualificationDefiningProperty["QuarterMileTime"] = 1] = "QuarterMileTime";
+    RaceQualificationDefiningProperty[RaceQualificationDefiningProperty["EightMileTime"] = 2] = "EightMileTime";
+    RaceQualificationDefiningProperty[RaceQualificationDefiningProperty["ReactionTime"] = 3] = "ReactionTime";
+    RaceQualificationDefiningProperty[RaceQualificationDefiningProperty["DialInMargin"] = 4] = "DialInMargin";
+})(RaceQualificationDefiningProperty = exports.RaceQualificationDefiningProperty || (exports.RaceQualificationDefiningProperty = {}));
 var RaceEndDefiningProperty;
 (function (RaceEndDefiningProperty) {
     RaceEndDefiningProperty[RaceEndDefiningProperty["Invalid"] = 0] = "Invalid";

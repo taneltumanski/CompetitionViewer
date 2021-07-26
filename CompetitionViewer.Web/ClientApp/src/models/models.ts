@@ -168,7 +168,7 @@ export class RaceDataModel {
     }
 
     private getDefaultClassInfo(raceClass: string, year: number): ClassInformation {
-        let qualificationProp = ["BB", "J/BR", "ST",].includes(raceClass) ? RaceClassDefiningProperty.ReactionTime : ["SET", "PET", "SPET"].includes(raceClass) ? RaceClassDefiningProperty.DialInMargin : RaceClassDefiningProperty.QuarterMileTime;
+        let qualificationProp = ["BB", "J/BR"].includes(raceClass) ? RaceQualificationDefiningProperty.ReactionTime : ["SET", "PET", "SPET"].includes(raceClass) ? RaceQualificationDefiningProperty.DialInMargin : RaceQualificationDefiningProperty.QuarterMileTime;
         let raceEndProp = ["J/BR"].includes(raceClass) ? RaceEndDefiningProperty.EightMileTime : RaceEndDefiningProperty.QuarterMileTime;
         let eliminatorType = ["OL", "PB"].includes(raceClass) ? EliminatorType.Pro : EliminatorType.Sportsman;
         let classIndex = this.getClassIndex(raceClass, year);
@@ -274,7 +274,7 @@ export interface RaceClass {
     name: string;
     event: RaceEvent;
     classIndex: ClassTimeIndex | undefined;
-    qualificationDefiningProperty: RaceClassDefiningProperty;
+    qualificationDefiningProperty: RaceQualificationDefiningProperty;
     raceEndDefiningProperty: RaceEndDefiningProperty;
     eliminatorType: EliminatorType;
     results: ObservableArray<RaceEventRace>;
@@ -293,7 +293,7 @@ export interface Participant {
     results: ObservableArray<RaceEventRace>;
 }
 
-export enum RaceClassDefiningProperty {
+export enum RaceQualificationDefiningProperty {
     Invalid = 0,
     QuarterMileTime = 1,
     EightMileTime = 2,

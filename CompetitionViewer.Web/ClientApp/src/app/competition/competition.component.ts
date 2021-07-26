@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CompetitionMessageService } from '../../services/competitionMessageService';
-import { RaceEvent, RaceClassDefiningProperty, ObservableArray, RaceClass, ClassParticipant, Participant } from '../../models/models';
+import { RaceEvent, RaceQualificationDefiningProperty, ObservableArray, RaceClass, ClassParticipant, Participant } from '../../models/models';
 import { RaceUtils } from '../../util/raceUtils';
 import { CompetitionService } from '../../services/competitionService';
 

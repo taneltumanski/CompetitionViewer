@@ -1,7 +1,7 @@
 import { Injectable, EventEmitter } from '@angular/core';
 import { CompetitionMessage, RaceEventDataMessage, RaceEventRace, RaceEventMessage, RaceEventRaceResult } from '../models/racemessages';
 import { CompetitionMessageService } from './competitionMessageService';
-import { RaceEvent, ObservableArray, RaceClass, RaceClassDefiningProperty, ClassParticipant, Participant, RaceEndDefiningProperty, EliminatorType, RaceDataModel } from '../models/models';
+import { RaceEvent, ObservableArray, RaceClass, RaceQualificationDefiningProperty, ClassParticipant, Participant, RaceEndDefiningProperty, EliminatorType, RaceDataModel } from '../models/models';
 import { BehaviorSubject, interval } from 'rxjs';
 import { sample, bufferTime } from 'rxjs/operators';
 import { RaceUtils } from '../util/raceUtils';
@@ -116,7 +116,7 @@ export interface ClassInformation {
     id: string;
     name: string;
     index: ClassTimeIndex | undefined;
-    qualificationDefiningProperty: RaceClassDefiningProperty;
+    qualificationDefiningProperty: RaceQualificationDefiningProperty;
     raceEndDefiningProperty: RaceEndDefiningProperty;
     eliminatorType: EliminatorType;
 }

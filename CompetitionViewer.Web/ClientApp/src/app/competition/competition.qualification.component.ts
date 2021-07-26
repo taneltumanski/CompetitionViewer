@@ -1,6 +1,6 @@
 import { Component, OnChanges, SimpleChanges, Input, ElementRef, ViewChild, OnInit, OnDestroy } from '@angular/core';
 import { RaceEventRace, RaceEventRaceResult } from '../../models/racemessages';
-import { RaceEvent, RaceClassDefiningProperty, RaceClass, EliminatorType, RaceEndDefiningProperty } from '../../models/models';
+import { RaceEvent, RaceQualificationDefiningProperty, RaceClass, EliminatorType, RaceEndDefiningProperty } from '../../models/models';
 import { RaceUtils } from '../../util/raceUtils';
 import { CompetitionService } from '../../services/competitionService';
 import { Subscription } from 'rxjs';
@@ -464,7 +464,7 @@ export class QualificationClassViewModel {
     }
 
     public updateMessage(message: RaceEventRace, result: RaceEventRaceResult, event: RaceEvent) {
-        if (this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.Invalid) {
+        if (this.classData.qualificationDefiningProperty == RaceQualificationDefiningProperty.Invalid) {
             return;
         }
 
@@ -487,11 +487,11 @@ export class QualificationClassViewModel {
             }
 
             if (currentTime != undefined) {
-                let isEightMileOk = this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.EightMileTime && currentTime > 0;
-                let isQuarterMileOk = this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.QuarterMileTime && currentTime > 0;
-                let isReactionTimeOk = this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.ReactionTime && currentTime >= 0;
-                let isDialInMarginOk = this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.DialInMargin && currentTime > 0;
-                let isNotBreakout = this.classData.classIndex == undefined || currentTime >= (this.classData.raceEndDefiningProperty == RaceEndDefiningProperty.QuarterMileTime ? this.classData.classIndex.QuarterMileIndex : this.classData.classIndex.EightMileIndex);
+                let isEightMileOk = this.classData.qualificationDefiningProperty == RaceQualificationDefiningProperty.EightMileTime && currentTime > 0;
+                let isQuarterMileOk = this.classData.qualificationDefiningProperty == RaceQualificationDefiningProperty.QuarterMileTime && currentTime > 0;
+                let isReactionTimeOk = this.classData.qualificationDefiningProperty == RaceQualificationDefiningProperty.ReactionTime && currentTime >= 0;
+                let isDialInMarginOk = this.classData.qualificationDefiningProperty == RaceQualificationDefiningProperty.DialInMargin && currentTime > 0;
+                let isNotBreakout = this.classData.classIndex == undefined || (result.finishTime != undefined && result.finishTime >= (this.classData.raceEndDefiningProperty == RaceEndDefiningProperty.QuarterMileTime ? this.classData.classIndex.QuarterMileIndex : this.classData.classIndex.EightMileIndex));
 
                 if (isEightMileOk || isQuarterMileOk || isReactionTimeOk || isDialInMarginOk) {
                     if ((existingItem.bestTime == undefined || currentTime < existingItem.bestTime) && isNotBreakout) {
@@ -563,15 +563,15 @@ export class QualificationClassViewModel {
     }
 
     private getCurrentTime(result: RaceEventRaceResult, raceClass: RaceClass): number | undefined {
-        if (raceClass.qualificationDefiningProperty == RaceClassDefiningProperty.QuarterMileTime) {
+        if (raceClass.qualificationDefiningProperty == RaceQualificationDefiningProperty.QuarterMileTime) {
             return result.finishTime;
         }
 
-        if (raceClass.qualificationDefiningProperty == RaceClassDefiningProperty.ReactionTime) {
+        if (raceClass.qualificationDefiningProperty == RaceQualificationDefiningProperty.ReactionTime) {
             return result.reactionTime;
         }
 
-        if (raceClass.qualificationDefiningProperty == RaceClassDefiningProperty.DialInMargin) {
+        if (raceClass.qualificationDefiningProperty == RaceQualificationDefiningProperty.DialInMargin) {
             if (result.finishTime !== undefined && result.dialIn !== undefined) {
                 return result.finishTime - result.dialIn;
             }

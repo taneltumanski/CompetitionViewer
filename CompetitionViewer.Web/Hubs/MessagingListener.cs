@@ -55,11 +55,6 @@ namespace CompetitionViewer.Web.Hubs
                         async msg => await _clients.Client(id).OnCompetitionMessage(msg),
                         ex => _logger.LogError(ex, "Logger error for client {connectionId}", id));
 
-                var existingDataObservable = _liveRaceResultsService
-                    .GetEventData()
-                    .SelectMany(x => x.Value)
-                    .ToObservable();
-
                 var dataStreamObservable = _liveRaceResultsService
                     .GetDataEventStream()
                     .Where(x => x.Type == RaceDataEventType.AddOrUpdate)
@@ -69,43 +64,21 @@ namespace CompetitionViewer.Web.Hubs
                     .GetDataEventStream()
                     .Where(x => x.Type == RaceDataEventType.Delete)
                     .Select(x => x.Id)
-                    .Buffer(TimeSpan.FromSeconds(1))
+                    .Buffer(TimeSpan.FromMilliseconds(100))
                     .Where(x => x.Any())
-                    .Select(x => (messages: Enumerable.Empty<RaceEventMessage>(), removedIds: x.AsEnumerable()));
+                    .Select(x => (messages: Enumerable.Empty<RaceEventDataMessage>(), removedIds: x.AsEnumerable()));
 
-                var fullDataObservable = existingDataObservable
-                    .Concat(dataStreamObservable)
+                var fullDataObservable = dataStreamObservable
                     .Where(x => x.EventId != null && x.RaceId != null && x.Timestamp.HasValue)
-                    .Select(data => new RaceEventMessage()
-                    {
-                        EventId = data.EventId,
-                        RaceId = data.RaceId,
-                        Round = data.Round,
-                        Timestamp = data.Timestamp.Value.ToUnixTimeMilliseconds(),
-                        DialIn = data.DialIn?.TotalSeconds,
-                        FinishSpeed = data.FinishSpeed,
-                        FinishTime = data.FinishTime?.TotalSeconds,
-                        Lane = data.Lane,
-                        RacerId = data.RacerId,
-                        ReactionTime = data.ReactionTime?.TotalSeconds,
-                        Result = data.Result,
-                        SixSixtyFeetSpeed = data.SixSixtyFeetSpeed,
-                        SixSixtyFeetTime = data.SixSixtyFeetTime?.TotalSeconds,
-                        SixtyFeetTime = data.SixtyFeetTime?.TotalSeconds,
-                        ThousandFeetSpeed = data.ThousandFeetSpeed,
-                        ThousandFeetTime = data.ThousandFeetTime?.TotalSeconds,
-                        ThreeThirtyFeetTime = data.ThreeThirtyFeetTime?.TotalSeconds
-                    })
-                    .Buffer(TimeSpan.FromSeconds(1))
+                    .Buffer(TimeSpan.FromMilliseconds(100), 100)
                     .Where(x => x.Any())
-                    .Select(x => (messages: x.AsEnumerable(), removedIds: Enumerable.Empty<string>()));
+                    .Select(x => (messages: x.Select(Mapper.FromDto), removedIds: Enumerable.Empty<string>()));
 
                 var subscription = Observable
                     .Merge(fullDataObservable, removedStreamObservable)
-                    .Select((x, i) => new CompetitionMessage()
+                    .Select(x => new CompetitionMessage()
                     {
-                        MessageIndex = i,
-                        Messages = x.messages ?? Enumerable.Empty<RaceEventMessage>(),
+                        Messages = x.messages ?? Enumerable.Empty<RaceEventDataMessage>(),
                         RemovedMessageIds = x.removedIds ?? Enumerable.Empty<string>(),
                     })
                     .Subscribe(observer);

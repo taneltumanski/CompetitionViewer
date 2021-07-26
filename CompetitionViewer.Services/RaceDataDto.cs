@@ -4,6 +4,12 @@ using System.Collections.Immutable;
 
 namespace CompetitionViewer.Services
 {
+    public class EventDataDto
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+    }
+
     public class RaceDataDto
     {
         public DateTimeOffset? Timestamp { get; set; }

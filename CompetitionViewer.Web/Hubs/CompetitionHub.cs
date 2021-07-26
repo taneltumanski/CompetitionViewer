@@ -46,20 +46,18 @@ namespace CompetitionViewer.Web.Hubs
             await base.OnDisconnectedAsync(exception);
         }
 
-        public Task UpdateEvent(string id)
+        public async Task UpdateEvent(string id)
         {
             _logger.LogInformation("Requested update event {eventId}", id);
-            _raceUpdateService.Update(id);
 
-            return Task.CompletedTask;
+            await _raceUpdateService.Update(id);
         }
 
-        public Task UpdateAllEvents()
+        public async Task UpdateAllEvents()
         {
             _logger.LogInformation("Requested update all events");
-            _raceUpdateService.UpdateAll();
-
-            return Task.CompletedTask;
+            
+            await _raceUpdateService.UpdateAll();
         }
     }
 }

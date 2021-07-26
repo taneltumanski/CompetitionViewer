@@ -1,4 +1,4 @@
-import { RaceEventDto, RaceEventResultDto } from "../models/racemessages";
+import { RaceEventRace, RaceEventRaceResult } from "../models/racemessages";
 import { RoundInformation } from "../services/competitionService";
 
 export class RaceUtils {
@@ -52,7 +52,7 @@ export class RaceUtils {
         return true;
     }
 
-    public static getTotalTime(result: RaceEventResultDto) {
+    public static getTotalTime(result: RaceEventRaceResult) {
         if (result.reactionTime == undefined || result.finishTime == undefined || result.reactionTime < 0 || result.finishTime <= 0) {
             return undefined;
         }
@@ -60,7 +60,7 @@ export class RaceUtils {
         return result.reactionTime + result.finishTime;
     }
 
-    public static getDialInAccuracy(result: RaceEventResultDto): number | undefined {
+    public static getDialInAccuracy(result: RaceEventRaceResult): number | undefined {
         if (result == undefined || result.finishTime == undefined) {
             return undefined;
         }
@@ -72,13 +72,13 @@ export class RaceUtils {
         return result.finishTime - result.dialIn;
     }
 
-    public static getTimeDifference(result: RaceEventResultDto, message: RaceEventDto | RaceEventResultDto): number | undefined {
-        let winnerResult: RaceEventResultDto | undefined;
+    public static getTimeDifference(result: RaceEventRaceResult, message: RaceEventRace | RaceEventRaceResult): number | undefined {
+        let winnerResult: RaceEventRaceResult | undefined;
 
         if (this.isRaceEventResultMessage(message)) {
             winnerResult = message;;
         } else {
-            winnerResult = (<RaceEventDto>message).results.find(x => x.result == 0);
+            winnerResult = (<RaceEventRace>message).results.find(x => x.result == 0);
         }
 
         if (winnerResult == undefined || result == undefined || winnerResult.racerId == result.racerId || winnerResult.racerId.toLowerCase() == "bye" || result.racerId.toLowerCase() == "bye") {
@@ -108,7 +108,7 @@ export class RaceUtils {
         }
     }
 
-    private static isRaceEventResultMessage(msg: RaceEventDto | RaceEventResultDto): msg is RaceEventResultDto {
-        return (<RaceEventResultDto>msg).threeThirtyFeetTime !== undefined;
+    private static isRaceEventResultMessage(msg: RaceEventRace | RaceEventRaceResult): msg is RaceEventRaceResult {
+        return (<RaceEventRaceResult>msg).threeThirtyFeetTime !== undefined;
     }
 }

@@ -29,6 +29,10 @@ using CompetitionViewer.Services.ResultsRequesters.EDRA;
 using System.Net.Http;
 using System.Net;
 using System.Reactive.Concurrency;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using MessagePack.AspNetCoreMvcFormatter;
+using MessagePack.Resolvers;
 
 namespace CompetitionViewer.Web
 {
@@ -44,7 +48,7 @@ namespace CompetitionViewer.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddResponseCompression();
+            services.AddResponseCompression(x => x.EnableForHttps = true);
 
             services.AddMemoryCache();
             services
@@ -74,14 +78,14 @@ namespace CompetitionViewer.Web
             //services
             //    .AddAuthentication()
             //    .AddIdentityServerJwt()
-                //.AddGoogle(options =>
-                //{
-                //    var googleAuthNSection = Configuration.GetSection("Authentication:Google");
+            //.AddGoogle(options =>
+            //{
+            //    var googleAuthNSection = Configuration.GetSection("Authentication:Google");
 
-                //    options.ClientId = googleAuthNSection["ClientId"];
-                //    options.ClientSecret = googleAuthNSection["ClientSecret"];
-                //})
-                ;
+            //    options.ClientId = googleAuthNSection["ClientId"];
+            //    options.ClientSecret = googleAuthNSection["ClientSecret"];
+            //})
+            ;
 
             services.AddControllersWithViews();
             services.AddRazorPages();
@@ -162,7 +166,6 @@ namespace CompetitionViewer.Web
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<CompetitionHub>("/messaging");
-
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller}/{action=Index}/{id?}");

@@ -52,9 +52,25 @@ var RaceDataModel = /** @class */ (function () {
             }
         }
     };
+    RaceDataModel.prototype.updateEvents = function (events) {
+        var _this = this;
+        var newEventIds = events.map(function (x) { return x.id; });
+        for (var _i = 0, events_1 = events; _i < events_1.length; _i++) {
+            var evt = events_1[_i];
+            this.getOrAddEvent(evt.id, evt.name);
+        }
+        var removeEventIds = this.events
+            .value
+            .map(function (x) { return x.id; })
+            .filter(function (x) { return !newEventIds.some(function (y) { return x == y; }); });
+        var eventIndexes = removeEventIds
+            .map(function (x) { return _this.events.value.findIndex(function (y) { return y.id == x; }); })
+            .filter(function (x) { return x >= 0; });
+        this.events.remove(eventIndexes);
+    };
     RaceDataModel.prototype.update = function (message) {
         var year = new Date(message.timestamp).getFullYear();
-        var existingEvent = this.getOrAddEvent(message.eventId, message.eventName);
+        var existingEvent = this.getOrAddEvent(message.eventId, message.eventId);
         var raceClass = raceUtils_1.RaceUtils.getClass(message.racerId, existingEvent.eventInfo.generalClassName);
         if (raceClass == undefined || !raceUtils_1.RaceUtils.isValidRaceClass(raceClass)) {
             return;
@@ -62,8 +78,7 @@ var RaceDataModel = /** @class */ (function () {
         var existingRace = existingEvent.races.value.find(function (x) { return x.raceId == message.raceId; });
         if (existingRace == undefined) {
             existingRace = {
-                eventId: message.eventId,
-                eventName: message.eventName,
+                event: existingEvent,
                 raceId: message.raceId,
                 round: message.round,
                 timestamp: message.timestamp,
@@ -74,6 +89,7 @@ var RaceDataModel = /** @class */ (function () {
         var existingResult = existingRace.results.find(function (x) { return x.racerId == message.racerId; });
         if (existingResult == undefined) {
             existingResult = {
+                race: existingRace,
                 messageId: message.hashcode,
                 racerId: message.racerId,
                 lane: message.lane,
@@ -95,13 +111,14 @@ var RaceDataModel = /** @class */ (function () {
         var existingEventClass = existingEvent.classes.value.find(function (x) { return x.id == raceClass; });
         if (existingEventClass == undefined) {
             existingEventClass = {
+                event: existingEvent,
                 id: raceClass,
                 name: raceClass,
                 classIndex: classInfo.index,
-                results: new ObservableArray([]),
                 qualificationDefiningProperty: classInfo.qualificationDefiningProperty,
                 raceEndDefiningProperty: classInfo.raceEndDefiningProperty,
                 eliminatorType: classInfo.eliminatorType,
+                results: new ObservableArray([]),
                 participants: new ObservableArray([]),
             };
             existingEvent.classes.push(existingEventClass);
@@ -117,8 +134,8 @@ var RaceDataModel = /** @class */ (function () {
         var existingEvent = this.events.value.find(function (x) { return x.id == id; });
         if (existingEvent == undefined) {
             existingEvent = {
-                id: eventInfo.id,
-                name: eventInfo.name,
+                id: id,
+                name: name !== null && name !== void 0 ? name : "Unknown event: " + id,
                 eventInfo: eventInfo,
                 classes: new ObservableArray([]),
                 races: new ObservableArray([]),
@@ -126,13 +143,14 @@ var RaceDataModel = /** @class */ (function () {
             };
             this.events.push(existingEvent);
         }
+        else if (name !== undefined) {
+            existingEvent.name = name;
+        }
         return existingEvent;
     };
     RaceDataModel.prototype.getDefaultEventInfo = function (id, name) {
         return {
-            id: id,
-            name: name !== null && name !== void 0 ? name : "Unknown event: " + id,
-            generalClassName: "Default class",
+            generalClassName: "DEFAULT",
             classInformations: [],
             qualifyingStageKey: "Q",
             eliminatorStageKey: "E"
@@ -216,14 +234,6 @@ var RaceDataModel = /** @class */ (function () {
             };
         }
         return undefined;
-    };
-    RaceDataModel.prototype.isValidEvent = function (message) {
-        return message.raceId
-            && message.timestamp > 0
-            && message.results.length > 0
-            && message.results.every(function (x) {
-                return x.result != undefined && x.result >= 0;
-            });
     };
     return RaceDataModel;
 }());

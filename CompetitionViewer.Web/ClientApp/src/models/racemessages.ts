@@ -1,13 +1,18 @@
+import { RaceEvent } from "./models";
+
 export interface CompetitionMessage {
-    messageIndex: number;
-    messages: RaceEventMessage[];
+    messages: RaceEventDataMessage[];
     removedMessageIds: string[];
 }
 
 export interface RaceEventMessage {
+    id: string;
+    name: string;
+}
+
+export interface RaceEventDataMessage {
     hashcode: string;
     eventId: string;
-    eventName: string;
     raceId: string;
     round: string;
     timestamp: number;
@@ -26,16 +31,16 @@ export interface RaceEventMessage {
     finishSpeed: number | undefined;
 }
 
-export interface RaceEventDto {
-    eventId: string;
-    eventName: string;
+export interface RaceEventRace {
+    event: RaceEvent;
     raceId: string;
     round: string;
     timestamp: number;
-    results: RaceEventResultDto[];
+    results: RaceEventRaceResult[];
 }
 
-export interface RaceEventResultDto {
+export interface RaceEventRaceResult {
+    race: RaceEventRace;
     messageId: string;
     racerId: string;
     lane: string | undefined;

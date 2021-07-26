@@ -1,4 +1,4 @@
-import { RaceEventDto, RaceEventMessage } from "./racemessages";
+import { RaceEventRace, RaceEventDataMessage, RaceEventMessage } from "./racemessages";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ClassInformation, ClassTimeIndex, EventInformation } from "../services/competitionService";
 import { RaceUtils } from "../util/raceUtils";
@@ -47,9 +47,28 @@ export class RaceDataModel {
         }
     }
 
-    public update(message: RaceEventMessage) {
+    public updateEvents(events: RaceEventMessage[]) {
+        let newEventIds = events.map(x => x.id);
+
+        for (let evt of events) {
+            this.getOrAddEvent(evt.id, evt.name);
+        }
+
+        let removeEventIds = this.events
+            .value
+            .map(x => x.id)
+            .filter(x => !newEventIds.some(y => x == y));
+
+        let eventIndexes = removeEventIds
+            .map(x => this.events.value.findIndex(y => y.id == x))
+            .filter(x => x >= 0)
+
+        this.events.remove(eventIndexes);
+    }
+
+    public update(message: RaceEventDataMessage) {
         let year = new Date(message.timestamp).getFullYear();
-        let existingEvent = this.getOrAddEvent(message.eventId, message.eventName);
+        let existingEvent = this.getOrAddEvent(message.eventId, message.eventId);
 
         let raceClass = RaceUtils.getClass(message.racerId, existingEvent.eventInfo.generalClassName);
         if (raceClass == undefined || !RaceUtils.isValidRaceClass(raceClass)) {
@@ -59,8 +78,7 @@ export class RaceDataModel {
         let existingRace = existingEvent.races.value.find(x => x.raceId == message.raceId);
         if (existingRace == undefined) {
             existingRace = {
-                eventId: message.eventId,
-                eventName: message.eventName,
+                event: existingEvent,
                 raceId: message.raceId,
                 round: message.round,
                 timestamp: message.timestamp,
@@ -73,6 +91,7 @@ export class RaceDataModel {
         let existingResult = existingRace.results.find(x => x.racerId == message.racerId);
         if (existingResult == undefined) {
             existingResult = {
+                race: existingRace,
                 messageId: message.hashcode,
                 racerId: message.racerId,
                 lane: message.lane,
@@ -96,13 +115,14 @@ export class RaceDataModel {
         let existingEventClass = existingEvent.classes.value.find(x => x.id == raceClass);
         if (existingEventClass == undefined) {
             existingEventClass = {
+                event: existingEvent,
                 id: raceClass,
                 name: raceClass,
                 classIndex: classInfo.index,
-                results: new ObservableArray<RaceEventDto>([]),
                 qualificationDefiningProperty: classInfo.qualificationDefiningProperty,
                 raceEndDefiningProperty: classInfo.raceEndDefiningProperty,
                 eliminatorType: classInfo.eliminatorType,
+                results: new ObservableArray<RaceEventRace>([]),
                 participants: new ObservableArray<ClassParticipant>([]),
             };
 
@@ -117,20 +137,22 @@ export class RaceDataModel {
         }
     }
 
-    private getOrAddEvent(id: string, name: string): RaceEvent {
+    private getOrAddEvent(id: string, name: string | undefined): RaceEvent {
         let eventInfo = this.getDefaultEventInfo(id, name);
         let existingEvent = this.events.value.find(x => x.id == id);
         if (existingEvent == undefined) {
             existingEvent = {
-                id: eventInfo.id,
-                name: eventInfo.name,
+                id: id,
+                name: name ?? "Unknown event: " + id,
                 eventInfo: eventInfo,
                 classes: new ObservableArray<RaceClass>([]),
-                races: new ObservableArray<RaceEventDto>([]),
+                races: new ObservableArray<RaceEventRace>([]),
                 participants: new ObservableArray<Participant>([])
             };
 
             this.events.push(existingEvent);
+        } else if (name !== undefined) {
+            existingEvent.name = name;
         }
 
         return existingEvent;
@@ -138,9 +160,7 @@ export class RaceDataModel {
 
     private getDefaultEventInfo(id: string, name: string | undefined): EventInformation {
         return {
-            id: id,
-            name: name ?? "Unknown event: " + id,
-            generalClassName: "Default class",
+            generalClassName: "DEFAULT",
             classInformations: [],
             qualifyingStageKey: "Q",
             eliminatorStageKey: "E"
@@ -238,23 +258,13 @@ export class RaceDataModel {
 
         return undefined;
     }
-
-    private isValidEvent(message: RaceEventDto) {
-        return message.raceId
-            && message.timestamp > 0
-            && message.results.length > 0
-            && message.results.every(x =>
-                x.result != undefined && x.result >= 0
-            )
-            ;
-    }
 }
 
 export interface RaceEvent {
     id: string;
     name: string;
     eventInfo: EventInformation;
-    races: ObservableArray<RaceEventDto>;
+    races: ObservableArray<RaceEventRace>;
     classes: ObservableArray<RaceClass>;
     participants: ObservableArray<Participant>;
 }
@@ -262,11 +272,12 @@ export interface RaceEvent {
 export interface RaceClass {
     id: string;
     name: string;
+    event: RaceEvent;
     classIndex: ClassTimeIndex | undefined;
     qualificationDefiningProperty: RaceClassDefiningProperty;
     raceEndDefiningProperty: RaceEndDefiningProperty;
     eliminatorType: EliminatorType;
-    results: ObservableArray<RaceEventDto>;
+    results: ObservableArray<RaceEventRace>;
     participants: ObservableArray<ClassParticipant>;
 }
 
@@ -279,7 +290,7 @@ export interface Participant {
     name: string;
     identificationCodes: ObservableArray<string>;
     classes: ObservableArray<RaceClass>;
-    results: ObservableArray<RaceEventDto>;
+    results: ObservableArray<RaceEventRace>;
 }
 
 export enum RaceClassDefiningProperty {

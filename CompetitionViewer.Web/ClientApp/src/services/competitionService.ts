@@ -1,10 +1,11 @@
 import { Injectable, EventEmitter } from '@angular/core';
-import { CompetitionMessage, RaceEventMessage, RaceEventDto, RaceEventResultDto } from '../models/racemessages';
+import { CompetitionMessage, RaceEventDataMessage, RaceEventRace, RaceEventMessage, RaceEventRaceResult } from '../models/racemessages';
 import { CompetitionMessageService } from './competitionMessageService';
 import { RaceEvent, ObservableArray, RaceClass, RaceClassDefiningProperty, ClassParticipant, Participant, RaceEndDefiningProperty, EliminatorType, RaceDataModel } from '../models/models';
 import { BehaviorSubject, interval } from 'rxjs';
 import { sample, bufferTime } from 'rxjs/operators';
 import { RaceUtils } from '../util/raceUtils';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
     providedIn: 'root',
@@ -13,19 +14,24 @@ export class CompetitionService {
     private selectedEventId: string | undefined;
 
     public dataModel = new RaceDataModel();
-    public filteredMessages = new BehaviorSubject<RaceEventDto[]>([]);
+    public filteredMessages = new BehaviorSubject<RaceEventRace[]>([]);
     public selectedEvent = new BehaviorSubject<RaceEvent | undefined>(undefined);
 
-    constructor(raceMessageService: CompetitionMessageService) {
+    constructor(raceMessageService: CompetitionMessageService, http: HttpClient) {
         raceMessageService
             .getMessageStream()
             .subscribe(x => this.handleCompetitionMessage(x));
-    }
 
-    private reset(): void {
-        this.selectedEvent.next(undefined);
-        this.dataModel.clear();
-        this.updateFilteredMessages();
+        raceMessageService
+            .onConnected
+            .subscribe(isConnected => {
+                if (isConnected) {
+                    http
+                        .get<RaceEventDataMessage[]>("/api/race/event/all")
+                        .toPromise()
+                        .then(result => this.handleRaceMessages(result));
+                }
+            });
     }
 
     public selectEvent(eventId: string | undefined) {
@@ -42,16 +48,10 @@ export class CompetitionService {
     }
 
     private handleCompetitionMessage(msg: CompetitionMessage) {
-        if (msg.messageIndex == 0) {
-            let selectedEvent = this.selectedEventId;
-            this.reset();
-            this.selectEvent(selectedEvent);
-        }
-
         this.handleRaceMessages(msg.messages);
     }
 
-    private handleRaceMessages(messages: RaceEventMessage[]) {
+    private handleRaceMessages(messages: RaceEventDataMessage[]) {
         for (const msg of messages) {
             this.dataModel.update(msg);
         }
@@ -60,7 +60,7 @@ export class CompetitionService {
     }
 
     private updateFilteredMessages() {
-        let messages: RaceEventDto[] | undefined;
+        let messages: RaceEventRace[] | undefined;
         let selectedEventId = this.selectedEventId;
 
         if (selectedEventId != undefined) {
@@ -107,8 +107,6 @@ export interface RaceEventResultModel {
 }
 
 export interface EventInformation {
-    id: string;
-    name: string;
     generalClassName: string;
     classInformations: ClassInformation[];
     qualifyingStageKey: string;

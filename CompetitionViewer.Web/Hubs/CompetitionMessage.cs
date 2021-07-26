@@ -5,12 +5,17 @@ namespace CompetitionViewer.Web.Hubs
 {
     public class CompetitionMessage
     {
-        public int MessageIndex { get; set; }
         public IEnumerable<string> RemovedMessageIds { get; set; } = new List<string>();
-        public IEnumerable<RaceEventMessage> Messages { get; set; } = new List<RaceEventMessage>();
+        public IEnumerable<RaceEventDataMessage> Messages { get; set; } = new List<RaceEventDataMessage>();
     }
 
     public class RaceEventMessage
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+    }
+
+    public class RaceEventDataMessage
     {
         public string Hashcode { get; set; }
         public string EventId { get; set; }

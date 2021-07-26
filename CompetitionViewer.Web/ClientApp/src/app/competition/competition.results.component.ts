@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges, SimpleChanges, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { RaceEvent } from '../../models/models';
-import { RaceEventDto, RaceEventResultDto } from '../../models/racemessages';
+import { RaceEventRace, RaceEventRaceResult } from '../../models/racemessages';
 import { RaceUtils } from '../../util/raceUtils';
 import { Binary } from '@angular/compiler';
 import { MatTableDataSource } from '@angular/material/table';
@@ -143,7 +143,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
         });
     }
 
-    public invalidate(messages?: RaceEventDto[]) {
+    public invalidate(messages?: RaceEventRace[]) {
         let oldLength = this.dataSource.filteredData.length;
         let messageList = messages || this.competitionService.filteredMessages.value;
         let mappedMessages = this.map(messageList, this.getSortFilters(this.sort));
@@ -303,7 +303,7 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
         }
     }
 
-    private map(messages: RaceEventDto[], filters: ((item: RaceMessageViewModel) => boolean)[]): RaceMessageViewModel[] {
+    private map(messages: RaceEventRace[], filters: ((item: RaceMessageViewModel) => boolean)[]): RaceMessageViewModel[] {
         let data = new Array<RaceMessageViewModel>();
 
         for (const msg of messages) {
@@ -312,12 +312,12 @@ export class CompetitionResultsComponent implements OnInit, AfterViewInit, OnDes
             for (const result of msg.results) {
                 let item = {
                     timestamp: this.datePipe.transform(msg.timestamp, "yyyy-MM-dd HH:mm:ss")!,
-                    eventId: msg.eventId,
-                    eventName: msg.eventName || msg.eventId,
+                    eventId: msg.event.id,
+                    eventName: msg.event.name,
                     raceId: msg.raceId,
                     round: msg.round,
                     stage: RaceUtils.getStage(msg.round)?.name || "DEFAULT",
-                    raceClass: RaceUtils.getClass(result.racerId, "GENERAL") || "INVALID",
+                    raceClass: RaceUtils.getClass(result.racerId, msg.event.eventInfo.generalClassName) || "INVALID",
 
                     dialIn: result.dialIn,
                     finishSpeed: result.finishSpeed,

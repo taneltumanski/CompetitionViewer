@@ -19,8 +19,10 @@ namespace CompetitionViewer.Services
     public interface IRaceService
     {
         IObservable<RaceDataEvent> GetDataEventStream();
+
+        IEnumerable<EventDataDto> GetEvents();
         IEnumerable<RaceDataDto> GetEventData(string eventId);
-        ImmutableDictionary<string, IEnumerable<RaceDataDto>> GetEventData();
+        IEnumerable<RaceDataDto> GetAllEventData();
 
         void Clear();
         void AddOrUpdate(string eventId, IEnumerable<RaceDataDto> data);
@@ -44,7 +46,7 @@ namespace CompetitionViewer.Services
         public RaceDataEventType Type { get; }
         public string Id { get; }
         public RaceDataDto Data { get; }
-        
+
     }
 
     public enum RaceDataEventType
@@ -56,10 +58,10 @@ namespace CompetitionViewer.Services
 
     public interface IRaceUpdateService
     {
-        void Start();
+        Task Start();
         void Stop();
-        void Update(string eventId);
-        void UpdateAll();
+        Task Update(string eventId);
+        Task UpdateAll();
     }
 
     public class RaceUpdateService : IRaceUpdateService
@@ -83,18 +85,18 @@ namespace CompetitionViewer.Services
             _logger = logger;
         }
 
-        public void Start()
+        public Task Start()
         {
             if (_isRunning)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             _logger.LogInformation("Starting update service");
 
             _isRunning = true;
 
-            UpdateAllEvents(true);
+            return UpdateAllEvents(true);
         }
 
         public void Stop()
@@ -106,7 +108,7 @@ namespace CompetitionViewer.Services
             _raceService.Clear();
         }
 
-        public void Update(string eventId)
+        public async Task Update(string eventId)
         {
             var eventInfo = _eventInfoProvider
                 .GetEventInfos()
@@ -114,46 +116,47 @@ namespace CompetitionViewer.Services
 
             if (eventInfo != null)
             {
-                ScheduleUpdateEvent(eventInfo, true);
+                await PollEvent(eventInfo);
             }
         }
 
-        public void UpdateAll()
+        public Task UpdateAll()
         {
-            UpdateAllEvents(true);
+            return UpdateAllEvents(true);
         }
 
-        private void UpdateAllEvents(bool isForced)
+        private async Task UpdateAllEvents(bool isForced)
         {
             var eventInfos = _eventInfoProvider.GetEventInfos();
+
             foreach (var evtInfo in eventInfos)
             {
-                ScheduleUpdateEvent(evtInfo, isForced);
+                if (isForced)
+                {
+                    await PollEvent(evtInfo);
+                }
+                else
+                {
+                    ScheduleUpdateEvent(evtInfo);
+                }
             }
         }
 
-        private void ScheduleUpdateEvent(EDRAEventInfo evtInfo, bool isForced)
+        private void ScheduleUpdateEvent(EDRAEventInfo evtInfo)
         {
             var latestDataItem = _raceService
                 .GetEventData(evtInfo.Id)
                 .OrderByDescending(x => x.Timestamp)
                 .FirstOrDefault();
 
-            var actionDelay = isForced ? TimeSpan.Zero : GetDelayTime(latestDataItem);
+            var actionDelay = GetDelayTime(latestDataItem);
             var action = _scheduler.ScheduleAsync(actionDelay, async (_, __) =>
             {
-                try
-                {
-                    await PollEvent(evtInfo);
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError(e, "Polling event {eventUri} failed", evtInfo.FullUri);
-                }
+                await PollEvent(evtInfo);
 
                 if (_isRunning)
                 {
-                    ScheduleUpdateEvent(evtInfo, false);
+                    ScheduleUpdateEvent(evtInfo);
                 }
             });
 
@@ -162,19 +165,26 @@ namespace CompetitionViewer.Services
 
         private async Task PollEvent(EDRAEventInfo evtInfo)
         {
-            var data = await _resultService.GetRaceData(evtInfo, CancellationToken.None);
-            var mappedData = data
-                .Pipe(x =>
-                {
-                    if (x.Errors.Any() && _writtenLogsForHashcodes.Add(x.Hashcode))
+            try
+            {
+                var data = await _resultService.GetRaceData(evtInfo, CancellationToken.None);
+                var mappedData = data
+                    .Pipe(x =>
                     {
-                        _logger.LogError("Data errors: [ {message} ]", string.Join(", ", x.Errors));
-                    }
-                })
-                .Where(x => !x.Errors.Any())
-                .Select(x => Map(evtInfo.Id, x));
+                        if (x.Errors.Any() && _writtenLogsForHashcodes.Add(x.Hashcode))
+                        {
+                            _logger.LogError("Data errors: [ {message} ]", string.Join(", ", x.Errors));
+                        }
+                    })
+                    .Where(x => !x.Errors.Any())
+                    .Select(x => Map(evtInfo.Id, x));
 
-            _raceService.AddOrUpdate(evtInfo.Id, mappedData);
+                _raceService.AddOrUpdate(evtInfo.Id, mappedData);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Polling event {eventUri} failed", evtInfo.FullUri);
+            }
         }
 
         private static RaceDataDto Map(string eventId, EDRADragParser.ParseResult result)
@@ -273,7 +283,7 @@ namespace CompetitionViewer.Services
 
     public class RaceService : IRaceService, IDisposable
     {
-        private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, RaceDataDto>> _raceItems = new();
+        private readonly ConcurrentDictionary<string, (EventDataDto evt, ConcurrentDictionary<string, RaceDataDto> items)> _raceItems = new();
         private readonly Subject<RaceDataEvent> _raceDataEventSubject = new();
         private readonly ILogger<RaceService> _logger;
 
@@ -287,16 +297,23 @@ namespace CompetitionViewer.Services
             return _raceDataEventSubject.AsObservable();
         }
 
-        public ImmutableDictionary<string, IEnumerable<RaceDataDto>> GetEventData()
+        public IEnumerable<RaceDataDto> GetAllEventData()
         {
-            return _raceItems.ToImmutableDictionary(x => x.Key, x => x.Value.Select(y => y.Value));
+            return _raceItems
+                .SelectMany(x => x.Value.items)
+                .Select(x => x.Value);
+        }
+
+        public IEnumerable<EventDataDto> GetEvents()
+        {
+            return _raceItems.Values.Select(x => x.evt);
         }
 
         public IEnumerable<RaceDataDto> GetEventData(string eventId)
         {
             if (_raceItems.TryGetValue(eventId, out var eventData))
             {
-                return eventData.Values.ToImmutableArray();
+                return eventData.Item2.Values.ToImmutableArray();
             }
 
             return Enumerable.Empty<RaceDataDto>();
@@ -309,8 +326,9 @@ namespace CompetitionViewer.Services
 
         public void AddOrUpdate(string eventId, IEnumerable<RaceDataDto> data)
         {
-            var eventItems = _raceItems.GetOrAdd(eventId, _ => new ConcurrentDictionary<string, RaceDataDto>());
-            var existingKeys = Enumerable.ToHashSet(_raceItems.Select(x => x.Key));
+            var eventData = _raceItems.GetOrAdd(eventId, _ => (new EventDataDto() { Id = eventId }, new ConcurrentDictionary<string, RaceDataDto>()));
+            var eventItems = eventData.items;
+            var existingKeys = Enumerable.ToHashSet(eventItems.Select(x => x.Key));
 
             var newItems = data
                 .GroupBy(x => x.Hashcode)

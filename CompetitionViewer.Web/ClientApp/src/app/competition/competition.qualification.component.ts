@@ -1,6 +1,6 @@
 import { Component, OnChanges, SimpleChanges, Input, ElementRef, ViewChild, OnInit, OnDestroy } from '@angular/core';
-import { RaceEventDto, RaceEventResultDto } from '../../models/racemessages';
-import { RaceEvent, RaceClassDefiningProperty, RaceClass, EliminatorType } from '../../models/models';
+import { RaceEventRace, RaceEventRaceResult } from '../../models/racemessages';
+import { RaceEvent, RaceClassDefiningProperty, RaceClass, EliminatorType, RaceEndDefiningProperty } from '../../models/models';
 import { RaceUtils } from '../../util/raceUtils';
 import { CompetitionService } from '../../services/competitionService';
 import { Subscription } from 'rxjs';
@@ -54,7 +54,7 @@ export class CompetitionQualificationComponent implements OnInit {
         }
     }
 
-    public invalidate(messages: RaceEventDto[]) {
+    public invalidate(messages: RaceEventRace[]) {
         let selected = this.selectedClass;
         this.classViewModels = [];
 
@@ -73,12 +73,12 @@ export class CompetitionQualificationComponent implements OnInit {
         this.invalidateCanvas();
     }
 
-    private updateWithMessage(message: RaceEventDto, result: RaceEventResultDto) {
+    private updateWithMessage(message: RaceEventRace, result: RaceEventRaceResult) {
         if (this.selectedEvent == undefined) {
             return;
         }
 
-        let raceClass = RaceUtils.getClass(result.racerId, "GENERAL");
+        let raceClass = RaceUtils.getClass(result.racerId, message.event.eventInfo.generalClassName);
 
         if (!RaceUtils.isValidRaceClass(raceClass)) {
             return;
@@ -463,7 +463,7 @@ export class QualificationClassViewModel {
     constructor(public classData: RaceClass) {
     }
 
-    public updateMessage(message: RaceEventDto, result: RaceEventResultDto, event: RaceEvent) {
+    public updateMessage(message: RaceEventRace, result: RaceEventRaceResult, event: RaceEvent) {
         if (this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.Invalid) {
             return;
         }
@@ -486,11 +486,19 @@ export class QualificationClassViewModel {
                 this.qualificationPositions.push(existingItem);
             }
 
-            if (currentTime != undefined && ((this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.QuarterMileTime && currentTime > 0) || (this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.ReactionTime && currentTime >= 0) || (this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.DialInMargin && currentTime > 0))) {
-                if ((existingItem.bestTime == undefined || currentTime < existingItem.bestTime) && (this.classData.classIndex == undefined || currentTime >= this.classData.classIndex.QuarterMileIndex)) {
-                    existingItem.reactionTime = result.reactionTime;
-                    existingItem.finishTime = result.finishTime;
-                    existingItem.bestTime = currentTime;
+            if (currentTime != undefined) {
+                let isEightMileOk = this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.EightMileTime && currentTime > 0;
+                let isQuarterMileOk = this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.QuarterMileTime && currentTime > 0;
+                let isReactionTimeOk = this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.ReactionTime && currentTime >= 0;
+                let isDialInMarginOk = this.classData.qualificationDefiningProperty == RaceClassDefiningProperty.DialInMargin && currentTime > 0;
+                let isNotBreakout = this.classData.classIndex == undefined || currentTime >= (this.classData.raceEndDefiningProperty == RaceEndDefiningProperty.QuarterMileTime ? this.classData.classIndex.QuarterMileIndex : this.classData.classIndex.EightMileIndex);
+
+                if (isEightMileOk || isQuarterMileOk || isReactionTimeOk || isDialInMarginOk) {
+                    if ((existingItem.bestTime == undefined || currentTime < existingItem.bestTime) && isNotBreakout) {
+                        existingItem.reactionTime = result.reactionTime;
+                        existingItem.finishTime = result.finishTime;
+                        existingItem.bestTime = currentTime;
+                    }
                 }
             }
         } else if (stage == event.eventInfo.eliminatorStageKey) {
@@ -506,11 +514,19 @@ export class QualificationClassViewModel {
 
     public update() {
         this.qualificationPositions.sort((a, b) => {
-            if (a.bestTime == undefined) {
+            if (a.bestTime == undefined && b.bestTime == undefined) {
+                return 0;
+            } else if (a.bestTime == undefined) {
                 return 1;
+            } else if (b.bestTime == undefined) {
+                return -1;
             }
 
-            if (b.bestTime == undefined) {
+            if (a.bestTime < 0 && b.bestTime < 0) {
+                return b.bestTime - a.bestTime;
+            } else if (a.bestTime < 0 && b.bestTime >= 0) {
+                return 1;
+            } else if (a.bestTime >= 0 && b.bestTime < 0) {
                 return -1;
             }
 
@@ -527,12 +543,12 @@ export class QualificationClassViewModel {
             return;
         }
 
-        for (let qualifier of this.qualificationPositions) {
-            let firstRoundEliminator = this.eliminatorResults.find(x => x.raceData.racerId == qualifier.racerId);
-            if (firstRoundEliminator == undefined) {
-                qualifier.isRemoved = true;
-            }
-        }
+        //for (let qualifier of this.qualificationPositions) {
+        //    let firstRoundEliminator = this.eliminatorResults.find(x => x.raceData.racerId == qualifier.racerId);
+        //    if (firstRoundEliminator == undefined) {
+        //        qualifier.isRemoved = true;
+        //    }
+        //}
     }
 
     private getCurrentEliminatorRound(): number | undefined {
@@ -546,7 +562,7 @@ export class QualificationClassViewModel {
         return maxRound;
     }
 
-    private getCurrentTime(result: RaceEventResultDto, raceClass: RaceClass): number | undefined {
+    private getCurrentTime(result: RaceEventRaceResult, raceClass: RaceClass): number | undefined {
         if (raceClass.qualificationDefiningProperty == RaceClassDefiningProperty.QuarterMileTime) {
             return result.finishTime;
         }
@@ -566,8 +582,8 @@ export class QualificationClassViewModel {
 }
 
 export interface RaceResultData {
-    raceData: RaceEventResultDto;
-    opponentData: RaceEventResultDto[];
+    raceData: RaceEventRaceResult;
+    opponentData: RaceEventRaceResult[];
     racerId: string;
     raceId: string;
     round: string;

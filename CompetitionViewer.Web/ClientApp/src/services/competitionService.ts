@@ -26,8 +26,7 @@ export class CompetitionService {
             .onConnected
             .subscribe(isConnected => {
                 if (isConnected) {
-                    http
-                        .get<RaceEventDataMessage[]>("/api/race/event/all")
+                    http.get<RaceEventDataMessage[]>("/api/race/event/all")
                         .toPromise()
                         .then(result => this.handleRaceMessages(result));
                 }

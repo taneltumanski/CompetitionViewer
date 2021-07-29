@@ -24,6 +24,14 @@ namespace CompetitionViewer.Web.Controllers
             _raceService = raceService;
         }
 
+        [HttpGet("start")]
+        public async Task<IActionResult> StartService()
+        {
+            await _raceUpdateService.Start();
+
+            return Ok();
+        }
+
         [HttpGet("event")]
         public async Task<IActionResult> GetEvents()
         {

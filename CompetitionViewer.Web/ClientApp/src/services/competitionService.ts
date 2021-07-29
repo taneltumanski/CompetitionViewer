@@ -28,9 +28,13 @@ export class CompetitionService {
                 if (isConnected) {
                     http.get<RaceEventDataMessage[]>("/api/race/event/all")
                         .toPromise()
-                        .then(result => this.handleRaceMessages(result));
+                        .then(result => this.handleRaceMessages(result, true));
                 }
             });
+
+        http.get("/api/race/start")
+            .toPromise()
+            .then(() => raceMessageService.connectSignalR());
     }
 
     public selectEvent(eventId: string | undefined) {
@@ -47,12 +51,16 @@ export class CompetitionService {
     }
 
     private handleCompetitionMessage(msg: CompetitionMessage) {
-        this.handleRaceMessages(msg.messages);
+        this.handleRaceMessages(msg.messages, false);
     }
 
-    private handleRaceMessages(messages: RaceEventDataMessage[]) {
+    private handleRaceMessages(messages: RaceEventDataMessage[], isFullUpdate: boolean) {
         for (const msg of messages) {
             this.dataModel.update(msg);
+        }
+
+        if (isFullUpdate) {
+            //let removeIds = this.dataModel.events.value.map(x => x.races.value.map(y => y.raceId));
         }
 
         this.updateFilteredMessages();

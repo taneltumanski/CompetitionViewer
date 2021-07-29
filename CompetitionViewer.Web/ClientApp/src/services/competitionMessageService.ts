@@ -18,10 +18,6 @@ export class CompetitionMessageService {
 
     public onConnected: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
-    constructor() {
-        this.connectSignalR();
-    }
-
     public getMessageStream(): Observable<CompetitionMessage> {
         return this.messageStream.asObservable();
     }
@@ -34,7 +30,7 @@ export class CompetitionMessageService {
         this.connection?.invoke("UpdateAllEvents");
     }
 
-    private connectSignalR() {
+    public connectSignalR() {
         if (this.connection) {
             this.connection.stop();
         }

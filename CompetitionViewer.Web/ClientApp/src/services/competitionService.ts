@@ -26,15 +26,17 @@ export class CompetitionService {
             .onConnected
             .subscribe(isConnected => {
                 if (isConnected) {
-                    http.get<RaceEventDataMessage[]>("/api/race/event/all")
+                    http.get("/api/race/start")
                         .toPromise()
-                        .then(result => this.handleRaceMessages(result, true));
+                        .then(() => {
+                            raceMessageService.subscribeToEvents();
+
+                            http.get<RaceEventDataMessage[]>("/api/race/event/all")
+                                .toPromise()
+                                .then(result => this.handleRaceMessages(result, true));
+                        }); 
                 }
             });
-
-        http.get("/api/race/start")
-            .toPromise()
-            .then(() => raceMessageService.connectSignalR());
     }
 
     public selectEvent(eventId: string | undefined) {

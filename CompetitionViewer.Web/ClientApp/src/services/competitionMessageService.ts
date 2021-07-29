@@ -18,6 +18,10 @@ export class CompetitionMessageService {
 
     public onConnected: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
+    constructor() {
+        this.connectSignalR();
+    }
+
     public getMessageStream(): Observable<CompetitionMessage> {
         return this.messageStream.asObservable();
     }
@@ -30,7 +34,7 @@ export class CompetitionMessageService {
         this.connection?.invoke("UpdateAllEvents");
     }
 
-    public connectSignalR() {
+    private connectSignalR() {
         if (this.connection) {
             this.connection.stop();
         }
@@ -39,26 +43,24 @@ export class CompetitionMessageService {
             .withUrl("/messaging")
             .build();
 
-        this.setupEvents(this.connection);
-    }
+        this.connection.onclose(e => this.onSignalrError(e));
 
-    private setupEvents(connection: HubConnection) {
-        connection
-            .onclose(e => this.onSignalrError(e));
-
-        connection
+        this.connection
             .start()
             .then(
                 () => {
-                    connection
-                        .on("OnCompetitionMessage", msg => this.messageStream.next(msg));
-
-                    /* TODO start event */
                     this.isConnectedToServer = true;
                     this.onConnected.next(true);
                 },
                 reason => this.onSignalrError(reason))
             .catch(err => this.onSignalrError(err));
+    }
+
+    public subscribeToEvents() {
+        if (this.connection) {
+            this.connection.on("OnCompetitionMessage", msg => this.messageStream.next(msg));
+            this.connection.invoke("SubscribeToEvents");            
+        }
     }
 
     private onSignalrError(error: any) {

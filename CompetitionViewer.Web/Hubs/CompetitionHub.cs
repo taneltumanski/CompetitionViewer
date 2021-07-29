@@ -25,8 +25,6 @@ namespace CompetitionViewer.Web.Hubs
         {
             _logger.LogInformation("Client connected: connection id = \"{connectionId}\", name = \"{username}\"", Context.ConnectionId, Context.UserIdentifier);
 
-            _listener.Subscribe(Context.ConnectionId);
-
             await base.OnConnectedAsync();
         }
 
@@ -44,6 +42,15 @@ namespace CompetitionViewer.Web.Hubs
             _listener.Unsubscribe(Context.ConnectionId);
 
             await base.OnDisconnectedAsync(exception);
+        }
+
+        public Task SubscribeToEvents()
+        {
+            _logger.LogInformation("Client subscribed: connection id = \"{connectionId}\", name = \"{username}\"", Context.ConnectionId, Context.UserIdentifier);
+
+            _listener.Subscribe(Context.ConnectionId);
+
+            return Task.CompletedTask;
         }
 
         public async Task UpdateEvent(string id)

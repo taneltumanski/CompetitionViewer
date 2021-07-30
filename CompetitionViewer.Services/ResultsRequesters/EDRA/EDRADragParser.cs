@@ -60,7 +60,7 @@ namespace CompetitionViewer.Services.ResultsRequesters.EDRA
 
             var bytes = Encoding.UTF8.GetBytes(data);
             var hashBytes = hashAlgo.ComputeHash(bytes);
-            var hash = Encoding.UTF8.GetString(hashBytes);
+            var hash = Convert.ToBase64String(hashBytes);
 
             return hash;
         }

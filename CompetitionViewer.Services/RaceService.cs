@@ -313,7 +313,7 @@ namespace CompetitionViewer.Services
         {
             if (_raceItems.TryGetValue(eventId, out var eventData))
             {
-                return eventData.Item2.Values.ToImmutableArray();
+                return eventData.items.Values.ToImmutableArray();
             }
 
             return Enumerable.Empty<RaceDataDto>();
@@ -326,10 +326,6 @@ namespace CompetitionViewer.Services
 
         public void AddOrUpdate(string eventId, IEnumerable<RaceDataDto> data)
         {
-            var eventData = _raceItems.GetOrAdd(eventId, _ => (new EventDataDto() { Id = eventId }, new ConcurrentDictionary<string, RaceDataDto>()));
-            var eventItems = eventData.items;
-            var existingKeys = Enumerable.ToHashSet(eventItems.Select(x => x.Key));
-
             var newItems = data
                 .GroupBy(x => x.Hashcode)
                 .Select(x => x.First())
@@ -339,6 +335,15 @@ namespace CompetitionViewer.Services
             {
                 return;
             }
+
+            var eventData = _raceItems.GetOrAdd(eventId, _ =>
+            {
+                _logger.LogInformation("Adding event {eventId}", eventId);
+                return (new EventDataDto() { Id = eventId }, new ConcurrentDictionary<string, RaceDataDto>());
+            });
+
+            var eventItems = eventData.items;
+            var existingKeys = Enumerable.ToHashSet(eventItems.Select(x => x.Key));
 
             foreach (var item in newItems)
             {

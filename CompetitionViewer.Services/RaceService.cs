@@ -74,7 +74,8 @@ namespace CompetitionViewer.Services
         private readonly DisposableDictionary _schedulerDisposables = new();
 
         private bool _isRunning;
-        private readonly HashSet<string> _writtenLogsForHashcodes = new HashSet<string>();
+        private Task _startTask = Task.CompletedTask;
+        private readonly HashSet<string> _writtenLogsForHashcodes = new();
 
         public RaceUpdateService(IEventInfoProvider eventInfoProvider, EDRAResultService resultService, IRaceService raceService, IScheduler scheduler, ILogger<RaceUpdateService> logger)
         {
@@ -89,14 +90,14 @@ namespace CompetitionViewer.Services
         {
             if (_isRunning)
             {
-                return Task.CompletedTask;
+                return _startTask;
             }
 
             _logger.LogInformation("Starting update service");
-
             _isRunning = true;
+            _startTask = UpdateAllEvents(true);
 
-            return UpdateAllEvents(true);
+            return _startTask;
         }
 
         public void Stop()

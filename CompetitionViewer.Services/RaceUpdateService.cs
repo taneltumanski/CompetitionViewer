@@ -81,13 +81,17 @@ namespace CompetitionViewer.Services
                 .GetEventInfos()
                 .Reverse();
 
-            foreach (var evtInfo in eventInfos)
+            if (isForced)
             {
-                if (isForced)
-                {
-                    await PollEvent(evtInfo);
-                }
-                else
+                var updateTasks = eventInfos
+                    .Select(x => Task.Run(() => PollEvent(x)))
+                    .ToArray();
+
+                await Task.WhenAll(updateTasks);
+            }
+            else
+            {
+                foreach (var evtInfo in eventInfos)
                 {
                     ScheduleUpdateEvent(evtInfo);
                 }

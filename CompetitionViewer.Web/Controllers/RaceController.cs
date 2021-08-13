@@ -67,5 +67,17 @@ namespace CompetitionViewer.Web.Controllers
 
             return Ok(data);
         }
+
+        [HttpGet("event/latest")]
+        public async Task<IActionResult> GetLatestEventData()
+        {
+            await _raceUpdateService.Start();
+
+            var data = _raceService
+                .GetLatestEventData()
+                .Select(Mapper.FromDto);
+
+            return Ok(data);
+        }
     }
 }

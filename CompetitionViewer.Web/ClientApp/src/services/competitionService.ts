@@ -31,9 +31,15 @@ export class CompetitionService {
                         .then(() => {
                             raceMessageService.subscribeToEvents();
 
-                            http.get<RaceEventDataMessage[]>("/api/race/event/all")
+                            http.get<RaceEventDataMessage[]>("/api/race/event/latest")
                                 .toPromise()
-                                .then(result => this.handleRaceMessages(result, true));
+                                .then(result => {
+                                    this.handleRaceMessages(result, true);
+
+                                    http.get<RaceEventDataMessage[]>("/api/race/event/all")
+                                        .toPromise()
+                                        .then(result => this.handleRaceMessages(result, true));
+                                });
                         }); 
                 }
             });

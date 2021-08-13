@@ -107,7 +107,7 @@ namespace CompetitionViewer.Web.Hubs
 
             if (!_subscribers.Any())
             {
-                _stopDisposable.Disposable = _scheduler.Schedule(TimeSpan.FromMinutes(30), () => _updateService.Stop());
+                _stopDisposable.Disposable = _scheduler.Schedule(TimeSpan.FromHours(6), () => _updateService.Stop());
             }
         }
 

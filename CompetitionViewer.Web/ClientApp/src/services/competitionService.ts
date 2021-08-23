@@ -22,6 +22,14 @@ export class CompetitionService {
             .getMessageStream()
             .subscribe(x => this.handleCompetitionMessage(x));
 
+        http.get("/api/race/start")
+            .toPromise()
+            .then(() => {
+                http.get<RaceEventDataMessage[]>("/api/race/event/latest")
+                    .toPromise()
+                    .then(result => this.handleRaceMessages(result, true));
+            });
+
         raceMessageService
             .onConnected
             .subscribe(isConnected => {

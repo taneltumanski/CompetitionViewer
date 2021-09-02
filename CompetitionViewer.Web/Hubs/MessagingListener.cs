@@ -107,8 +107,20 @@ namespace CompetitionViewer.Web.Hubs
 
             if (!_subscribers.Any())
             {
-                _stopDisposable.Disposable = _scheduler.Schedule(TimeSpan.FromHours(6), () => _updateService.Stop());
+                var stopDelay = GetStopDelay(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(3)));
+
+                _stopDisposable.Disposable = _scheduler.Schedule(stopDelay, () => _updateService.Stop());
             }
+        }
+
+        private TimeSpan GetStopDelay(DateTimeOffset timestamp)
+        {
+            if (timestamp.DayOfWeek == DayOfWeek.Saturday || timestamp.DayOfWeek == DayOfWeek.Sunday)
+            {
+                return TimeSpan.FromHours(6);
+            }
+
+            return TimeSpan.FromMinutes(15);
         }
 
         public void Dispose()
@@ -118,6 +130,7 @@ namespace CompetitionViewer.Web.Hubs
                 GC.SuppressFinalize(this);
 
                 _isDisposed = true;
+                _stopDisposable.Disposable = Disposable.Empty;
 
                 foreach (var subscriber in _subscribers)
                 {

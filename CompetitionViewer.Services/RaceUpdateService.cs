@@ -139,7 +139,7 @@ namespace CompetitionViewer.Services
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Polling event {eventUri} failed", evtInfo.FullUri);
+                _logger.LogError("Polling event {eventUri} failed: {errorMsg}", evtInfo.FullUri, e.Message);
             }
         }
 
@@ -176,7 +176,7 @@ namespace CompetitionViewer.Services
                 var difference = _scheduler.Now - timestamp;
                 if (difference < TimeSpan.FromHours(48))
                 {
-                    return TimeSpan.FromSeconds(3);
+                    return TimeSpan.FromSeconds(60);
                 }
                 else if (difference < TimeSpan.FromDays(14))
                 {
